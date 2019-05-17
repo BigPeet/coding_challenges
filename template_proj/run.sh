@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./build/main
+./build/problem_XX
