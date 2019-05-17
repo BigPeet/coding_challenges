@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 
 extern "C" {
-#include "challenge/challenge.h"
+#include "challenge/challenge_lib.h"
 }
 
 class challenge_test : public ::testing::Test

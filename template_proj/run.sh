@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./build/problem_XX
+./build/challenge_XX

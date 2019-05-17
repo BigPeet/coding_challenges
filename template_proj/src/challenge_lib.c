@@ -1,1 +1,1 @@
-#include "challenge/challenge.h"
+#include "challenge/challenge_lib.h"
