@@ -1,7 +1,7 @@
+#include "challenge/challenge_lib.h"
+#include "stdbool.h"
 #include "stdio.h"
 #include "stdlib.h"
-#include "stdbool.h"
-#include "challenge/challenge_lib.h"
 
 int* read_input_numbers(const int argc, char** argv, int input[argc])
 {
@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
 
     int amount_of_numbers = argc - 1;
     int numbers[amount_of_numbers];
-    read_input_numbers(argc, argv, &k, numbers);
+    read_input_numbers(argc, argv, numbers);
 
     printf("Number sequence: ");
     for (int i = 0; i < amount_of_numbers; i++)
@@ -30,6 +30,17 @@ int main(int argc, char* argv[])
         printf("%d ", numbers[i]);
     }
     printf("\n");
+
+    int output[amount_of_numbers];
+    process(numbers, amount_of_numbers, output);
+
+    printf("Processed number sequence: ");
+    for (int i = 0; i < amount_of_numbers; i++)
+    {
+        printf("%d ", output[i]);
+    }
+    printf("\n");
+
 
     return 0;
 }

@@ -1,2 +1,2 @@
 #!/bin/bash
-./build/problem_XX-test
+./build/challenge_02-test
