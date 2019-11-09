@@ -9,3 +9,7 @@ A few notes on the implementation:
 
 2. The deserialization might not only be victim to "reserved" characters in the value of nodes, but the input string might not be well-formed or a serialized node at all.
    I only performed limited checks for that and I guess a lot more could be added to prevent errors from random strings or strange corner cases.
+
+3. The serialization does not differentiate between an empty string ("") or NULL for the node value.
+   Both will result in an empty string in the serialized Tree and will become an empty string when deserialized.
+   To prevent this, a NULL value could be serialized with a "reserved" character, for example.
