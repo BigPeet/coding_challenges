@@ -120,6 +120,25 @@ int* example_05(size_t* const amount, int* solution)
   return numbers;
 }
 
+int* example_06(size_t* const amount, int* solution)
+{
+  int* numbers = NULL;
+  if ((amount != NULL) && (solution != NULL))
+  {
+    *amount   = 10000;
+    *solution = 10001;
+    numbers   = (int*)calloc(*amount, sizeof(int));
+    if (numbers != NULL)
+    {
+      for (size_t i = 0; i < *amount; ++i)
+      {
+        numbers[i] = i + 1;
+      }
+    }
+  }
+  return numbers;
+}
+
 TEST_F(challenge_test, nonlinear_solution_test_01)
 {
   size_t amount   = 0;
@@ -185,6 +204,19 @@ TEST_F(challenge_test, nonlinear_solution_test_05)
   }
 }
 
+TEST_F(challenge_test, nonlinear_solution_test_06)
+{
+  size_t amount   = 0;
+  int groundtruth = -1;
+  int* numbers    = example_06(&amount, &groundtruth);
+  if (numbers != NULL)
+  {
+    int solution = nonlinear_solution(numbers, amount);
+    ASSERT_EQ(solution, groundtruth);
+    free(numbers);
+  }
+}
+
 TEST_F(challenge_test, nonconstant_solution_test_01)
 {
   size_t amount   = 0;
@@ -242,6 +274,19 @@ TEST_F(challenge_test, nonconstant_solution_test_05)
   size_t amount   = 0;
   int groundtruth = -1;
   int* numbers    = example_05(&amount, &groundtruth);
+  if (numbers != NULL)
+  {
+    int solution = nonconstant_solution(numbers, amount);
+    ASSERT_EQ(solution, groundtruth);
+    free(numbers);
+  }
+}
+
+TEST_F(challenge_test, nonconstant_solution_test_06)
+{
+  size_t amount   = 0;
+  int groundtruth = -1;
+  int* numbers    = example_06(&amount, &groundtruth);
   if (numbers != NULL)
   {
     int solution = nonconstant_solution(numbers, amount);
