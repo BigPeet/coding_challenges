@@ -60,14 +60,14 @@ int* example_03(size_t* const amount, int* solution)
     numbers   = (int*)calloc(*amount, sizeof(int));
     if (numbers != NULL)
     {
-      numbers[0] = 1;
+      numbers[0] = 7;
       numbers[1] = 2;
       numbers[2] = 0;
       numbers[3] = 5;
       numbers[4] = 7;
       numbers[5] = 8;
       numbers[6] = 4;
-      numbers[7] = 7;
+      numbers[7] = 1;
     }
   }
   return numbers;
