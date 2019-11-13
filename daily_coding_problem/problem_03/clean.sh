@@ -1,4 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-rm -rf build/*
-rm compile_commands.json
+if [[ -d ./build ]]; then
+  rm -rf ./build
+fi
+
+if [[ -L compile_commands.json ]]; then
+  rm compile_commands.json
+fi
