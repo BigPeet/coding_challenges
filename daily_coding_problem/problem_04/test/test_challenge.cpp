@@ -139,6 +139,30 @@ int* example_06(size_t* const amount, int* solution)
   return numbers;
 }
 
+int* example_07(size_t* const amount, int* solution)
+{
+  int* numbers = NULL;
+  if ((amount != NULL) && (solution != NULL))
+  {
+    *amount   = 9;
+    *solution = 3;
+    numbers   = (int*)calloc(*amount, sizeof(int));
+    if (numbers != NULL)
+    {
+      numbers[0] = 1;
+      numbers[1] = 4;
+      numbers[2] = 1;
+      numbers[3] = 5;
+      numbers[4] = 4;
+      numbers[5] = 7;
+      numbers[6] = 9;
+      numbers[7] = 6;
+      numbers[8] = 2;
+    }
+  }
+  return numbers;
+}
+
 TEST_F(challenge_test, nonlinear_solution_test_01)
 {
   size_t amount   = 0;
@@ -209,6 +233,19 @@ TEST_F(challenge_test, nonlinear_solution_test_06)
   size_t amount   = 0;
   int groundtruth = -1;
   int* numbers    = example_06(&amount, &groundtruth);
+  if (numbers != NULL)
+  {
+    int solution = nonlinear_solution(numbers, amount);
+    ASSERT_EQ(solution, groundtruth);
+    free(numbers);
+  }
+}
+
+TEST_F(challenge_test, nonlinear_solution_test_07)
+{
+  size_t amount   = 0;
+  int groundtruth = -1;
+  int* numbers    = example_07(&amount, &groundtruth);
   if (numbers != NULL)
   {
     int solution = nonlinear_solution(numbers, amount);
@@ -290,6 +327,110 @@ TEST_F(challenge_test, nonconstant_solution_test_06)
   if (numbers != NULL)
   {
     int solution = nonconstant_solution(numbers, amount);
+    ASSERT_EQ(solution, groundtruth);
+    free(numbers);
+  }
+}
+
+TEST_F(challenge_test, nonconstant_solution_test_07)
+{
+  size_t amount   = 0;
+  int groundtruth = -1;
+  int* numbers    = example_07(&amount, &groundtruth);
+  if (numbers != NULL)
+  {
+    int solution = nonconstant_solution(numbers, amount);
+    ASSERT_EQ(solution, groundtruth);
+    free(numbers);
+  }
+}
+
+TEST_F(challenge_test, linear_constant_solution_test_01)
+{
+  size_t amount   = 0;
+  int groundtruth = -1;
+  int* numbers    = example_01(&amount, &groundtruth);
+  if (numbers != NULL)
+  {
+    int solution = linear_constant_solution(numbers, amount);
+    ASSERT_EQ(solution, groundtruth);
+    free(numbers);
+  }
+}
+
+TEST_F(challenge_test, linear_constant_solution_test_02)
+{
+  size_t amount   = 0;
+  int groundtruth = -1;
+  int* numbers    = example_02(&amount, &groundtruth);
+  if (numbers != NULL)
+  {
+    int solution = linear_constant_solution(numbers, amount);
+    ASSERT_EQ(solution, groundtruth);
+    free(numbers);
+  }
+}
+
+TEST_F(challenge_test, linear_constant_solution_test_03)
+{
+  size_t amount   = 0;
+  int groundtruth = -1;
+  int* numbers    = example_03(&amount, &groundtruth);
+  if (numbers != NULL)
+  {
+    int solution = linear_constant_solution(numbers, amount);
+    ASSERT_EQ(solution, groundtruth);
+    free(numbers);
+  }
+}
+
+TEST_F(challenge_test, linear_constant_solution_test_04)
+{
+  size_t amount   = 0;
+  int groundtruth = -1;
+  int* numbers    = example_04(&amount, &groundtruth);
+  if (numbers != NULL)
+  {
+    int solution = linear_constant_solution(numbers, amount);
+    ASSERT_EQ(solution, groundtruth);
+    free(numbers);
+  }
+}
+
+TEST_F(challenge_test, linear_constant_solution_test_05)
+{
+  size_t amount   = 0;
+  int groundtruth = -1;
+  int* numbers    = example_05(&amount, &groundtruth);
+  if (numbers != NULL)
+  {
+    int solution = linear_constant_solution(numbers, amount);
+    ASSERT_EQ(solution, groundtruth);
+    free(numbers);
+  }
+}
+
+TEST_F(challenge_test, linear_constant_solution_test_06)
+{
+  size_t amount   = 0;
+  int groundtruth = -1;
+  int* numbers    = example_06(&amount, &groundtruth);
+  if (numbers != NULL)
+  {
+    int solution = linear_constant_solution(numbers, amount);
+    ASSERT_EQ(solution, groundtruth);
+    free(numbers);
+  }
+}
+
+TEST_F(challenge_test, linear_constant_solution_test_07)
+{
+  size_t amount   = 0;
+  int groundtruth = -1;
+  int* numbers    = example_07(&amount, &groundtruth);
+  if (numbers != NULL)
+  {
+    int solution = linear_constant_solution(numbers, amount);
     ASSERT_EQ(solution, groundtruth);
     free(numbers);
   }

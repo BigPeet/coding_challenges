@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
     }
     printf("\n");
 
-    int solution = nonlinear_solution(numbers, amount_of_numbers);
+    int solution = linear_constant_solution(numbers, amount_of_numbers);
     printf("Solution: %d\n", solution);
 
     return 0;
