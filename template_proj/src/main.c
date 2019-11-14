@@ -3,13 +3,12 @@
 #include "stdbool.h"
 #include "challenge/challenge_lib.h"
 
-int* read_input_numbers(const int argc, char** argv, int input[argc])
+void read_input_numbers(const int argc, char** argv, int* input)
 {
     for (int i = 1; i < argc; i++)
     {
         input[i - 1] = atoi(argv[i]);
     }
-    return input;
 }
 
 int main(int argc, char* argv[])
@@ -22,7 +21,7 @@ int main(int argc, char* argv[])
 
     int amount_of_numbers = argc - 1;
     int numbers[amount_of_numbers];
-    read_input_numbers(argc, argv, &k, numbers);
+    read_input_numbers(argc, argv, numbers);
 
     printf("Number sequence: ");
     for (int i = 0; i < amount_of_numbers; i++)

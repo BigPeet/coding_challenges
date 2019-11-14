@@ -3,13 +3,12 @@
 #include "stdbool.h"
 #include "challenge/challenge_lib.h"
 
-int* read_input_numbers(const int argc, char** argv, int* input)
+void read_input_numbers(const int argc, char** argv, int* input)
 {
     for (int i = 1; i < argc; i++)
     {
         input[i - 1] = atoi(argv[i]);
     }
-    return input;
 }
 
 int main(int argc, char* argv[])
