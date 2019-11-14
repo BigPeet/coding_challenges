@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-./build/challenge_XX-test
+./build/challenge_XXX-test
