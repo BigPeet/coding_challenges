@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5.1)
-project(challenge_04 VERSION 0.0.1)
+project(challenge_003 VERSION 0.0.1)
 
 # for correct library locations across platforms
 include(GNUInstallDirs)
@@ -10,7 +10,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include_directories(SYSTEM
   include
-  )
+)
 
 add_library(
   ${PROJECT_NAME}_lib
@@ -49,6 +49,7 @@ if (BUILD_TESTING)
   find_package(GTest QUIET)
   # only build when modern target exists
   if (TARGET GTest::GTest)
+  message(STATUS "TESTS ARE BUILD")
     add_executable(
       ${PROJECT_NAME}-test
       test/test_main.cpp

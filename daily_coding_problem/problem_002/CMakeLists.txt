@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5.1)
-project(problem_01 VERSION 0.0.1)
+project(challenge_002 VERSION 0.0.1)
 
 # for correct library locations across platforms
 include(GNUInstallDirs)
@@ -15,7 +15,7 @@ include_directories(SYSTEM
 add_library(
   ${PROJECT_NAME}_lib
   SHARED
-  src/list_check.c
+  src/challenge_lib.c
 )
 
 add_executable(
@@ -52,7 +52,7 @@ if (BUILD_TESTING)
     add_executable(
       ${PROJECT_NAME}-test
       test/test_main.cpp
-      test/test_summands.cpp
+      test/test_challenge.cpp
       )
     set_property(TARGET ${PROJECT_NAME}-test PROPERTY CXX_STANDARD 11)
     set_property(TARGET ${PROJECT_NAME}-test PROPERTY CXX_STANDARD_REQUIRED ON)
