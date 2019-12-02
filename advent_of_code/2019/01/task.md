@@ -1,4 +1,5 @@
 Taken from: https://adventofcode.com/2019/day/1
+
 Solutions can be found in notes.md
 
 --- Day 1: The Tyranny of the Rocket Equation ---
