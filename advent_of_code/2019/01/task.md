@@ -22,3 +22,5 @@ For example:
 The Fuel Counter-Upper needs to know the total fuel requirement. To find it, individually calculate the fuel needed for the mass of each module (your puzzle input), then add together all the fuel values.
 
 What is the sum of the fuel requirements for all of the modules on your spacecraft?
+
+*The puzzle input is provided in input.txt.*
