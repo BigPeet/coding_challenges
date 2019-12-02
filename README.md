@@ -5,6 +5,7 @@
 Challenges are taken from the following sources:
 
 * https://dailycodingproblem.com
+* https://adventofcode.com
 * https://coderbyte.com
 * https://codewars.com
 * https://hackerrank.com
