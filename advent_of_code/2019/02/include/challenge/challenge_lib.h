@@ -28,10 +28,11 @@ typedef struct
 } intcode_t;
 
 intcode_t* read_intcode(const char* const file_path);
-
 intcode_t* create_intcode(int* const content, const size_t content_size);
 void destroy_intcode(intcode_t* const prog);
 void print_intcode(const intcode_t* const prog);
+intcode_t* copy_intcode(const intcode_t* const prog);
+int output_intcode(const intcode_t* const prog);
 
 int execute(intcode_t* const prog);
 int execute_head_block(intcode_t* const prog);

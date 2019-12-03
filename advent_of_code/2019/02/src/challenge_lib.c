@@ -96,6 +96,37 @@ void print_intcode(const intcode_t* const prog)
     }
 }
 
+intcode_t* copy_intcode(const intcode_t* const prog)
+{
+    intcode_t* copy = NULL;
+    if (prog != NULL)
+    {
+        if ((prog->memory != NULL) && (prog->memory_size > 0))
+        {
+            int* memory_copy = (int*) malloc(sizeof(int) * prog->memory_size);
+            if (memory_copy != NULL)
+            {
+                for (size_t i = 0; i < prog->memory_size; ++i)
+                {
+                    memory_copy[i] = prog->memory[i];
+                }
+            }
+            copy = create_intcode(memory_copy, prog->memory_size);
+        }
+    }
+    return copy;
+}
+
+int output_intcode(const intcode_t* const prog)
+{
+    int out = -1;
+    if ((prog != NULL) && (prog->memory != NULL) && (prog->memory_size > 0))
+    {
+        out = prog->memory[0];
+    }
+    return out;
+}
+
 int execute(intcode_t* const prog)
 {
     int ret = INT_CODE_ERROR;
