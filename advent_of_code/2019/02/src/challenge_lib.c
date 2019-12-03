@@ -18,10 +18,10 @@ intcode_t* read_intcode(const char* const file_path)
         size_t num_ints  = 0;
         get_size_info(file_path, &num_chars, &num_ints);
 
-        char* str    = (char*)malloc(sizeof(char) * num_chars);
-        int* content = (int*)malloc(sizeof(int) * num_ints);
-        FILE* fp     = fopen(file_path, "r");
-        if ((fp != NULL) && (str != NULL) && (content != NULL))
+        char* str   = (char*) malloc(sizeof(char) * num_chars);
+        int* memory = (int*) malloc(sizeof(int) * num_ints);
+        FILE* fp    = fopen(file_path, "r");
+        if ((fp != NULL) && (str != NULL) && (memory != NULL))
         {
             /*We only read the first line.*/
             if (fscanf(fp, "%s", str) == EOF)
@@ -35,29 +35,29 @@ intcode_t* read_intcode(const char* const file_path)
             char* token  = strtok(str, INTCODE_DELIM);
             while (token != NULL)
             {
-                content[index++] = atoi(token);
-                token            = strtok(NULL, INTCODE_DELIM);
+                memory[index++] = atoi(token);
+                token           = strtok(NULL, INTCODE_DELIM);
             }
             free(str);
 
-            prog = create_intcode(content, num_ints);
+            prog = create_intcode(memory, num_ints);
         }
     }
 
     return prog;
 }
 
-intcode_t* create_intcode(int* const content, const size_t content_size)
+intcode_t* create_intcode(int* const memory, const size_t memory_size)
 {
     intcode_t* prog = NULL;
-    if (content != NULL)
+    if (memory != NULL)
     {
-        prog = (intcode_t*)malloc(sizeof(intcode_t));
+        prog = (intcode_t*) malloc(sizeof(intcode_t));
         if (prog != NULL)
         {
-            prog->content      = content;
-            prog->content_size = content_size;
-            prog->head         = 0;
+            prog->memory      = memory;
+            prog->memory_size = memory_size;
+            prog->head        = 0;
         }
     }
     return prog;
@@ -67,28 +67,46 @@ void destroy_intcode(intcode_t* const prog)
 {
     if (prog != NULL)
     {
-        if (prog->content != NULL)
+        if (prog->memory != NULL)
         {
-            free(prog->content);
+            free(prog->memory);
         }
         free(prog);
     }
 }
 
+void print_intcode(const intcode_t* const prog)
+{
+    if (prog != NULL)
+    {
+        /*Print program*/
+        for (size_t i = 0; i < prog->memory_size; i++)
+        {
+            printf("%d", prog->memory[i]);
+            if (((i + 1) % INSTRUCTION_SIZE) == 0)
+            {
+                printf("\n");
+            }
+            else if ((i + 1) < prog->memory_size)
+            {
+                printf(" ");
+            }
+        }
+        printf("\n");
+    }
+}
 
 int execute(intcode_t* const prog)
 {
-    /*TODO: remove magic numbers*/
-    int ret = 0;
+    int ret = INT_CODE_ERROR;
     if (prog != NULL)
     {
-        ret = 2;
-        while (ret == 2)
+        ret = INT_CODE_CONTINUE;
+        while (ret == INT_CODE_CONTINUE)
         {
             ret = execute_head_block(prog);
-            if (ret == 2)
+            if (ret == INT_CODE_CONTINUE)
             {
-                /*TODO use return value here*/
                 move_head(prog);
             }
         }
@@ -98,79 +116,98 @@ int execute(intcode_t* const prog)
 
 int execute_head_block(intcode_t* const prog)
 {
-    int ret = 0;
-    if ((prog != NULL) && (prog->content != NULL))
+    int ret = INT_CODE_ERROR;
+    if ((prog != NULL) && (prog->memory != NULL))
     {
         size_t head = prog->head;
-        int op_code = prog->content[head];
-        int first, second, result;
-
-        /*TODO: remove magic numbers*/
-        switch (op_code)
+        if (head < prog->memory_size)
         {
-            case 1:
-                /*TODO: add boundary checks*/
-                first  = prog->content[head + 1];
-                second = prog->content[head + 2];
-                result = prog->content[head + 3];
-                add_op(prog, first, second, result);
-                ret = 2;
-                break;
-            case 2:
-                /*TODO: add boundary checks*/
-                first  = prog->content[head + 1];
-                second = prog->content[head + 2];
-                result = prog->content[head + 3];
-                multiply_op(prog, first, second, result);
-                ret = 2;
-                break;
-            case 99:
-                ret = 1;
-                break;
-            default:
-                ret = -1;
-                break;
+            int op_code = prog->memory[head];
+            int first, second, result;
+            switch (op_code)
+            {
+                case OP_CODE_ADD:
+                    if (head < (prog->memory_size - INSTRUCTION_SIZE + 1))
+                    {
+                        first  = prog->memory[head + 1];
+                        second = prog->memory[head + 2];
+                        result = prog->memory[head + 3];
+                        add_op(prog, first, second, result);
+                        ret = INT_CODE_CONTINUE;
+                    }
+                    else
+                    {
+                        ret = INT_CODE_ERROR;
+                    }
+                    break;
+                case OP_CODE_MULT:
+                    if (head < (prog->memory_size - INSTRUCTION_SIZE + 1))
+                    {
+                        first  = prog->memory[head + 1];
+                        second = prog->memory[head + 2];
+                        result = prog->memory[head + 3];
+                        multiply_op(prog, first, second, result);
+                        ret = INT_CODE_CONTINUE;
+                    }
+                    else
+                    {
+                        ret = INT_CODE_ERROR;
+                    }
+                    break;
+                case OP_CODE_HALT:
+                    ret = INT_CODE_HALT;
+                    break;
+                default:
+                    ret = INT_CODE_ERROR;
+                    break;
+            }
         }
     }
     return ret;
 }
 
-void add_op(intcode_t* const prog, const int first, const int second, const int result)
+void add_op(intcode_t* const prog,
+            const int first,
+            const int second,
+            const int result)
 {
-    if ((prog != NULL) && (prog->content != NULL))
+    if ((prog != NULL) && (prog->memory != NULL))
     {
-        /*TODO check boundaries*/
-        prog->content[result] = prog->content[first] + prog->content[second];
+        if ((result < prog->memory_size) && (first < prog->memory_size) &&
+            (second < prog->memory_size))
+        {
+            prog->memory[result] = prog->memory[first] + prog->memory[second];
+        }
     }
 }
 
-void multiply_op(intcode_t* const prog, const int first, const int second, const int result)
+void multiply_op(intcode_t* const prog,
+                 const int first,
+                 const int second,
+                 const int result)
 {
-    if ((prog != NULL) && (prog->content != NULL))
+    if ((prog != NULL) && (prog->memory != NULL))
     {
-        /*TODO check boundaries*/
-        prog->content[result] = prog->content[first] * prog->content[second];
+        if ((result < prog->memory_size) && (first < prog->memory_size) &&
+            (second < prog->memory_size))
+        {
+            prog->memory[result] = prog->memory[first] * prog->memory[second];
+        }
     }
 }
 
-int move_head(intcode_t* const prog)
+void move_head(intcode_t* const prog)
 {
-    int ret = 0;
     if (prog != NULL)
     {
-        /*TODO: remove magic number*/
-        prog->head += 4;
-        if (prog->head < prog->content_size)
-        {
-            ret = 1;
-        }
+        prog->head += INSTRUCTION_SIZE;
     }
-    return ret;
 }
 
 
-static void
-get_size_info(const char* const file_path, size_t* const total_chars, size_t* const amount_integers)
+static void get_size_info(const char* const file_path,
+                          size_t* const total_chars,
+                          size_t* const amount_integers)
 {
     /*Again, inefficient but lazy*/
     if (file_path != NULL)

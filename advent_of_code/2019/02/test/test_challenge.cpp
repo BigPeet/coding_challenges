@@ -7,19 +7,23 @@ extern "C" {
 class challenge_test : public ::testing::Test
 {
   protected:
-    void SetUp() override {}
+    void SetUp() override
+    {
+    }
 
-    void TearDown() override {}
+    void TearDown() override
+    {
+    }
 };
 
 TEST_F(challenge_test, add_test_01)
 {
     size_t nums = 4;
-    int content[nums];
-    content[0] = 1;
-    content[1] = 10;
-    content[2] = 20;
-    content[3] = 40;
+    int memory[nums];
+    memory[0] = 1;
+    memory[1] = 10;
+    memory[2] = 20;
+    memory[3] = 40;
 
     int first    = 1;
     int second   = 2;
@@ -27,23 +31,23 @@ TEST_F(challenge_test, add_test_01)
     int solution = 30;
 
     intcode_t prog;
-    prog.content      = content;
-    prog.head         = 0;
-    prog.content_size = nums;
+    prog.memory      = memory;
+    prog.head        = 0;
+    prog.memory_size = nums;
 
     add_op(&prog, first, second, result);
 
-    ASSERT_EQ(prog.content[result], solution);
+    ASSERT_EQ(prog.memory[result], solution);
 }
 
 TEST_F(challenge_test, multiply_test_01)
 {
     size_t nums = 4;
-    int content[nums];
-    content[0] = 1;
-    content[1] = 10;
-    content[2] = 20;
-    content[3] = 40;
+    int memory[nums];
+    memory[0] = 1;
+    memory[1] = 10;
+    memory[2] = 20;
+    memory[3] = 40;
 
     int first    = 1;
     int second   = 2;
@@ -51,24 +55,24 @@ TEST_F(challenge_test, multiply_test_01)
     int solution = 200;
 
     intcode_t prog;
-    prog.content      = content;
-    prog.head         = 0;
-    prog.content_size = nums;
+    prog.memory      = memory;
+    prog.head        = 0;
+    prog.memory_size = nums;
 
     multiply_op(&prog, first, second, result);
 
-    ASSERT_EQ(prog.content[result], solution);
+    ASSERT_EQ(prog.memory[result], solution);
 }
 
 TEST_F(challenge_test, execute_test_01)
 {
     size_t nums = 5;
-    int content[nums];
-    content[0] = 1;
-    content[1] = 0;
-    content[2] = 0;
-    content[3] = 0;
-    content[4] = 99;
+    int memory[nums];
+    memory[0] = 1;
+    memory[1] = 0;
+    memory[2] = 0;
+    memory[3] = 0;
+    memory[4] = 99;
 
     int solution[nums];
     solution[0] = 2;
@@ -78,28 +82,28 @@ TEST_F(challenge_test, execute_test_01)
     solution[4] = 99;
 
     intcode_t prog;
-    prog.content      = content;
-    prog.head         = 0;
-    prog.content_size = nums;
+    prog.memory      = memory;
+    prog.head        = 0;
+    prog.memory_size = nums;
 
     int ret = execute(&prog);
 
     ASSERT_EQ(ret, 1);
     for (int i = 0; i < nums; ++i)
     {
-        ASSERT_EQ(prog.content[i], solution[i]);
+        ASSERT_EQ(prog.memory[i], solution[i]);
     }
 }
 
 TEST_F(challenge_test, execute_test_02)
 {
     size_t nums = 5;
-    int content[nums];
-    content[0] = 2;
-    content[1] = 3;
-    content[2] = 0;
-    content[3] = 3;
-    content[4] = 99;
+    int memory[nums];
+    memory[0] = 2;
+    memory[1] = 3;
+    memory[2] = 0;
+    memory[3] = 3;
+    memory[4] = 99;
 
     int solution[nums];
     solution[0] = 2;
@@ -109,29 +113,29 @@ TEST_F(challenge_test, execute_test_02)
     solution[4] = 99;
 
     intcode_t prog;
-    prog.content      = content;
-    prog.head         = 0;
-    prog.content_size = nums;
+    prog.memory      = memory;
+    prog.head        = 0;
+    prog.memory_size = nums;
 
     int ret = execute(&prog);
 
     ASSERT_EQ(ret, 1);
     for (int i = 0; i < nums; ++i)
     {
-        ASSERT_EQ(prog.content[i], solution[i]);
+        ASSERT_EQ(prog.memory[i], solution[i]);
     }
 }
 
 TEST_F(challenge_test, execute_test_03)
 {
     size_t nums = 6;
-    int content[nums];
-    content[0] = 2;
-    content[1] = 4;
-    content[2] = 4;
-    content[3] = 5;
-    content[4] = 99;
-    content[5] = 0;
+    int memory[nums];
+    memory[0] = 2;
+    memory[1] = 4;
+    memory[2] = 4;
+    memory[3] = 5;
+    memory[4] = 99;
+    memory[5] = 0;
 
     int solution[nums];
     solution[0] = 2;
@@ -142,32 +146,32 @@ TEST_F(challenge_test, execute_test_03)
     solution[5] = 9801;
 
     intcode_t prog;
-    prog.content      = content;
-    prog.head         = 0;
-    prog.content_size = nums;
+    prog.memory      = memory;
+    prog.head        = 0;
+    prog.memory_size = nums;
 
     int ret = execute(&prog);
 
     ASSERT_EQ(ret, 1);
     for (int i = 0; i < nums; ++i)
     {
-        ASSERT_EQ(prog.content[i], solution[i]);
+        ASSERT_EQ(prog.memory[i], solution[i]);
     }
 }
 
 TEST_F(challenge_test, execute_test_04)
 {
     size_t nums = 9;
-    int content[nums];
-    content[0] = 1;
-    content[1] = 1;
-    content[2] = 1;
-    content[3] = 4;
-    content[4] = 99;
-    content[5] = 5;
-    content[6] = 6;
-    content[7] = 0;
-    content[8] = 99;
+    int memory[nums];
+    memory[0] = 1;
+    memory[1] = 1;
+    memory[2] = 1;
+    memory[3] = 4;
+    memory[4] = 99;
+    memory[5] = 5;
+    memory[6] = 6;
+    memory[7] = 0;
+    memory[8] = 99;
 
     int solution[nums];
     solution[0] = 30;
@@ -181,15 +185,15 @@ TEST_F(challenge_test, execute_test_04)
     solution[8] = 99;
 
     intcode_t prog;
-    prog.content      = content;
-    prog.head         = 0;
-    prog.content_size = nums;
+    prog.memory      = memory;
+    prog.head        = 0;
+    prog.memory_size = nums;
 
     int ret = execute(&prog);
 
     ASSERT_EQ(ret, 1);
     for (int i = 0; i < nums; ++i)
     {
-        ASSERT_EQ(prog.content[i], solution[i]);
+        ASSERT_EQ(prog.memory[i], solution[i]);
     }
 }

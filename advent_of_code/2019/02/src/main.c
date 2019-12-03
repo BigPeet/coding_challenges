@@ -15,32 +15,24 @@ int main(int argc, char* argv[])
     intcode_t* prog = read_intcode(argv[1]);
     if (prog != NULL)
     {
-        /*Print program*/
-        /*for (int i = 0; i < prog->content_size - 4; i += 4)*/
-        /*{*/
-            /*printf("%d %d %d %d\n",*/
-                   /*prog->content[i],*/
-                   /*prog->content[i + 1],*/
-                   /*prog->content[i + 2],*/
-                   /*prog->content[i + 3]);*/
-        /*}*/
         int ret = execute(prog);
-        switch(ret)
+        switch (ret)
         {
-          case 0:
-          case -1:
-            printf("Something went wrong!\n");
-            break;
-          case 1:
-            printf("We reached 99.\n");
-            printf("Position 0 is now: %d\n", prog->content[0]);
-            break;
-          case 2:
-            printf("We ran out of stuff??\n");
-            break;
-          default:
-            printf("Default: Something went wrong!\n");
-            break;
+            case 0:
+            case -1:
+                printf("Something went wrong!\n");
+                break;
+            case 1:
+                printf("We reached 99.\n");
+                print_intcode(prog);
+                printf("Position 0 is now: %d\n", prog->memory[0]);
+                break;
+            case 2:
+                printf("We ran out of stuff??\n");
+                break;
+            default:
+                printf("Default: Something went wrong!\n");
+                break;
         }
         destroy_intcode(prog);
     }
