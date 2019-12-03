@@ -15,6 +15,13 @@ int main(int argc, char* argv[])
     intcode_t* prog = read_intcode(argv[1]);
     if (prog != NULL)
     {
+        /*Apply fix for Part 1 of the Task*/
+        if ((prog->memory != NULL) && (prog->memory_size > 3))
+        {
+            prog->memory[1] = 12;
+            prog->memory[2] = 2;
+        }
+
         int ret = execute(prog);
         switch (ret)
         {
@@ -25,7 +32,6 @@ int main(int argc, char* argv[])
             case 1:
                 printf("We reached 99.\n");
                 print_intcode(prog);
-                printf("Position 0 is now: %d\n", prog->memory[0]);
                 break;
             case 2:
                 printf("We ran out of stuff??\n");
