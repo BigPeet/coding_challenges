@@ -51,6 +51,7 @@ What is the Manhattan distance from the central port to the closest intersection
 
 The input is stored in input.txt
 
+*Part Two was provided after entering the solution to the first part.*
 
 --- Part Two ---
 
