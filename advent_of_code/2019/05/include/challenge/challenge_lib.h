@@ -38,7 +38,7 @@ intcode_t* copy_intcode(const intcode_t* const prog);
 int output_intcode(const intcode_t* const prog);
 
 int execute(intcode_t* const prog);
-int execute_head_block(intcode_t* const prog);
+int execute_head_block(intcode_t* const prog, int* const op_code);
 
 void add_op(intcode_t* const prog, const int* const parameters);
 void multiply_op(intcode_t* const prog, const int* const parameters);

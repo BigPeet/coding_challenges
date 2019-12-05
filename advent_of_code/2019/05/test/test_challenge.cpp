@@ -193,3 +193,34 @@ TEST_F(challenge_test, execute_test_04)
         ASSERT_EQ(prog.memory[i], solution[i]);
     }
 }
+
+TEST_F(challenge_test, execute_test_05)
+{
+    size_t nums = 5;
+    int memory[nums];
+    memory[0] = 1001;
+    memory[1] = 0;
+    memory[2] = 1;
+    memory[3] = 0;
+    memory[4] = 99;
+
+    int solution[nums];
+    solution[0] = 1002;
+    solution[1] = 0;
+    solution[2] = 1;
+    solution[3] = 0;
+    solution[4] = 99;
+
+    intcode_t prog;
+    prog.memory      = memory;
+    prog.head        = 0;
+    prog.memory_size = nums;
+
+    int ret = execute(&prog);
+
+    ASSERT_EQ(ret, 1);
+    for (int i = 0; i < nums; ++i)
+    {
+        ASSERT_EQ(prog.memory[i], solution[i]);
+    }
+}

@@ -11,7 +11,7 @@ static void get_size_info(const char* const file_path,
                           size_t* const amount_integers);
 
 static size_t get_instruction_size(const int op_code);
-static void move_head(intcode_t* const prog);
+static void move_head(intcode_t* const prog, const int op_code);
 static int get_opcode(const int number);
 static int is_valid_opcode(const int op_code);
 
@@ -162,17 +162,18 @@ int execute(intcode_t* const prog)
         ret = INT_CODE_CONTINUE;
         while (ret == INT_CODE_CONTINUE)
         {
-            ret = execute_head_block(prog);
+            int op_code;
+            ret = execute_head_block(prog, &op_code);
             if (ret == INT_CODE_CONTINUE)
             {
-                move_head(prog);
+                move_head(prog, op_code);
             }
         }
     }
     return ret;
 }
 
-int execute_head_block(intcode_t* const prog)
+int execute_head_block(intcode_t* const prog, int* const op_code)
 {
     int ret = INT_CODE_ERROR;
     if ((prog != NULL) && (prog->memory != NULL))
@@ -180,10 +181,9 @@ int execute_head_block(intcode_t* const prog)
         size_t head = prog->head;
         if (head < prog->memory_size)
         {
-            int op_code = get_opcode(prog->memory[head]);
-            int first, second, result;
-            size_t inst_size = get_instruction_size(op_code);
-            switch (op_code)
+            *op_code         = get_opcode(prog->memory[head]);
+            size_t inst_size = get_instruction_size(*op_code);
+            switch (*op_code)
             {
                 case OP_CODE_ADD:
                     if (head < (prog->memory_size - inst_size + 1))
@@ -283,11 +283,11 @@ void multiply_op(intcode_t* const prog, const int* const parameters)
     }
 }
 
-static void move_head(intcode_t* const prog)
+static void move_head(intcode_t* const prog, const int op_code)
 {
     if (prog != NULL)
     {
-        prog->head += get_instruction_size(prog->memory[prog->head]);
+        prog->head += get_instruction_size(op_code);
     }
 }
 
