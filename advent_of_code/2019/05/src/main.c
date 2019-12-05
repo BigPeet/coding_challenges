@@ -15,6 +15,8 @@ int main(int argc, char* argv[])
     intcode_t* prog = read_intcode(argv[1]);
     if (prog != NULL)
     {
+        print_intcode(prog);
+
         /*Create copy for PART 1 of the Task*/
         intcode_t* copy = copy_intcode(prog);
         if (copy != NULL)

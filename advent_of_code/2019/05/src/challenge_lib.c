@@ -84,20 +84,23 @@ void print_intcode(const intcode_t* const prog)
     {
         /*Print program*/
         int op_code = prog->memory[0];
+        size_t inst_index = 0;
         size_t inst_size = get_instruction_size(op_code);
         for (size_t i = 0; i < prog->memory_size; i++)
         {
             printf("%d", prog->memory[i]);
-            if (((i + 1) % inst_size) == 0)
+            if (((inst_index + 1) % inst_size) == 0)
             {
                 printf("\n");
                 if ((i + 1) < prog->memory_size)
                 {
+                    inst_index = 0;
                     inst_size = get_instruction_size(prog->memory[i + 1]);
                 }
             }
             else if ((i + 1) < prog->memory_size)
             {
+                inst_index++;
                 printf(" ");
             }
         }
@@ -274,7 +277,7 @@ static void get_size_info(const char* const file_path,
 
 static size_t get_instruction_size(const int op_code)
 {
-    size_t inst_size = 0;
+    size_t inst_size = 1;
     if ((op_code == OP_CODE_ADD) || (op_code == OP_CODE_MULT))
     {
         inst_size = 4;
