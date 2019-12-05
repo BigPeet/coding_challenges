@@ -12,11 +12,15 @@ typedef enum
 
 typedef enum
 {
-    OP_CODE_ADD    = 1,
-    OP_CODE_MULT   = 2,
-    OP_CODE_INPUT  = 3,
-    OP_CODE_OUTPUT = 4,
-    OP_CODE_HALT   = 99,
+    OP_CODE_ADD          = 1,
+    OP_CODE_MULT         = 2,
+    OP_CODE_INPUT        = 3,
+    OP_CODE_OUTPUT       = 4,
+    OP_CODE_JMP_IF_TRUE  = 5,
+    OP_CODE_JMP_IF_FALSE = 6,
+    OP_CODE_IS_LESS      = 7,
+    OP_CODE_IS_EQUALS    = 8,
+    OP_CODE_HALT         = 99,
 } intcode_op_codes_t;
 
 typedef enum
@@ -42,11 +46,15 @@ int output_intcode(const intcode_t* const prog);
 int execute(intcode_t* const prog);
 int execute_head_block(intcode_t* const prog, int* const op_code);
 
-void add_op(intcode_t* const prog, const int* const parameters);
-void multiply_op(intcode_t* const prog, const int* const parameters);
-void input_op(intcode_t* const prog, const int* const parameters);
-void output_op(intcode_t* const prog, const int* const parameters);
-void no_op(intcode_t* const prog, const int* const parameters);
+int add_op(intcode_t* const prog, const int* const parameters);
+int multiply_op(intcode_t* const prog, const int* const parameters);
+int input_op(intcode_t* const prog, const int* const parameters);
+int output_op(intcode_t* const prog, const int* const parameters);
+int jmp_if_true_op(intcode_t* const prog, const int* const parameters);
+int jmp_if_false_op(intcode_t* const prog, const int* const parameters);
+int is_less_op(intcode_t* const prog, const int* const parameters);
+int is_equals_op(intcode_t* const prog, const int* const parameters);
+int no_op(intcode_t* const prog, const int* const parameters);
 
 
 #endif /* ifndef INCLUDE_CHALLENGE_LIB_H */

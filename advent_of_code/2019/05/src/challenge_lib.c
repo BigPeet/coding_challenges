@@ -6,14 +6,13 @@
 #define INTCODE_DELIM ","
 #define INTCODE_NO_STORE -1
 
-typedef void (*intcode_op_f)(intcode_t* const, const int* const);
+typedef int (*intcode_op_f)(intcode_t* const, const int* const);
 
 static void get_size_info(const char* const file_path,
                           size_t* const total_chars,
                           size_t* const amount_integers);
 
 static size_t get_instruction_size(const int op_code);
-static void move_head(intcode_t* const prog, const int op_code);
 static int get_opcode(const int number);
 static int is_valid_opcode(const int op_code);
 
@@ -168,10 +167,6 @@ int execute(intcode_t* const prog)
         {
             int op_code;
             ret = execute_head_block(prog, &op_code);
-            if (ret == INT_CODE_CONTINUE)
-            {
-                move_head(prog, op_code);
-            }
         }
     }
     return ret;
@@ -198,7 +193,8 @@ int execute_head_block(intcode_t* const prog, int* const op_code)
                     int parameters[inst_size - 1];
                     int parameter_modes[inst_size - 1];
                     int store_param = inst_size - 2;
-                    if (*op_code == OP_CODE_OUTPUT)
+                    if ((*op_code == OP_CODE_OUTPUT) || (*op_code == OP_CODE_JMP_IF_TRUE) ||
+                        (*op_code == OP_CODE_JMP_IF_FALSE))
                     {
                         store_param = INTCODE_NO_STORE;
                     }
@@ -212,22 +208,19 @@ int execute_head_block(intcode_t* const prog, int* const op_code)
                                              parameter_modes,
                                              parameters))
                     {
-                        get_op_func (*op_code)(prog, parameters);
-                        ret = INT_CODE_CONTINUE;
+                        ret = get_op_func(*op_code)(prog, parameters);
                     }
                 }
-            }
-            else
-            {
-                ret = INT_CODE_ERROR;
             }
         }
     }
     return ret;
 }
 
-void add_op(intcode_t* const prog, const int* const parameters)
+int add_op(intcode_t* const prog, const int* const parameters)
 {
+    int ret = INT_CODE_ERROR;
+    /*TODO add boundary checks*/
     /*Assuming parameters has the correct size*/
     if ((prog != NULL) && (prog->memory != NULL) && (parameters != NULL))
     {
@@ -237,12 +230,17 @@ void add_op(intcode_t* const prog, const int* const parameters)
         if (result < prog->memory_size)
         {
             prog->memory[result] = first + second;
+            prog->head += get_instruction_size(OP_CODE_ADD);
+            ret = INT_CODE_CONTINUE;
         }
     }
+    return ret;
 }
 
-void multiply_op(intcode_t* const prog, const int* const parameters)
+int multiply_op(intcode_t* const prog, const int* const parameters)
 {
+    int ret = INT_CODE_ERROR;
+    /*TODO add boundary checks*/
     /*Assuming parameters has the correct size*/
     if ((prog != NULL) && (prog->memory != NULL) && (parameters != NULL))
     {
@@ -252,12 +250,16 @@ void multiply_op(intcode_t* const prog, const int* const parameters)
         if (result < prog->memory_size)
         {
             prog->memory[result] = first * second;
+            prog->head += get_instruction_size(OP_CODE_MULT);
+            ret = INT_CODE_CONTINUE;
         }
     }
+    return ret;
 }
 
-void input_op(intcode_t* const prog, const int* const parameters)
+int input_op(intcode_t* const prog, const int* const parameters)
 {
+    int ret = INT_CODE_ERROR;
     if ((prog != NULL) && (parameters != NULL))
     {
         int val;
@@ -266,31 +268,108 @@ void input_op(intcode_t* const prog, const int* const parameters)
         {
             /*TODO add boundary check*/
             prog->memory[parameters[0]] = val;
+            prog->head += get_instruction_size(OP_CODE_INPUT);
+            ret = INT_CODE_CONTINUE;
         }
     }
+    return ret;
 }
 
-void output_op(intcode_t* const prog, const int* const parameters)
+int output_op(intcode_t* const prog, const int* const parameters)
 {
+    /*TODO add boundary checks*/
+    int ret = INT_CODE_ERROR;
     if (parameters != NULL)
     {
         printf("Output: %d\n", parameters[0]);
+        prog->head += get_instruction_size(OP_CODE_OUTPUT);
+        ret = INT_CODE_CONTINUE;
     }
+    return ret;
 }
 
-void no_op(intcode_t* const prog, const int* const parameters)
+int jmp_if_true_op(intcode_t* const prog, const int* const parameters)
+{
+    /*TODO add boundary checks*/
+    int ret = INT_CODE_ERROR;
+    if (parameters != NULL)
+    {
+        if (parameters[0] != 0)
+        {
+            prog->head = parameters[1];
+        }
+        else
+        {
+            prog->head += get_instruction_size(OP_CODE_JMP_IF_TRUE);
+        }
+        ret = INT_CODE_CONTINUE;
+    }
+    return ret;
+}
+
+int jmp_if_false_op(intcode_t* const prog, const int* const parameters)
+{
+    /*TODO add boundary checks*/
+    int ret = INT_CODE_ERROR;
+    if (parameters != NULL)
+    {
+        if (parameters[0] == 0)
+        {
+            prog->head = parameters[1];
+        }
+        else
+        {
+            prog->head += get_instruction_size(OP_CODE_JMP_IF_FALSE);
+        }
+        ret = INT_CODE_CONTINUE;
+    }
+    return ret;
+}
+
+int is_less_op(intcode_t* const prog, const int* const parameters)
+{
+    /*TODO add boundary checks*/
+    int ret = INT_CODE_ERROR;
+    if (parameters != NULL)
+    {
+        if (parameters[0] < parameters[1])
+        {
+            prog->memory[parameters[2]] = 1;
+        }
+        else
+        {
+            prog->memory[parameters[2]] = 0;
+        }
+        prog->head += get_instruction_size(OP_CODE_IS_LESS);
+        ret = INT_CODE_CONTINUE;
+    }
+    return ret;
+}
+int is_equals_op(intcode_t* const prog, const int* const parameters)
+{
+    /*TODO add boundary checks*/
+    int ret = INT_CODE_ERROR;
+    if (parameters != NULL)
+    {
+        if (parameters[0] == parameters[1])
+        {
+            prog->memory[parameters[2]] = 1;
+        }
+        else
+        {
+            prog->memory[parameters[2]] = 0;
+        }
+        prog->head += get_instruction_size(OP_CODE_IS_EQUALS);
+        ret = INT_CODE_CONTINUE;
+    }
+    return ret;
+}
+
+int no_op(intcode_t* const prog, const int* const parameters)
 {
     /*NO OP*/
+    return INT_CODE_ERROR;
 }
-
-static void move_head(intcode_t* const prog, const int op_code)
-{
-    if (prog != NULL)
-    {
-        prog->head += get_instruction_size(op_code);
-    }
-}
-
 
 static void get_size_info(const char* const file_path,
                           size_t* const total_chars,
@@ -321,9 +400,16 @@ static void get_size_info(const char* const file_path,
 static size_t get_instruction_size(const int op_code)
 {
     size_t inst_size = 1;
-    if ((op_code == OP_CODE_ADD) || (op_code == OP_CODE_MULT))
+    if ((op_code == OP_CODE_ADD) || (op_code == OP_CODE_MULT) ||
+        (op_code == OP_CODE_IS_LESS) ||
+        (op_code == OP_CODE_IS_EQUALS))
     {
         inst_size = 4;
+    }
+    else if ((op_code == OP_CODE_JMP_IF_TRUE) ||
+             (op_code == OP_CODE_JMP_IF_FALSE))
+    {
+        inst_size = 3;
     }
     else if ((op_code == OP_CODE_INPUT) || (op_code == OP_CODE_OUTPUT))
     {
@@ -352,9 +438,7 @@ static int get_opcode(const int number)
 
 static int is_valid_opcode(const int op_code)
 {
-    return ((op_code == OP_CODE_ADD) || (op_code == OP_CODE_MULT) ||
-            (op_code == OP_CODE_INPUT) || (op_code == OP_CODE_OUTPUT) ||
-            (op_code == OP_CODE_HALT));
+    return (op_code >= 1 && op_code <= 8) || (op_code == OP_CODE_HALT);
 }
 
 static void get_parameter_modes(const int number,
@@ -370,11 +454,9 @@ static void get_parameter_modes(const int number,
             int mode           = modes % 10;
             parameter_modes[i] = mode;
             modes /= 10;
-            /*TODO: if it is STORE parameter, then it needs to be the immediate
-             * mode
-             * Since the value there is the address to store*/
         }
-        if ((store_param != INTCODE_NO_STORE) && (store_param < num_parameters))
+        if ((store_param != INTCODE_NO_STORE) &&
+            (store_param < num_parameters))
         {
             /*Storage parameters always use the address, i.e. immediate mode*/
             parameter_modes[store_param] = PARAM_MODE_IMMEDIATE;
@@ -429,6 +511,14 @@ static intcode_op_f get_op_func(const int op_code)
             return input_op;
         case OP_CODE_OUTPUT:
             return output_op;
+        case OP_CODE_IS_LESS:
+            return is_less_op;
+        case OP_CODE_IS_EQUALS:
+            return is_equals_op;
+        case OP_CODE_JMP_IF_TRUE:
+            return jmp_if_true_op;
+        case OP_CODE_JMP_IF_FALSE:
+            return jmp_if_false_op;
         default:
             return no_op;
     }
