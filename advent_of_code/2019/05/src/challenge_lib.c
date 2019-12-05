@@ -9,6 +9,9 @@ static void get_size_info(const char* const file_path,
                           size_t* const total_chars,
                           size_t* const amount_integers);
 
+static size_t get_instruction_size(const int op_code);
+static void move_head(intcode_t* const prog);
+
 intcode_t* read_intcode(const char* const file_path)
 {
     intcode_t* prog = NULL;
@@ -80,12 +83,18 @@ void print_intcode(const intcode_t* const prog)
     if (prog != NULL)
     {
         /*Print program*/
+        int op_code = prog->memory[0];
+        size_t inst_size = get_instruction_size(op_code);
         for (size_t i = 0; i < prog->memory_size; i++)
         {
             printf("%d", prog->memory[i]);
-            if (((i + 1) % INSTRUCTION_SIZE) == 0)
+            if (((i + 1) % inst_size) == 0)
             {
                 printf("\n");
+                if ((i + 1) < prog->memory_size)
+                {
+                    inst_size = get_instruction_size(prog->memory[i + 1]);
+                }
             }
             else if ((i + 1) < prog->memory_size)
             {
@@ -155,10 +164,11 @@ int execute_head_block(intcode_t* const prog)
         {
             int op_code = prog->memory[head];
             int first, second, result;
+            size_t inst_size = get_instruction_size(op_code);
             switch (op_code)
             {
                 case OP_CODE_ADD:
-                    if (head < (prog->memory_size - INSTRUCTION_SIZE + 1))
+                    if (head < (prog->memory_size - inst_size + 1))
                     {
                         first  = prog->memory[head + 1];
                         second = prog->memory[head + 2];
@@ -172,7 +182,7 @@ int execute_head_block(intcode_t* const prog)
                     }
                     break;
                 case OP_CODE_MULT:
-                    if (head < (prog->memory_size - INSTRUCTION_SIZE + 1))
+                    if (head < (prog->memory_size - inst_size + 1))
                     {
                         first  = prog->memory[head + 1];
                         second = prog->memory[head + 2];
@@ -227,11 +237,11 @@ void multiply_op(intcode_t* const prog,
     }
 }
 
-void move_head(intcode_t* const prog)
+static void move_head(intcode_t* const prog)
 {
     if (prog != NULL)
     {
-        prog->head += INSTRUCTION_SIZE;
+        prog->head += get_instruction_size(prog->memory[prog->head]);
     }
 }
 
@@ -260,4 +270,18 @@ static void get_size_info(const char* const file_path,
             fclose(fp);
         }
     }
+}
+
+static size_t get_instruction_size(const int op_code)
+{
+    size_t inst_size = 0;
+    if ((op_code == OP_CODE_ADD) || (op_code == OP_CODE_MULT))
+    {
+        inst_size = 4;
+    }
+    else if (op_code == OP_CODE_HALT)
+    {
+        inst_size = 1;
+    }
+    return inst_size;
 }

@@ -3,9 +3,6 @@
 
 #include "stdlib.h"
 
-#define INSTRUCTION_SIZE (size_t) 4
-
-
 typedef enum
 {
     INT_CODE_ERROR    = 0,
@@ -36,7 +33,6 @@ int output_intcode(const intcode_t* const prog);
 
 int execute(intcode_t* const prog);
 int execute_head_block(intcode_t* const prog);
-void move_head(intcode_t* const prog);
 
 void add_op(intcode_t* const prog,
             const int first,
