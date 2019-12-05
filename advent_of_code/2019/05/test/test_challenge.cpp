@@ -25,9 +25,7 @@ TEST_F(challenge_test, add_test_01)
     memory[2] = 20;
     memory[3] = 40;
 
-    int first    = 1;
-    int second   = 2;
-    int result   = 3;
+    int parameters[3] = {10, 20, 3};
     int solution = 30;
 
     intcode_t prog;
@@ -35,9 +33,9 @@ TEST_F(challenge_test, add_test_01)
     prog.head        = 0;
     prog.memory_size = nums;
 
-    add_op(&prog, first, second, result);
+    add_op(&prog, parameters);
 
-    ASSERT_EQ(prog.memory[result], solution);
+    ASSERT_EQ(prog.memory[parameters[2]], solution);
 }
 
 TEST_F(challenge_test, multiply_test_01)
@@ -49,9 +47,7 @@ TEST_F(challenge_test, multiply_test_01)
     memory[2] = 20;
     memory[3] = 40;
 
-    int first    = 1;
-    int second   = 2;
-    int result   = 3;
+    int parameters[3] = {10, 20, 3};
     int solution = 200;
 
     intcode_t prog;
@@ -59,9 +55,9 @@ TEST_F(challenge_test, multiply_test_01)
     prog.head        = 0;
     prog.memory_size = nums;
 
-    multiply_op(&prog, first, second, result);
+    multiply_op(&prog, parameters);
 
-    ASSERT_EQ(prog.memory[result], solution);
+    ASSERT_EQ(prog.memory[parameters[2]], solution);
 }
 
 TEST_F(challenge_test, execute_test_01)

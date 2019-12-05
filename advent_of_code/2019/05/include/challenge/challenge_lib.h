@@ -17,6 +17,12 @@ typedef enum
     OP_CODE_HALT = 99,
 } intcode_op_codes_t;
 
+typedef enum
+{
+    PARAM_MODE_POSITION  = 0,
+    PARAM_MODE_IMMEDIATE = 1,
+} intcode_param_modes_t;
+
 typedef struct
 {
     int* memory;
@@ -34,14 +40,8 @@ int output_intcode(const intcode_t* const prog);
 int execute(intcode_t* const prog);
 int execute_head_block(intcode_t* const prog);
 
-void add_op(intcode_t* const prog,
-            const int first,
-            const int second,
-            const int result);
-void multiply_op(intcode_t* const prog,
-                 const int first,
-                 const int second,
-                 const int result);
+void add_op(intcode_t* const prog, const int* const parameters);
+void multiply_op(intcode_t* const prog, const int* const parameters);
 
 
 #endif /* ifndef INCLUDE_CHALLENGE_LIB_H */

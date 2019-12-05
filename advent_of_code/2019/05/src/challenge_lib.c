@@ -14,6 +14,16 @@ static void move_head(intcode_t* const prog);
 static int get_opcode(const int number);
 static int is_valid_opcode(const int op_code);
 
+static void get_parameter_modes(const int number,
+                                const size_t num_parameters,
+                                int* const parameter_modes);
+
+static int get_parameter_values(const int* const memory,
+                                const size_t head,
+                                const size_t num_parameters,
+                                const int* const parameter_modes,
+                                int* const parameters);
+
 intcode_t* read_intcode(const char* const file_path)
 {
     intcode_t* prog = NULL;
@@ -169,6 +179,7 @@ int execute_head_block(intcode_t* const prog)
         if (head < prog->memory_size)
         {
             int op_code = get_opcode(prog->memory[head]);
+            printf("Op Code: %d\n", op_code);
             int first, second, result;
             size_t inst_size = get_instruction_size(op_code);
             switch (op_code)
@@ -176,11 +187,25 @@ int execute_head_block(intcode_t* const prog)
                 case OP_CODE_ADD:
                     if (head < (prog->memory_size - inst_size + 1))
                     {
-                        first  = prog->memory[head + 1];
-                        second = prog->memory[head + 2];
-                        result = prog->memory[head + 3];
-                        add_op(prog, first, second, result);
-                        ret = INT_CODE_CONTINUE;
+                        int parameters[inst_size - 1];
+                        int parameter_modes[inst_size - 1];
+                        get_parameter_modes(
+                            prog->memory[head], inst_size - 1, parameter_modes);
+                        printf("modes: %d %d %d\n", parameter_modes[0], parameter_modes[1], parameter_modes[2]);
+                        if (get_parameter_values(prog->memory,
+                                                 head,
+                                                 inst_size - 1,
+                                                 parameter_modes,
+                                                 parameters))
+                        {
+                          printf("values: %d %d %d\n", parameters[0], parameters[1], parameters[2]);
+                            add_op(prog, parameters);
+                            ret = INT_CODE_CONTINUE;
+                        }
+                        else
+                        {
+                            ret = INT_CODE_ERROR;
+                        }
                     }
                     else
                     {
@@ -190,11 +215,23 @@ int execute_head_block(intcode_t* const prog)
                 case OP_CODE_MULT:
                     if (head < (prog->memory_size - inst_size + 1))
                     {
-                        first  = prog->memory[head + 1];
-                        second = prog->memory[head + 2];
-                        result = prog->memory[head + 3];
-                        multiply_op(prog, first, second, result);
-                        ret = INT_CODE_CONTINUE;
+                        int parameters[inst_size - 1];
+                        int parameter_modes[inst_size - 1];
+                        get_parameter_modes(
+                            prog->memory[head], inst_size - 1, parameter_modes);
+                        if (get_parameter_values(prog->memory,
+                                                 head,
+                                                 inst_size - 1,
+                                                 parameter_modes,
+                                                 parameters))
+                        {
+                            multiply_op(prog, parameters);
+                            ret = INT_CODE_CONTINUE;
+                        }
+                        else
+                        {
+                            ret = INT_CODE_ERROR;
+                        }
                     }
                     else
                     {
@@ -213,32 +250,33 @@ int execute_head_block(intcode_t* const prog)
     return ret;
 }
 
-void add_op(intcode_t* const prog,
-            const int first,
-            const int second,
-            const int result)
+void add_op(intcode_t* const prog, const int* const parameters)
 {
-    if ((prog != NULL) && (prog->memory != NULL))
+    /*Assuming parameters has the correct size*/
+    if ((prog != NULL) && (prog->memory != NULL) && (parameters != NULL))
     {
-        if ((result < prog->memory_size) && (first < prog->memory_size) &&
-            (second < prog->memory_size))
+        int first  = parameters[0];
+        int second = parameters[1];
+        int result = parameters[2];
+        if (result < prog->memory_size)
         {
-            prog->memory[result] = prog->memory[first] + prog->memory[second];
+            printf("Store %d + %d at address %d\n", first, second, result);
+            prog->memory[result] = first + second;
         }
     }
 }
 
-void multiply_op(intcode_t* const prog,
-                 const int first,
-                 const int second,
-                 const int result)
+void multiply_op(intcode_t* const prog, const int* const parameters)
 {
-    if ((prog != NULL) && (prog->memory != NULL))
+    /*Assuming parameters has the correct size*/
+    if ((prog != NULL) && (prog->memory != NULL) && (parameters != NULL))
     {
-        if ((result < prog->memory_size) && (first < prog->memory_size) &&
-            (second < prog->memory_size))
+        int first  = parameters[0];
+        int second = parameters[1];
+        int result = parameters[2];
+        if (result < prog->memory_size)
         {
-            prog->memory[result] = prog->memory[first] * prog->memory[second];
+            prog->memory[result] = first * second;
         }
     }
 }
@@ -310,4 +348,57 @@ static int is_valid_opcode(const int op_code)
 {
     return ((op_code == OP_CODE_ADD) || (op_code == OP_CODE_MULT) ||
             (op_code == OP_CODE_HALT));
+}
+
+static void get_parameter_modes(const int number,
+                                const size_t num_parameters,
+                                int* const parameter_modes)
+{
+    if (NULL != parameter_modes)
+    {
+        int modes = number / 100;
+        for (size_t i = 0; i < num_parameters; i++)
+        {
+            int mode           = modes % 10;
+            parameter_modes[i] = mode;
+            modes /= 10;
+            /*TODO: if it is STORE parameter, then it needs to be the immediate mode
+             * Since the value there is the address to store*/
+        }
+    }
+}
+
+static int get_parameter_values(const int* const memory,
+                                const size_t head,
+                                const size_t num_parameters,
+                                const int* const parameter_modes,
+                                int* const parameters)
+{
+    int no_error = 0;
+    /*Assuming range checks are made by caller*/
+    if ((memory != NULL) && (parameter_modes != NULL) && (parameters != NULL))
+    {
+        no_error = 1;
+        for (size_t i = 0; i < num_parameters; i++)
+        {
+            int memory_val = memory[head + i + 1];
+            int param_val  = 0;
+            if (parameter_modes[i] == PARAM_MODE_POSITION)
+            {
+                /*TODO check boundaries*/
+                param_val = memory[memory_val];
+            }
+            else if (parameter_modes[i] == PARAM_MODE_IMMEDIATE)
+            {
+                param_val = memory_val;
+            }
+            else
+            {
+                no_error = 0;
+                break;
+            }
+            parameters[i] = param_val;
+        }
+    }
+    return no_error;
 }
