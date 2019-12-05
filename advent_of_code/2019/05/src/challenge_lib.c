@@ -6,6 +6,8 @@
 #define INTCODE_DELIM ","
 #define INTCODE_NO_STORE -1
 
+typedef void (*intcode_op_f)(intcode_t* const, const int* const);
+
 static void get_size_info(const char* const file_path,
                           size_t* const total_chars,
                           size_t* const amount_integers);
@@ -15,6 +17,7 @@ static void move_head(intcode_t* const prog, const int op_code);
 static int get_opcode(const int number);
 static int is_valid_opcode(const int op_code);
 
+static intcode_op_f get_op_func(const int op_code);
 static void get_parameter_modes(const int number,
                                 const size_t num_parameters,
                                 const int store_param,
@@ -25,6 +28,7 @@ static int get_parameter_values(const int* const memory,
                                 const size_t num_parameters,
                                 const int* const parameter_modes,
                                 int* const parameters);
+
 
 intcode_t* read_intcode(const char* const file_path)
 {
@@ -183,70 +187,39 @@ int execute_head_block(intcode_t* const prog, int* const op_code)
         {
             *op_code         = get_opcode(prog->memory[head]);
             size_t inst_size = get_instruction_size(*op_code);
-            switch (*op_code)
+            if (*op_code == OP_CODE_HALT)
             {
-                case OP_CODE_ADD:
-                    if (head < (prog->memory_size - inst_size + 1))
+                ret = INT_CODE_HALT;
+            }
+            else if (is_valid_opcode(*op_code))
+            {
+                if (head < (prog->memory_size - inst_size + 1))
+                {
+                    int parameters[inst_size - 1];
+                    int parameter_modes[inst_size - 1];
+                    int store_param = inst_size - 2;
+                    if (*op_code == OP_CODE_OUTPUT)
                     {
-                        int parameters[inst_size - 1];
-                        int parameter_modes[inst_size - 1];
-                        get_parameter_modes(prog->memory[head],
-                                            inst_size - 1,
-                                            inst_size - 2,
-                                            parameter_modes);
-                        if (get_parameter_values(prog->memory,
-                                                 head,
-                                                 inst_size - 1,
-                                                 parameter_modes,
-                                                 parameters))
-                        {
-                            add_op(prog, parameters);
-                            ret = INT_CODE_CONTINUE;
-                        }
-                        else
-                        {
-                            ret = INT_CODE_ERROR;
-                        }
+                        store_param = INTCODE_NO_STORE;
                     }
-                    else
+                    get_parameter_modes(prog->memory[head],
+                                        inst_size - 1,
+                                        store_param,
+                                        parameter_modes);
+                    if (get_parameter_values(prog->memory,
+                                             head,
+                                             inst_size - 1,
+                                             parameter_modes,
+                                             parameters))
                     {
-                        ret = INT_CODE_ERROR;
+                        get_op_func(*op_code)(prog, parameters);
+                        ret = INT_CODE_CONTINUE;
                     }
-                    break;
-                case OP_CODE_MULT:
-                    if (head < (prog->memory_size - inst_size + 1))
-                    {
-                        int parameters[inst_size - 1];
-                        int parameter_modes[inst_size - 1];
-                        get_parameter_modes(prog->memory[head],
-                                            inst_size - 1,
-                                            inst_size - 2,
-                                            parameter_modes);
-                        if (get_parameter_values(prog->memory,
-                                                 head,
-                                                 inst_size - 1,
-                                                 parameter_modes,
-                                                 parameters))
-                        {
-                            multiply_op(prog, parameters);
-                            ret = INT_CODE_CONTINUE;
-                        }
-                        else
-                        {
-                            ret = INT_CODE_ERROR;
-                        }
-                    }
-                    else
-                    {
-                        ret = INT_CODE_ERROR;
-                    }
-                    break;
-                case OP_CODE_HALT:
-                    ret = INT_CODE_HALT;
-                    break;
-                default:
-                    ret = INT_CODE_ERROR;
-                    break;
+                }
+            }
+            else
+            {
+                ret = INT_CODE_ERROR;
             }
         }
     }
@@ -281,6 +254,16 @@ void multiply_op(intcode_t* const prog, const int* const parameters)
             prog->memory[result] = first * second;
         }
     }
+}
+
+void input_op(intcode_t* const prog, const int* const parameters)
+{
+}
+void output_op(intcode_t* const prog, const int* const parameters)
+{
+}
+void no_op(intcode_t* const prog, const int* const parameters)
+{
 }
 
 static void move_head(intcode_t* const prog, const int op_code)
@@ -325,6 +308,10 @@ static size_t get_instruction_size(const int op_code)
     {
         inst_size = 4;
     }
+    else if ((op_code == OP_CODE_INPUT) || (op_code == OP_CODE_OUTPUT))
+    {
+        inst_size = 2;
+    }
     else if (op_code == OP_CODE_HALT)
     {
         inst_size = 1;
@@ -349,6 +336,7 @@ static int get_opcode(const int number)
 static int is_valid_opcode(const int op_code)
 {
     return ((op_code == OP_CODE_ADD) || (op_code == OP_CODE_MULT) ||
+            (op_code == OP_CODE_INPUT) || (op_code == OP_CODE_OUTPUT) ||
             (op_code == OP_CODE_HALT));
 }
 
@@ -410,4 +398,21 @@ static int get_parameter_values(const int* const memory,
         }
     }
     return no_error;
+}
+
+static intcode_op_f get_op_func(const int op_code)
+{
+    switch (op_code)
+    {
+        case OP_CODE_ADD:
+            return add_op;
+        case OP_CODE_MULT:
+            return multiply_op;
+        case OP_CODE_INPUT:
+            return input_op;
+        case OP_CODE_OUTPUT:
+            return output_op;
+        default:
+            return no_op;
+    }
 }

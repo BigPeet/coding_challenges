@@ -12,9 +12,11 @@ typedef enum
 
 typedef enum
 {
-    OP_CODE_ADD  = 1,
-    OP_CODE_MULT = 2,
-    OP_CODE_HALT = 99,
+    OP_CODE_ADD    = 1,
+    OP_CODE_MULT   = 2,
+    OP_CODE_INPUT  = 3,
+    OP_CODE_OUTPUT = 4,
+    OP_CODE_HALT   = 99,
 } intcode_op_codes_t;
 
 typedef enum
@@ -42,6 +44,9 @@ int execute_head_block(intcode_t* const prog, int* const op_code);
 
 void add_op(intcode_t* const prog, const int* const parameters);
 void multiply_op(intcode_t* const prog, const int* const parameters);
+void input_op(intcode_t* const prog, const int* const parameters);
+void output_op(intcode_t* const prog, const int* const parameters);
+void no_op(intcode_t* const prog, const int* const parameters);
 
 
 #endif /* ifndef INCLUDE_CHALLENGE_LIB_H */
