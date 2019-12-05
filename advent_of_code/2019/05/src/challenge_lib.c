@@ -212,7 +212,7 @@ int execute_head_block(intcode_t* const prog, int* const op_code)
                                              parameter_modes,
                                              parameters))
                     {
-                        get_op_func(*op_code)(prog, parameters);
+                        get_op_func (*op_code)(prog, parameters);
                         ret = INT_CODE_CONTINUE;
                     }
                 }
@@ -258,12 +258,26 @@ void multiply_op(intcode_t* const prog, const int* const parameters)
 
 void input_op(intcode_t* const prog, const int* const parameters)
 {
+    if ((prog != NULL) && (parameters != NULL))
+    {
+        int val;
+        scanf("Input: %d\n", &val);
+        /*TODO add boundary check*/
+        prog->memory[parameters[0]] = val;
+    }
 }
+
 void output_op(intcode_t* const prog, const int* const parameters)
 {
+    if (parameters != NULL)
+    {
+        printf("Output: %d\n", parameters[0]);
+    }
 }
+
 void no_op(intcode_t* const prog, const int* const parameters)
 {
+    /*NO OP*/
 }
 
 static void move_head(intcode_t* const prog, const int op_code)
