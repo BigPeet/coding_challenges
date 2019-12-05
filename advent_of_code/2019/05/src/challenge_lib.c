@@ -11,6 +11,8 @@ static void get_size_info(const char* const file_path,
 
 static size_t get_instruction_size(const int op_code);
 static void move_head(intcode_t* const prog);
+static int get_opcode(const int number);
+static int is_valid_opcode(const int op_code);
 
 intcode_t* read_intcode(const char* const file_path)
 {
@@ -83,9 +85,9 @@ void print_intcode(const intcode_t* const prog)
     if (prog != NULL)
     {
         /*Print program*/
-        int op_code = prog->memory[0];
+        int op_code       = get_opcode(prog->memory[0]);
         size_t inst_index = 0;
-        size_t inst_size = get_instruction_size(op_code);
+        size_t inst_size  = get_instruction_size(op_code);
         for (size_t i = 0; i < prog->memory_size; i++)
         {
             printf("%d", prog->memory[i]);
@@ -95,7 +97,8 @@ void print_intcode(const intcode_t* const prog)
                 if ((i + 1) < prog->memory_size)
                 {
                     inst_index = 0;
-                    inst_size = get_instruction_size(prog->memory[i + 1]);
+                    op_code    = get_opcode(prog->memory[i + 1]);
+                    inst_size  = get_instruction_size(op_code);
                 }
             }
             else if ((i + 1) < prog->memory_size)
@@ -165,7 +168,7 @@ int execute_head_block(intcode_t* const prog)
         size_t head = prog->head;
         if (head < prog->memory_size)
         {
-            int op_code = prog->memory[head];
+            int op_code = get_opcode(prog->memory[head]);
             int first, second, result;
             size_t inst_size = get_instruction_size(op_code);
             switch (op_code)
@@ -287,4 +290,24 @@ static size_t get_instruction_size(const int op_code)
         inst_size = 1;
     }
     return inst_size;
+}
+
+static int get_opcode(const int number)
+{
+    int op_code = 0;
+    if (number > 99)
+    {
+        op_code = number % 100;
+    }
+    else
+    {
+        op_code = number;
+    }
+    return op_code;
+}
+
+static int is_valid_opcode(const int op_code)
+{
+    return ((op_code == OP_CODE_ADD) || (op_code == OP_CODE_MULT) ||
+            (op_code == OP_CODE_HALT));
 }
