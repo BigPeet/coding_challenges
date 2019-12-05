@@ -4,6 +4,7 @@
 #include "string.h"
 
 #define INTCODE_DELIM ","
+#define INTCODE_NO_STORE -1
 
 static void get_size_info(const char* const file_path,
                           size_t* const total_chars,
@@ -16,6 +17,7 @@ static int is_valid_opcode(const int op_code);
 
 static void get_parameter_modes(const int number,
                                 const size_t num_parameters,
+                                const int store_param,
                                 int* const parameter_modes);
 
 static int get_parameter_values(const int* const memory,
@@ -179,7 +181,6 @@ int execute_head_block(intcode_t* const prog)
         if (head < prog->memory_size)
         {
             int op_code = get_opcode(prog->memory[head]);
-            printf("Op Code: %d\n", op_code);
             int first, second, result;
             size_t inst_size = get_instruction_size(op_code);
             switch (op_code)
@@ -189,16 +190,16 @@ int execute_head_block(intcode_t* const prog)
                     {
                         int parameters[inst_size - 1];
                         int parameter_modes[inst_size - 1];
-                        get_parameter_modes(
-                            prog->memory[head], inst_size - 1, parameter_modes);
-                        printf("modes: %d %d %d\n", parameter_modes[0], parameter_modes[1], parameter_modes[2]);
+                        get_parameter_modes(prog->memory[head],
+                                            inst_size - 1,
+                                            inst_size - 2,
+                                            parameter_modes);
                         if (get_parameter_values(prog->memory,
                                                  head,
                                                  inst_size - 1,
                                                  parameter_modes,
                                                  parameters))
                         {
-                          printf("values: %d %d %d\n", parameters[0], parameters[1], parameters[2]);
                             add_op(prog, parameters);
                             ret = INT_CODE_CONTINUE;
                         }
@@ -217,8 +218,10 @@ int execute_head_block(intcode_t* const prog)
                     {
                         int parameters[inst_size - 1];
                         int parameter_modes[inst_size - 1];
-                        get_parameter_modes(
-                            prog->memory[head], inst_size - 1, parameter_modes);
+                        get_parameter_modes(prog->memory[head],
+                                            inst_size - 1,
+                                            inst_size - 2,
+                                            parameter_modes);
                         if (get_parameter_values(prog->memory,
                                                  head,
                                                  inst_size - 1,
@@ -260,7 +263,6 @@ void add_op(intcode_t* const prog, const int* const parameters)
         int result = parameters[2];
         if (result < prog->memory_size)
         {
-            printf("Store %d + %d at address %d\n", first, second, result);
             prog->memory[result] = first + second;
         }
     }
@@ -352,6 +354,7 @@ static int is_valid_opcode(const int op_code)
 
 static void get_parameter_modes(const int number,
                                 const size_t num_parameters,
+                                const int store_param,
                                 int* const parameter_modes)
 {
     if (NULL != parameter_modes)
@@ -362,8 +365,14 @@ static void get_parameter_modes(const int number,
             int mode           = modes % 10;
             parameter_modes[i] = mode;
             modes /= 10;
-            /*TODO: if it is STORE parameter, then it needs to be the immediate mode
+            /*TODO: if it is STORE parameter, then it needs to be the immediate
+             * mode
              * Since the value there is the address to store*/
+        }
+        if ((store_param != INTCODE_NO_STORE) && (store_param < num_parameters))
+        {
+            /*Storage parameters always use the address, i.e. immediate mode*/
+            parameter_modes[store_param] = PARAM_MODE_IMMEDIATE;
         }
     }
 }
