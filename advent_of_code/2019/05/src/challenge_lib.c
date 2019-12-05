@@ -261,9 +261,12 @@ void input_op(intcode_t* const prog, const int* const parameters)
     if ((prog != NULL) && (parameters != NULL))
     {
         int val;
-        scanf("Input: %d\n", &val);
-        /*TODO add boundary check*/
-        prog->memory[parameters[0]] = val;
+        printf("Input: ");
+        if (scanf("%d", &val) == 1)
+        {
+            /*TODO add boundary check*/
+            prog->memory[parameters[0]] = val;
+        }
     }
 }
 
