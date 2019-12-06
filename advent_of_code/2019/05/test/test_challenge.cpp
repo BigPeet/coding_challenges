@@ -26,7 +26,7 @@ TEST_F(challenge_test, add_test_01)
     memory[3] = 40;
 
     int parameters[3] = {10, 20, 3};
-    int solution = 30;
+    int solution      = 30;
 
     intcode_t prog;
     prog.memory      = memory;
@@ -48,7 +48,7 @@ TEST_F(challenge_test, multiply_test_01)
     memory[3] = 40;
 
     int parameters[3] = {10, 20, 3};
-    int solution = 200;
+    int solution      = 200;
 
     intcode_t prog;
     prog.memory      = memory;
@@ -222,5 +222,83 @@ TEST_F(challenge_test, execute_test_05)
     for (int i = 0; i < nums; ++i)
     {
         ASSERT_EQ(prog.memory[i], solution[i]);
+    }
+}
+
+TEST_F(challenge_test, execute_test_prog_01_01)
+{
+    size_t nums = 11;
+
+    // consider whether the input is equal to 8;
+    // output 1 (if it is) or 0 (if it is not).
+    int memory[nums]      = {3, 9, 8, 9, 10, 9, 4, 9, 99, -1, 8};
+    intcode_t prog;
+    prog.memory      = memory;
+    prog.head        = 0;
+    prog.memory_size = nums;
+
+    std::string file_path = "test/test_input_1.txt";
+    std::string solution = "Input: Output: 0\n";
+
+    testing::internal::CaptureStdout();
+    if (freopen(file_path.c_str(), "r", stdin) != NULL)
+    {
+        int ret            = execute(&prog);
+        std::string output = testing::internal::GetCapturedStdout();
+
+        ASSERT_EQ(ret, 1);
+        ASSERT_EQ(output, solution);
+    }
+}
+
+TEST_F(challenge_test, execute_test_prog_01_02)
+{
+    size_t nums = 11;
+
+    // consider whether the input is equal to 8;
+    // output 1 (if it is) or 0 (if it is not).
+    int memory[nums]      = {3, 9, 8, 9, 10, 9, 4, 9, 99, -1, 8};
+    intcode_t prog;
+    prog.memory      = memory;
+    prog.head        = 0;
+    prog.memory_size = nums;
+
+    std::string file_path = "test/test_input_8.txt";
+    std::string solution = "Input: Output: 1\n";
+
+    testing::internal::CaptureStdout();
+    if (freopen(file_path.c_str(), "r", stdin) != NULL)
+    {
+        int ret            = execute(&prog);
+        std::string output = testing::internal::GetCapturedStdout();
+
+        ASSERT_EQ(ret, 1);
+        ASSERT_EQ(output, solution);
+    }
+}
+
+TEST_F(challenge_test, execute_test_prog_01_03)
+{
+    size_t nums = 11;
+
+    // consider whether the input is equal to 8;
+    // output 1 (if it is) or 0 (if it is not).
+    int memory[nums]      = {3, 9, 8, 9, 10, 9, 4, 9, 99, -1, 8};
+    intcode_t prog;
+    prog.memory      = memory;
+    prog.head        = 0;
+    prog.memory_size = nums;
+
+    std::string file_path = "test/test_input_10.txt";
+    std::string solution = "Input: Output: 0\n";
+
+    testing::internal::CaptureStdout();
+    if (freopen(file_path.c_str(), "r", stdin) != NULL)
+    {
+        int ret            = execute(&prog);
+        std::string output = testing::internal::GetCapturedStdout();
+
+        ASSERT_EQ(ret, 1);
+        ASSERT_EQ(output, solution);
     }
 }
