@@ -1,3 +1,10 @@
+/*
+ *
+ *  Author: Peter Wolf <pwolf2310@gmail.com>
+ *  Date: 2019-12-04
+ *
+ */
+
 #include "challenge/challenge_lib.h"
 
 int fits_first_set_criteria(const int passcode, const int lower, const int upper)

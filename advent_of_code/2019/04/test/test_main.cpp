@@ -1,3 +1,10 @@
+/*
+ *
+ *  Author: Peter Wolf <pwolf2310@gmail.com>
+ *  Date: 2019-12-04
+ *
+ */
+
 #include "gtest/gtest.h"
 
 int main(int argc, char** argv)

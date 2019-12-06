@@ -1,3 +1,10 @@
+/*
+ *
+ *  Author: Peter Wolf <pwolf2310@gmail.com>
+ *  Date: 2019-12-05
+ *
+ */
+
 #include "challenge/challenge_lib.h"
 
 #include "stdio.h"

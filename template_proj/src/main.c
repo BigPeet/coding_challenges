@@ -1,3 +1,9 @@
+/*
+ *
+ *  Author: Peter Wolf <pwolf2310@gmail.com>
+ *
+ */
+
 #include "stdio.h"
 #include "stdlib.h"
 #include "stdbool.h"
