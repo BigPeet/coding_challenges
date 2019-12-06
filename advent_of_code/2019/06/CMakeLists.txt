@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5.1)
-project(challenge_XXX VERSION 0.0.1)
+project(aoc2019_06 VERSION 0.0.1)
 
 # for correct library locations across platforms
 include(GNUInstallDirs)
