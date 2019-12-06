@@ -365,9 +365,8 @@ int is_equals_op(intcode_t* const prog, const int* const parameters)
     return ret;
 }
 
-int no_op(intcode_t* const prog, const int* const parameters)
+int error_op(intcode_t* const prog, const int* const parameters)
 {
-    /*NO OP*/
     return INT_CODE_ERROR;
 }
 
@@ -520,6 +519,6 @@ static intcode_op_f get_op_func(const int op_code)
         case OP_CODE_JMP_IF_FALSE:
             return jmp_if_false_op;
         default:
-            return no_op;
+            return error_op;
     }
 }

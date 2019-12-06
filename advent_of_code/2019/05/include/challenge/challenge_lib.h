@@ -54,7 +54,7 @@ int jmp_if_true_op(intcode_t* const prog, const int* const parameters);
 int jmp_if_false_op(intcode_t* const prog, const int* const parameters);
 int is_less_op(intcode_t* const prog, const int* const parameters);
 int is_equals_op(intcode_t* const prog, const int* const parameters);
-int no_op(intcode_t* const prog, const int* const parameters);
+int error_op(intcode_t* const prog, const int* const parameters);
 
 
 #endif /* ifndef INCLUDE_CHALLENGE_LIB_H */
