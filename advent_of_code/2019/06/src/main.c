@@ -20,6 +20,6 @@ int main(int argc, char* argv[])
     }
 
     map_t map;
-    map_init(&map);
+    parse_map(argv[1], &map);
     return 0;
 }

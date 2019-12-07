@@ -13,6 +13,7 @@
 typedef struct space_object_t
 {
     char* name;
+    /*Per task description, this should always be 1 (or 0)*/
     size_t num_direct_orbits;
     struct space_object_t** orbits;
 } space_object_t;
@@ -26,9 +27,7 @@ typedef struct
 void map_init(map_t* const map);
 void map_add_object(map_t* const map, space_object_t* const object);
 int map_contains(const map_t* const map, const space_object_t* const object);
-
-/*TODO: implement*/
-int map_get_object(const map_t* const map, const char* const name);
+int map_get_object_idx(const map_t* const map, const char* const name);
 void map_destroy(map_t* const map);
 
 void object_init(space_object_t* const object, char* const name);
@@ -37,6 +36,7 @@ int object_contains(const space_object_t* const object, const space_object_t* co
 
 void object_destroy(space_object_t* const object);
 
+int parse_map(const char* const file_path, map_t* const map);
 int parse_object(const char* const line, space_object_t* const object);
 
 #endif /* ifndef INCLUDE_CHALLENGE_LIB_H */
