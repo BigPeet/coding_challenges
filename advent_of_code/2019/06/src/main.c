@@ -5,10 +5,10 @@
  *
  */
 
+#include "challenge/challenge_lib.h"
+#include "stdbool.h"
 #include "stdio.h"
 #include "stdlib.h"
-#include "stdbool.h"
-#include "challenge/challenge_lib.h"
 
 int main(int argc, char* argv[])
 {
@@ -19,7 +19,19 @@ int main(int argc, char* argv[])
         return 0;
     }
 
-    map_t map;
-    parse_map(argv[1], &map);
+    map_t* map = map_create();
+    if (map != NULL)
+    {
+        parse_map(argv[1], map);
+        printf("Map Size: %zu\n", map->num_objects);
+        /*for (int i = 0; i < map->num_objects; ++i)*/
+        /*{*/
+            /*space_object_t* obj = map->objects[i];*/
+            /*printf("%s has %zu total orbits.\n", obj->name, object_total_orbits(obj));*/
+        /*}*/
+        printf("Total orbits: %zu\n", map_total_orbits(map));
+        map_destroy(map);
+    }
+
     return 0;
 }
