@@ -37,6 +37,9 @@ int object_contains(const space_object_t* const object, const space_object_t* co
 void object_destroy(space_object_t* const object);
 size_t object_total_orbits(const space_object_t* const object);
 
+space_object_t* object_follow_path(space_object_t* const object, const size_t steps);
+size_t get_minimal_transfers(const space_object_t* const obj_a, const space_object_t* const obj_b);
+
 int parse_map(const char* const file_path, map_t* const map);
 int parse_objects(char* const line, space_object_t* const center, space_object_t* const orbiter);
 

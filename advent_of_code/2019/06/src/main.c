@@ -24,12 +24,19 @@ int main(int argc, char* argv[])
     {
         parse_map(argv[1], map);
         printf("Map Size: %zu\n", map->num_objects);
-        /*for (int i = 0; i < map->num_objects; ++i)*/
-        /*{*/
-            /*space_object_t* obj = map->objects[i];*/
-            /*printf("%s has %zu total orbits.\n", obj->name, object_total_orbits(obj));*/
-        /*}*/
         printf("Total orbits: %zu\n", map_total_orbits(map));
+
+        int you_idx   = map_get_object_idx(map, "YOU");
+        int santa_idx = map_get_object_idx(map, "SAN");
+        if ((you_idx > 0) && (santa_idx > 0))
+        {
+            space_object_t* you   = map->objects[you_idx];
+            space_object_t* santa = map->objects[santa_idx];
+            printf("Num of orbital transfers between %s and %s: %zu\n",
+                   you->name,
+                   santa->name,
+                   get_minimal_transfers(you, santa));
+        }
         map_destroy(map);
     }
 

@@ -106,8 +106,6 @@ void map_destroy(map_t* const map)
 
 size_t map_total_orbits(const map_t* const map)
 {
-    /*This is a very naive implementation.*/
-    /*You could do something with dynamic programming here instead by reusing results.*/
     size_t total_orbits = 0;
     if (map != NULL)
     {
@@ -188,6 +186,47 @@ size_t object_total_orbits(const space_object_t* const object)
         }
     }
     return total_orbits;
+}
+
+space_object_t* object_follow_path(space_object_t* const object, const size_t steps)
+{
+    space_object_t* goal = NULL;
+    if (object != NULL)
+    {
+        if (steps == 0)
+        {
+            goal = object;
+        }
+        else if (object->num_direct_orbits > 0)
+        {
+            goal = object_follow_path(object->orbits[0], steps - 1);
+        }
+    }
+    return goal;
+}
+
+size_t get_minimal_transfers(const space_object_t* const obj_a, const space_object_t* const obj_b)
+{
+    if ((obj_a != NULL) && (obj_b != NULL))
+    {
+        space_object_t* center_a = obj_a->orbits[0];
+        space_object_t* center_b = obj_b->orbits[0];
+        size_t length_a          = object_total_orbits(center_a);
+        size_t length_b          = object_total_orbits(center_b);
+        for (size_t i = 0; i < length_a; i++)
+        {
+            space_object_t* path_a = object_follow_path(center_a, i);
+            for (size_t j = 0; j < length_b; j++)
+            {
+                space_object_t* path_b = object_follow_path(center_b, j);
+                if (path_a == path_b)
+                {
+                    return (i + j);
+                }
+            }
+        }
+    }
+    return 0;
 }
 
 int parse_map(const char* const file_path, map_t* const map)
