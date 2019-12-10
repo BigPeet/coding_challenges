@@ -270,7 +270,6 @@ int input_op(intcode_t* const prog, const int* const parameters)
     if ((prog != NULL) && (parameters != NULL))
     {
         int val;
-        printf("");
         if (scanf("%d", &val) == 1)
         {
             /*TODO add boundary check*/

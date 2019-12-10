@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
             fclose(stdin);
             fclose(stdout);
 
-            if (ret == OP_CODE_HALT)
+            if (ret == INT_CODE_HALT)
             {
                 /*Read output of amplifier into input for next one*/
                 FILE* ofp = fopen(outfile, "r");
