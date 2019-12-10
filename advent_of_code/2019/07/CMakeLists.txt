@@ -44,6 +44,32 @@ target_compile_options(
   #-Wpedantic
   )
 
+add_executable(
+  ${PROJECT_NAME}_p01
+  src/part01.c
+)
+
+target_link_libraries(${PROJECT_NAME}_p01
+  ${PROJECT_NAME}_lib
+)
+
+target_include_directories(
+  ${PROJECT_NAME}_p01
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+  )
+
+target_compile_options(
+  ${PROJECT_NAME}_p01
+  PRIVATE
+  -Wall
+  #-Wextra
+  #-Werror
+  #-Wpedantic
+  )
+
+
 # Testing
 
 if (BUILD_TESTING)

@@ -25,28 +25,17 @@ int main(int argc, char* argv[])
     char* infile  = argv[2];
     char* outfile = argv[3];
 
-    size_t num_amplifiers = 5;
-    size_t offset         = 5;
 
-    intcode_t* amplifier_progs[num_amplifiers];
-    intcode_t* prog = read_intcode(argv[1]);
+    size_t num_amplifiers = 5;
+    intcode_t* prog       = read_intcode(argv[1]);
+
     if (prog == NULL)
     {
         return 0;
     }
-    for (size_t i = 0; i < num_amplifiers; ++i)
-    {
-        /*Create copy*/
-        intcode_t* copy = copy_intcode(prog);
-        if (copy == NULL)
-        {
-            return 0;
-        }
-        amplifier_progs[i] = copy;
-    }
 
     size_t num_perms = 0;
-    int** perms      = create_permutations_with_offset(num_amplifiers, offset, &num_perms);
+    int** perms      = create_permutations(num_amplifiers, &num_perms);
     if (perms == NULL)
     {
         return 0;
@@ -61,7 +50,6 @@ int main(int argc, char* argv[])
 
         for (size_t i = 0; i < num_amplifiers; i++)
         {
-            intcode_t* amp_prog = amplifier_progs[i];
             /*Write new input for next programm*/
             FILE* ifp = fopen(infile, "w");
             if (ifp != NULL)
@@ -74,11 +62,19 @@ int main(int argc, char* argv[])
                 fclose(ifp);
             }
 
+            /*Create copy*/
+            intcode_t* copy = copy_intcode(prog);
+            if (copy == NULL)
+            {
+                return 0;
+            }
 
             /*Redirecting stdin and stdou to files*/
             freopen(infile, "r", stdin);
             freopen(outfile, "w", stdout);
-            int ret = execute(amp_prog);
+            int ret = execute(copy);
+            destroy_intcode(copy);
+
             fclose(stdin);
             fclose(stdout);
 
@@ -111,11 +107,6 @@ int main(int argc, char* argv[])
     freopen(outfile, "w", stdout);
     printf("Max output: %d\n", max_output);
     fclose(stdout);
-
-    for (size_t i = 0; i < num_amplifiers; ++i)
-    {
-        destroy_intcode(amplifier_progs[i]);
-    }
 
     destroy_permutations(perms, num_perms);
     destroy_intcode(prog);
