@@ -17,25 +17,6 @@ typedef enum
     INT_CODE_CONTINUE = 2,
 } intcode_ret_t;
 
-typedef enum
-{
-    OP_CODE_ADD          = 1,
-    OP_CODE_MULT         = 2,
-    OP_CODE_INPUT        = 3,
-    OP_CODE_OUTPUT       = 4,
-    OP_CODE_JMP_IF_TRUE  = 5,
-    OP_CODE_JMP_IF_FALSE = 6,
-    OP_CODE_IS_LESS      = 7,
-    OP_CODE_IS_EQUALS    = 8,
-    OP_CODE_HALT         = 99,
-} intcode_op_codes_t;
-
-typedef enum
-{
-    PARAM_MODE_POSITION  = 0,
-    PARAM_MODE_IMMEDIATE = 1,
-} intcode_param_modes_t;
-
 typedef struct
 {
     int* memory;
