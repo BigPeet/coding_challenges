@@ -68,6 +68,7 @@ int main(int argc, char* argv[])
             {
                 return 0;
             }
+            set_io_mode(copy, INT_CODE_STD_IO);
 
             /*Redirecting stdin and stdou to files*/
             freopen(infile, "r", stdin);

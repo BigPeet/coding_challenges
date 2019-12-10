@@ -54,6 +54,9 @@ static int get_parameter_values(const int* const memory,
                                 const int* const parameter_modes,
                                 int* const parameters);
 
+static void write_to_io_mem(intcode_io_mem_t* const storage, const int value);
+static void read_from_io_mem(intcode_io_mem_t* const storage, int* value);
+
 
 intcode_t* read_intcode(const char* const file_path)
 {
@@ -104,6 +107,9 @@ intcode_t* create_intcode(int* const memory, const size_t memory_size)
             prog->memory      = memory;
             prog->memory_size = memory_size;
             prog->head        = 0;
+            prog->io_mode     = INT_CODE_STD_IO;
+            prog->io_in       = NULL;
+            prog->io_out      = NULL;
         }
     }
     return prog;
@@ -149,6 +155,30 @@ void print_intcode(const intcode_t* const prog)
             }
         }
         printf("\n");
+    }
+}
+
+void set_io_mode(intcode_t* const prog, const intcode_io_mode_t mode)
+{
+    if (prog != NULL)
+    {
+        prog->io_mode = mode;
+    }
+}
+
+void set_io_in(intcode_t* const prog, intcode_io_mem_t* const input_store)
+{
+    if (prog != NULL)
+    {
+        prog->io_in = input_store;
+    }
+}
+
+void set_io_out(intcode_t* const prog, intcode_io_mem_t* const output_store)
+{
+    if (prog != NULL)
+    {
+        prog->io_out = output_store;
     }
 }
 
@@ -219,7 +249,8 @@ int execute_head_block(intcode_t* const prog, int* const op_code)
                     int parameters[inst_size - 1];
                     int parameter_modes[inst_size - 1];
                     int store_param = inst_size - 2;
-                    if ((*op_code == OP_CODE_OUTPUT) || (*op_code == OP_CODE_JMP_IF_TRUE) ||
+                    if ((*op_code == OP_CODE_OUTPUT) ||
+                        (*op_code == OP_CODE_JMP_IF_TRUE) ||
                         (*op_code == OP_CODE_JMP_IF_FALSE))
                     {
                         store_param = INTCODE_NO_STORE;
@@ -289,12 +320,23 @@ int input_op(intcode_t* const prog, const int* const parameters)
     if ((prog != NULL) && (parameters != NULL))
     {
         int val;
-        if (scanf("%d", &val) == 1)
+        if (prog->io_mode == INT_CODE_STD_IO)
         {
-            /*TODO add boundary check*/
-            prog->memory[parameters[0]] = val;
-            prog->head += get_instruction_size(OP_CODE_INPUT);
-            ret = INT_CODE_CONTINUE;
+            if (scanf("%d", &val) == 1)
+            {
+                /*TODO add boundary check*/
+                prog->memory[parameters[0]] = val;
+                prog->head += get_instruction_size(OP_CODE_INPUT);
+                ret = INT_CODE_CONTINUE;
+            }
+        }
+        else if (prog->io_mode == INT_CODE_MEM_IO)
+        {
+            while (prog->io_in->consumed)
+            {
+                /*spin*/
+            }
+            read_from_io_mem(prog->io_in, &val);
         }
     }
     return ret;
@@ -306,7 +348,18 @@ int output_op(intcode_t* const prog, const int* const parameters)
     int ret = INT_CODE_ERROR;
     if (parameters != NULL)
     {
-        printf("%d\n", parameters[0]);
+        if (prog->io_mode == INT_CODE_STD_IO)
+        {
+            printf("%d\n", parameters[0]);
+        }
+        else if (prog->io_mode == INT_CODE_MEM_IO)
+        {
+            while (!prog->io_out->consumed)
+            {
+                /*spin*/
+            }
+            write_to_io_mem(prog->io_out, parameters[0]);
+        }
         prog->head += get_instruction_size(OP_CODE_OUTPUT);
         ret = INT_CODE_CONTINUE;
     }
@@ -425,8 +478,7 @@ static size_t get_instruction_size(const int op_code)
 {
     size_t inst_size = 1;
     if ((op_code == OP_CODE_ADD) || (op_code == OP_CODE_MULT) ||
-        (op_code == OP_CODE_IS_LESS) ||
-        (op_code == OP_CODE_IS_EQUALS))
+        (op_code == OP_CODE_IS_LESS) || (op_code == OP_CODE_IS_EQUALS))
     {
         inst_size = 4;
     }
@@ -479,8 +531,7 @@ static void get_parameter_modes(const int number,
             parameter_modes[i] = mode;
             modes /= 10;
         }
-        if ((store_param != INTCODE_NO_STORE) &&
-            (store_param < num_parameters))
+        if ((store_param != INTCODE_NO_STORE) && (store_param < num_parameters))
         {
             /*Storage parameters always use the address, i.e. immediate mode*/
             parameter_modes[store_param] = PARAM_MODE_IMMEDIATE;
@@ -545,5 +596,23 @@ static intcode_op_f get_op_func(const int op_code)
             return jmp_if_false_op;
         default:
             return error_op;
+    }
+}
+
+static void write_to_io_mem(intcode_io_mem_t* const storage, const int value)
+{
+    if (storage != NULL)
+    {
+        storage->value    = value;
+        storage->consumed = 0;
+    }
+}
+
+static void read_from_io_mem(intcode_io_mem_t* const storage, int* value)
+{
+    if ((storage != NULL) && (value != NULL))
+    {
+        *value            = storage->value;
+        storage->consumed = 1;
     }
 }

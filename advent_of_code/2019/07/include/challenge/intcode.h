@@ -17,17 +17,35 @@ typedef enum
     INT_CODE_CONTINUE = 2,
 } intcode_ret_t;
 
+typedef enum
+{
+    INT_CODE_STD_IO = 0,
+    INT_CODE_MEM_IO = 1,
+} intcode_io_mode_t;
+
+typedef struct
+{
+    int value;
+    int consumed;
+} intcode_io_mem_t;
+
 typedef struct
 {
     int* memory;
     size_t memory_size;
     size_t head;
+    intcode_io_mode_t io_mode;
+    intcode_io_mem_t* io_in;
+    intcode_io_mem_t* io_out;
 } intcode_t;
 
 intcode_t* read_intcode(const char* const file_path);
 intcode_t* create_intcode(int* const content, const size_t content_size);
 void destroy_intcode(intcode_t* const prog);
 void print_intcode(const intcode_t* const prog);
+void set_io_mode(intcode_t* const prog, const intcode_io_mode_t mode);
+void set_io_in(intcode_t* const prog, intcode_io_mem_t* const input_store);
+void set_io_out(intcode_t* const prog, intcode_io_mem_t* const output_store);
 intcode_t* copy_intcode(const intcode_t* const prog);
 int output_intcode(const intcode_t* const prog);
 
@@ -46,4 +64,3 @@ int error_op(intcode_t* const prog, const int* const parameters);
 
 
 #endif /* ifndef INCLUDE_CHALLENGE_LIB_H */
-
