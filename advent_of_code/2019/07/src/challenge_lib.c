@@ -8,13 +8,8 @@
 #include "challenge/challenge_lib.h"
 #include "stdio.h"
 
-static void fill_block(size_t* used,
-                       size_t num_used,
-                       size_t k,
-                       size_t col,
-                       size_t rows,
-                       size_t offset,
-                       int** perms);
+static void fill_block(
+  size_t* used, size_t num_used, size_t k, size_t col, size_t rows, size_t offset, int** perms);
 static int get_smallest_unused_value(const size_t* const used, const size_t length, size_t* val);
 static int find_max(const size_t* const numbers, const size_t amount);
 static void init_with_zeroes(int* const numbers, const size_t amount);
@@ -49,6 +44,22 @@ int** create_permutations(const size_t k, size_t* const num_perms)
         }
     }
 
+    return perms;
+}
+
+int** create_permutations_with_offset(const size_t k, const size_t offset, size_t* const num_perms)
+{
+    int** perms = create_permutations(k, num_perms);
+    if (perms != NULL)
+    {
+        for (size_t i = 0; i < *num_perms; ++i)
+        {
+            for (size_t j = 0; j < k; ++j)
+            {
+                perms[i][k] += offset;
+            }
+        }
+    }
     return perms;
 }
 
@@ -100,13 +111,8 @@ static int get_smallest_unused_value(const size_t* const used, const size_t leng
     return success;
 }
 
-static void fill_block(size_t* used,
-                       size_t num_used,
-                       size_t k,
-                       size_t col,
-                       size_t rows,
-                       size_t offset,
-                       int** perms)
+static void fill_block(
+  size_t* used, size_t num_used, size_t k, size_t col, size_t rows, size_t offset, int** perms)
 {
     if (num_used < k)
     {
