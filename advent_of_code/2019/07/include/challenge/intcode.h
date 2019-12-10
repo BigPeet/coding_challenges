@@ -9,6 +9,7 @@
 #define INCLUDE_INTCODE_H
 
 #include "stdlib.h"
+#include "stdio.h"
 
 typedef enum
 {
@@ -35,8 +36,10 @@ typedef struct
     size_t memory_size;
     size_t head;
     intcode_io_mode_t io_mode;
-    intcode_io_mem_t* io_in;
-    intcode_io_mem_t* io_out;
+    intcode_io_mem_t* mem_io_in;
+    intcode_io_mem_t* mem_io_out;
+    FILE* std_io_in;
+    FILE* std_io_out;
 } intcode_t;
 
 intcode_t* read_intcode(const char* const file_path);
@@ -44,8 +47,10 @@ intcode_t* create_intcode(int* const content, const size_t content_size);
 void destroy_intcode(intcode_t* const prog);
 void print_intcode(const intcode_t* const prog);
 void set_io_mode(intcode_t* const prog, const intcode_io_mode_t mode);
-void set_io_in(intcode_t* const prog, intcode_io_mem_t* const input_store);
-void set_io_out(intcode_t* const prog, intcode_io_mem_t* const output_store);
+void set_mem_io_in(intcode_t* const prog, intcode_io_mem_t* const input_store);
+void set_mem_io_out(intcode_t* const prog, intcode_io_mem_t* const output_store);
+void set_std_io_in(intcode_t* const prog, FILE* const input_stream);
+void set_std_io_out(intcode_t* const prog, FILE* const output_stream);
 intcode_t* copy_intcode(const intcode_t* const prog);
 int output_intcode(const intcode_t* const prog);
 

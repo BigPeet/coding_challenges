@@ -68,16 +68,19 @@ int main(int argc, char* argv[])
             {
                 return 0;
             }
-            set_io_mode(copy, INT_CODE_STD_IO);
 
-            /*Redirecting stdin and stdou to files*/
-            freopen(infile, "r", stdin);
-            freopen(outfile, "w", stdout);
+            /*Setup IO mode*/
+            set_io_mode(copy, INT_CODE_STD_IO);
+            FILE* std_in  = fopen(infile, "r");
+            FILE* std_out = fopen(outfile, "w");
+            set_std_io_in(copy, std_in);
+            set_std_io_out(copy, std_out);
+
             int ret = execute(copy);
             destroy_intcode(copy);
 
-            fclose(stdin);
-            fclose(stdout);
+            fclose(std_in);
+            fclose(std_out);
 
             if (ret == INT_CODE_HALT)
             {
@@ -95,7 +98,8 @@ int main(int argc, char* argv[])
             }
             else
             {
-                printf("Programm did not halt as expected. Err code: %d\n", ret);
+                printf("Programm did not halt as expected. Err code: %d\n",
+                       ret);
                 break;
             }
         }
@@ -105,9 +109,7 @@ int main(int argc, char* argv[])
         }
     }
 
-    freopen(outfile, "w", stdout);
     printf("Max output: %d\n", max_output);
-    fclose(stdout);
 
     destroy_permutations(perms, num_perms);
     destroy_intcode(prog);

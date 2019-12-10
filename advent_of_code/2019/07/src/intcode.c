@@ -6,8 +6,6 @@
  */
 
 #include "challenge/intcode.h"
-
-#include "stdio.h"
 #include "string.h"
 
 #define INTCODE_DELIM ","
@@ -54,6 +52,8 @@ static int get_parameter_values(const int* const memory,
                                 const int* const parameter_modes,
                                 int* const parameters);
 
+static void write_to_io_std(FILE* const stream, const int value);
+static int read_from_io_std(FILE* const stream, int* value);
 static void write_to_io_mem(intcode_io_mem_t* const storage, const int value);
 static void read_from_io_mem(intcode_io_mem_t* const storage, int* value);
 
@@ -108,8 +108,10 @@ intcode_t* create_intcode(int* const memory, const size_t memory_size)
             prog->memory_size = memory_size;
             prog->head        = 0;
             prog->io_mode     = INT_CODE_STD_IO;
-            prog->io_in       = NULL;
-            prog->io_out      = NULL;
+            prog->std_io_in   = stdin;
+            prog->std_io_out  = stdout;
+            prog->mem_io_in   = NULL;
+            prog->mem_io_out  = NULL;
         }
     }
     return prog;
@@ -166,19 +168,34 @@ void set_io_mode(intcode_t* const prog, const intcode_io_mode_t mode)
     }
 }
 
-void set_io_in(intcode_t* const prog, intcode_io_mem_t* const input_store)
+void set_mem_io_in(intcode_t* const prog, intcode_io_mem_t* const input_store)
 {
     if (prog != NULL)
     {
-        prog->io_in = input_store;
+        prog->mem_io_in = input_store;
     }
 }
 
-void set_io_out(intcode_t* const prog, intcode_io_mem_t* const output_store)
+void set_mem_io_out(intcode_t* const prog, intcode_io_mem_t* const output_store)
 {
     if (prog != NULL)
     {
-        prog->io_out = output_store;
+        prog->mem_io_out = output_store;
+    }
+}
+
+void set_std_io_in(intcode_t* const prog, FILE* const input_stream)
+{
+    if (prog != NULL)
+    {
+        prog->std_io_in = input_stream;
+    }
+}
+void set_std_io_out(intcode_t* const prog, FILE* const output_stream)
+{
+    if (prog != NULL)
+    {
+        prog->std_io_out = output_stream;
     }
 }
 
@@ -322,7 +339,7 @@ int input_op(intcode_t* const prog, const int* const parameters)
         int val;
         if (prog->io_mode == INT_CODE_STD_IO)
         {
-            if (scanf("%d", &val) == 1)
+            if (read_from_io_std(prog->std_io_in, &val))
             {
                 /*TODO add boundary check*/
                 prog->memory[parameters[0]] = val;
@@ -332,11 +349,11 @@ int input_op(intcode_t* const prog, const int* const parameters)
         }
         else if (prog->io_mode == INT_CODE_MEM_IO)
         {
-            while (prog->io_in->consumed)
+            while (prog->mem_io_in->consumed)
             {
                 /*spin*/
             }
-            read_from_io_mem(prog->io_in, &val);
+            read_from_io_mem(prog->mem_io_in, &val);
         }
     }
     return ret;
@@ -350,15 +367,15 @@ int output_op(intcode_t* const prog, const int* const parameters)
     {
         if (prog->io_mode == INT_CODE_STD_IO)
         {
-            printf("%d\n", parameters[0]);
+            write_to_io_std(prog->std_io_out, parameters[0]);
         }
         else if (prog->io_mode == INT_CODE_MEM_IO)
         {
-            while (!prog->io_out->consumed)
+            while (!prog->mem_io_out->consumed)
             {
                 /*spin*/
             }
-            write_to_io_mem(prog->io_out, parameters[0]);
+            write_to_io_mem(prog->mem_io_out, parameters[0]);
         }
         prog->head += get_instruction_size(OP_CODE_OUTPUT);
         ret = INT_CODE_CONTINUE;
@@ -597,6 +614,27 @@ static intcode_op_f get_op_func(const int op_code)
         default:
             return error_op;
     }
+}
+
+static void write_to_io_std(FILE* const stream, const int value)
+{
+    if (stream != NULL)
+    {
+        fprintf(stream, "%d\n", value);
+    }
+}
+
+static int read_from_io_std(FILE* const stream, int* value)
+{
+    int success = 0;
+    if (stream != NULL)
+    {
+        if (fscanf(stream, "%d", value) == 1)
+        {
+            success = 1;
+        }
+    }
+    return success;
 }
 
 static void write_to_io_mem(intcode_io_mem_t* const storage, const int value)
