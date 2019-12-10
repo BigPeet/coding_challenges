@@ -270,7 +270,7 @@ int input_op(intcode_t* const prog, const int* const parameters)
     if ((prog != NULL) && (parameters != NULL))
     {
         int val;
-        printf("Input: ");
+        printf("");
         if (scanf("%d", &val) == 1)
         {
             /*TODO add boundary check*/
@@ -288,7 +288,7 @@ int output_op(intcode_t* const prog, const int* const parameters)
     int ret = INT_CODE_ERROR;
     if (parameters != NULL)
     {
-        printf("Output: %d\n", parameters[0]);
+        printf("%d\n", parameters[0]);
         prog->head += get_instruction_size(OP_CODE_OUTPUT);
         ret = INT_CODE_CONTINUE;
     }

@@ -11,4 +11,7 @@
 #include "stdlib.h"
 #include "challenge/intcode.h"
 
+int** create_permutations(const size_t k, size_t* const num_perms);
+void destroy_permutations(int** const perms, const size_t num_perms);
+
 #endif /* ifndef INCLUDE_CHALLENGE_LIB_H */
