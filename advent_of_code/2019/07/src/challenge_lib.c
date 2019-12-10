@@ -56,7 +56,7 @@ int** create_permutations_with_offset(const size_t k, const size_t offset, size_
         {
             for (size_t j = 0; j < k; ++j)
             {
-                perms[i][k] += offset;
+                perms[i][j] += offset;
             }
         }
     }

@@ -10,6 +10,8 @@
 
 #include "stdlib.h"
 #include "stdio.h"
+#include "pthread.h"
+#include "unistd.h"
 
 typedef enum
 {
@@ -28,6 +30,8 @@ typedef struct
 {
     int value;
     int consumed;
+    pthread_mutex_t mut;
+    pthread_cond_t cond;
 } intcode_io_mem_t;
 
 typedef struct
