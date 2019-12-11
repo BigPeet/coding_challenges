@@ -34,16 +34,18 @@ void* input_phases(void* args)
     int phase                      = thread_args->phase;
     intcode_io_mem_t* io_mem       = thread_args->io_mem;
 
+    printf("Thread for phases input started. Distributing phase val %d\n", phase);
+
     for (;;)
     {
+        pthread_mutex_lock(&io_mem->mut);
         while (io_mem->consumed != 0)
         {
-            /*TODO replace with mutex/wait and the like*/
             /*spin*/
-            usleep(100);
+            pthread_cond_signal(&io_mem->cond);
+            pthread_cond_wait(&io_mem->cond, &io_mem->mut);
         }
 
-        pthread_mutex_lock(&io_mem->mut);
         printf("Set phase: %d\n", phase);
         io_mem->value    = phase;
         io_mem->consumed = 3;
@@ -64,31 +66,33 @@ void* input_thread(void* args)
     /*Initial input*/
     pthread_mutex_lock(&io_mems[0]->mut);
     io_mems[0]->value    = phases[0];
-    io_mems[0]->consumed = 1;
+    io_mems[0]->consumed = 3;
     pthread_cond_signal(&io_mems[0]->cond);
     pthread_mutex_unlock(&io_mems[0]->mut);
 
     printf("Set initial phase value to %d\n", io_mems[0]->value);
 
     pthread_mutex_lock(&io_mems[0]->mut);
-    while (io_mems[0]->consumed != 0)
+    while (io_mems[0]->consumed != 2)
     {
         /*spin*/
+        pthread_cond_signal(&io_mems[0]->cond);
         pthread_cond_wait(&io_mems[0]->cond, &io_mems[0]->mut);
     }
 
     printf("Set initial input value to %d\n", 0);
     io_mems[0]->value    = 0;
-    io_mems[0]->consumed = 3;
+    io_mems[0]->consumed = 1;
     pthread_cond_signal(&io_mems[0]->cond);
     pthread_mutex_unlock(&io_mems[0]->mut);
 
+    phase_thread_args ptas[k];
+
     for (size_t i = 0; i < k; i++)
     {
-        phase_thread_args pta;
-        pta.io_mem = io_mems[i];
-        pta.phase  = phases[i];
-        pthread_create(&threads[i], NULL, input_phases, &pta);
+        ptas[i].io_mem = io_mems[i];
+        ptas[i].phase  = phases[i];
+        pthread_create(&threads[i], NULL, input_phases, &ptas[i]);
     }
     for (size_t i = 0; i < k; i++)
     {
@@ -125,7 +129,7 @@ int main(int argc, char* argv[])
 
     /*TODO: check return values of the function calls here */
 
-    size_t num_amplifiers = 5;
+    size_t num_amplifiers = 2;
     size_t offset         = 5;
 
     intcode_t* amplifier_progs[num_amplifiers];

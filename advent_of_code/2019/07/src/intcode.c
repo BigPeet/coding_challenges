@@ -346,9 +346,10 @@ int input_op(intcode_t* const prog, const int* const parameters)
             pthread_mutex_lock(&prog->mem_io_in->mut);
             while (prog->mem_io_in->consumed % 2 != 1)
             {
-                printf("Going to wait in input_op\n");
+                /*printf("Going to wait in input_op\n");*/
+                /*pthread_cond_signal(&prog->mem_io_in->cond);*/
                 pthread_cond_wait(&prog->mem_io_in->cond, &prog->mem_io_in->mut);
-                printf("Got signal in input_op\n");
+                /*printf("Got signal in input_op\n");*/
             }
             printf("Left loop in input_op\n");
             read_from_io_mem(prog->mem_io_in, &val);
@@ -381,9 +382,10 @@ int output_op(intcode_t* const prog, const int* const parameters)
             while (prog->mem_io_out->consumed != 2)
             {
                 /*spin*/
-                printf("Going to wait in output_op\n");
+                /*printf("Going to wait in output_op\n");*/
+                pthread_cond_signal(&prog->mem_io_out->cond);
                 pthread_cond_wait(&prog->mem_io_out->cond, &prog->mem_io_out->mut);
-                printf("Got signal in output_op\n");
+                /*printf("Got signal in output_op\n");*/
             }
             printf("Left loop in output_op\n");
             write_to_io_mem(prog->mem_io_out, parameters[0]);
