@@ -344,19 +344,14 @@ int input_op(intcode_t* const prog, const int* const parameters)
         else if (prog->io_mode == INT_CODE_MEM_IO)
         {
             pthread_mutex_lock(&prog->mem_io_in->mut);
-            while (prog->mem_io_in->consumed % 2 != 1)
+            while (prog->mem_io_in->consumed)
             {
-                /*printf("Going to wait in input_op\n");*/
-                /*pthread_cond_signal(&prog->mem_io_in->cond);*/
                 pthread_cond_wait(&prog->mem_io_in->cond, &prog->mem_io_in->mut);
-                /*printf("Got signal in input_op\n");*/
             }
-            printf("Left loop in input_op\n");
             read_from_io_mem(prog->mem_io_in, &val);
             pthread_cond_signal(&prog->mem_io_in->cond);
             pthread_mutex_unlock(&prog->mem_io_in->mut);
 
-            printf("Read from input: %d\n", val);
             prog->memory[parameters[0]] = val;
             prog->head += get_instruction_size(OP_CODE_INPUT);
             ret = INT_CODE_CONTINUE;
@@ -379,17 +374,13 @@ int output_op(intcode_t* const prog, const int* const parameters)
         {
             /*TODO replace magic numbers*/
             pthread_mutex_lock(&prog->mem_io_out->mut);
-            while (prog->mem_io_out->consumed != 2)
+            while (!prog->mem_io_out->consumed)
             {
                 /*spin*/
-                /*printf("Going to wait in output_op\n");*/
                 pthread_cond_signal(&prog->mem_io_out->cond);
                 pthread_cond_wait(&prog->mem_io_out->cond, &prog->mem_io_out->mut);
-                /*printf("Got signal in output_op\n");*/
             }
-            printf("Left loop in output_op\n");
             write_to_io_mem(prog->mem_io_out, parameters[0]);
-            printf("Output: %d\n", prog->mem_io_out->value);
             pthread_cond_signal(&prog->mem_io_out->cond);
             pthread_mutex_unlock(&prog->mem_io_out->mut);
         }
@@ -656,7 +647,7 @@ static void write_to_io_mem(intcode_io_mem_t* const storage, const int value)
     if (storage != NULL)
     {
         storage->value    = value;
-        storage->consumed = 1;
+        storage->consumed = 0;
     }
 }
 
@@ -665,6 +656,6 @@ static void read_from_io_mem(intcode_io_mem_t* const storage, int* value)
     if ((storage != NULL) && (value != NULL))
     {
         *value = storage->value;
-        storage->consumed = storage->consumed - 1;
+        storage->consumed = 1;
     }
 }

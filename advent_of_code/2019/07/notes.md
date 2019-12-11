@@ -14,7 +14,14 @@ Some things I want to check:
   * What happens without the mutex?
   * What happens without the "consumed" checks?
   * How to properly debug multi-threaded programs?
-  * Maybe split input in phase and input to remove one conflict (this would be a solution fitted onto the amplifier problem and not a general solution :-/)
-  * Maybe look at other people's solution to get a better idea.
+
+Update: I just realized that the deadlocks are caused because I misinterpreted the Task. I thought the phase setting had to applied every cycle.
+So I assumed every instance of the program would need two inputs and then output its result in every cycle.
+After (a lot of) debugging (gdb and logging) I noticed that the program would output its result after receiving the phase for the 2nd time.
+I looked at the op-codes and the program itself (test\_input\_04.txt) and noticed my mistake: The first "input" for storing the phase is only executed in the first pass.
+
+After fixing that, I could resolve the remaining deadlocks :-)
+I could have tried to solve the 2nd part without multi-threading, but I (re-)learned a lot from this Task...how to use GDB to debug multiple threads, how to use valgrind, how to properly use pthread.
 
 * First solution: 336376
+* Second solution: 21596786
