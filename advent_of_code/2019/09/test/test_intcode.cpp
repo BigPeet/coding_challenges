@@ -284,7 +284,7 @@ TEST_F(intcode_test, execute_test_prog_01_03)
     // consider whether the input is equal to 8;
     // output 1 (if it is) or 0 (if it is not).
     int64_t memory[] = {3, 9, 8, 9, 10, 9, 4, 9, 99, -1, 8};
-    intcode_t* prog      = create_intcode(memory, nums);
+    intcode_t* prog  = create_intcode(memory, nums);
 
     std::string file_path = "test/test_input_10.txt";
     std::string solution  = "0\n";
@@ -306,7 +306,7 @@ TEST_F(intcode_test, execute_output_large_number_01)
 
     // Output large number
     int64_t memory[] = {104, 1125899906842624, 99};
-    intcode_t* prog      = create_intcode(memory, nums);
+    intcode_t* prog  = create_intcode(memory, nums);
 
     std::string solution = "1125899906842624\n";
 
@@ -324,7 +324,7 @@ TEST_F(intcode_test, execute_output_large_number_02)
 
     // Output large number (34915192 ** 2)
     int64_t memory[] = {1102, 34915192, 34915192, 7, 4, 7, 99, 0};
-    intcode_t* prog      = create_intcode(memory, nums);
+    intcode_t* prog  = create_intcode(memory, nums);
 
     std::string solution = "1219070632396864\n";
 
@@ -334,4 +334,30 @@ TEST_F(intcode_test, execute_output_large_number_02)
 
     ASSERT_EQ(ret, 1);
     ASSERT_EQ(output, solution);
+}
+
+TEST_F(intcode_test, execute_larger_memory_01)
+{
+    size_t nums = 16;
+
+    // Outputs itself
+    int64_t tmp[]   = {109, 1, 204, -1, 1001, 100, 1, 100, 1008, 100, 16, 101, 1006, 101, 0, 99};
+    int64_t* memory = (int64_t*)malloc(sizeof(int64_t) * nums);
+    for (int i = 0; i < nums; ++i)
+    {
+        memory[i] = tmp[i];
+    }
+    intcode_t* prog = create_intcode(memory, nums);
+
+    std::string solution =
+      "109\n1\n204\n-1\n1001\n100\n1\n100\n1008\n100\n16\n101\n1006\n101\n0\n99\n";
+
+    testing::internal::CaptureStdout();
+    int ret            = execute(prog);
+    std::string output = testing::internal::GetCapturedStdout();
+
+    ASSERT_EQ(ret, 1);
+    ASSERT_EQ(output, solution);
+
+    free(memory);
 }

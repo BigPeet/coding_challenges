@@ -131,6 +131,55 @@ void destroy_intcode(intcode_t* const prog)
     }
 }
 
+int set_mem_value(intcode_t* const prog, const size_t address, const int64_t value)
+{
+    int success = 0;
+    if ((prog != NULL) && (prog->memory != NULL))
+    {
+        if (address >= prog->memory_size)
+        {
+            /*Allocate more memory*/
+            size_t new_size = address + 1;
+            prog->memory    = realloc(prog->memory, sizeof(int64_t) * new_size);
+            if (prog->memory != NULL)
+            {
+                memset(prog->memory + prog->memory_size,
+                       0,
+                       sizeof(int64_t) * (new_size - prog->memory_size));
+                prog->memory_size = new_size;
+            }
+        }
+
+        if (prog->memory != NULL)
+        {
+            prog->memory[address] = value;
+            success               = 1;
+        }
+    }
+    return success;
+}
+
+int64_t get_mem_value(const intcode_t* const prog, const size_t address)
+{
+    int64_t value = 0;
+    if (prog != NULL)
+    {
+        if (address >= prog->memory_size)
+        {
+            /*Address is outside of memory, i.e. not set.*/
+            /*Even if memory was resized to fit, 0 would be returned.*/
+            /*So let's wait with allocating until values are stored there.*/
+            value = 0;
+        }
+
+        if (prog->memory != NULL)
+        {
+            value = prog->memory[address];
+        }
+    }
+    return value;
+}
+
 void print_intcode(const intcode_t* const prog)
 {
     if (prog != NULL)
@@ -250,36 +299,29 @@ int execute(intcode_t* const prog)
 int execute_head_block(intcode_t* const prog, int* const op_code)
 {
     int ret = INT_CODE_ERROR;
-    if ((prog != NULL) && (prog->memory != NULL))
+    if (prog != NULL)
     {
-        size_t head = prog->head;
-        if (head < prog->memory_size)
+        size_t head      = prog->head;
+        *op_code         = get_opcode(get_mem_value(prog, prog->head));
+        size_t inst_size = get_instruction_size(*op_code);
+        if (*op_code == OP_CODE_HALT)
         {
-            *op_code         = get_opcode(prog->memory[head]);
-            size_t inst_size = get_instruction_size(*op_code);
-            if (*op_code == OP_CODE_HALT)
+            ret = INT_CODE_HALT;
+        }
+        else if (is_valid_opcode(*op_code))
+        {
+            int64_t parameters[inst_size - 1];
+            int parameter_modes[inst_size - 1];
+            int store_param = inst_size - 2;
+            if ((*op_code == OP_CODE_OUTPUT) || (*op_code == OP_CODE_JMP_IF_TRUE) ||
+                (*op_code == OP_CODE_JMP_IF_FALSE))
             {
-                ret = INT_CODE_HALT;
+                store_param = INTCODE_NO_STORE;
             }
-            else if (is_valid_opcode(*op_code))
+            get_parameter_modes(get_mem_value(prog, head), inst_size - 1, parameter_modes);
+            if (get_parameter_values(prog, inst_size - 1, store_param, parameter_modes, parameters))
             {
-                if (head < (prog->memory_size - inst_size + 1))
-                {
-                    int64_t parameters[inst_size - 1];
-                    int parameter_modes[inst_size - 1];
-                    int store_param = inst_size - 2;
-                    if ((*op_code == OP_CODE_OUTPUT) || (*op_code == OP_CODE_JMP_IF_TRUE) ||
-                        (*op_code == OP_CODE_JMP_IF_FALSE))
-                    {
-                        store_param = INTCODE_NO_STORE;
-                    }
-                    get_parameter_modes(prog->memory[head], inst_size - 1, parameter_modes);
-                    if (get_parameter_values(
-                          prog, inst_size - 1, store_param, parameter_modes, parameters))
-                    {
-                        ret = get_op_func(*op_code)(prog, parameters);
-                    }
-                }
+                ret = get_op_func(*op_code)(prog, parameters);
             }
         }
     }
@@ -288,47 +330,47 @@ int execute_head_block(intcode_t* const prog, int* const op_code)
 
 int add_op(intcode_t* const prog, const int64_t* const parameters)
 {
-    int ret = INT_CODE_ERROR;
+    int op_ret = INT_CODE_ERROR;
     /*TODO add boundary checks*/
     /*Assuming parameters has the correct size*/
-    if ((prog != NULL) && (prog->memory != NULL) && (parameters != NULL))
+    if ((prog != NULL) && (parameters != NULL))
     {
         int64_t first  = parameters[0];
         int64_t second = parameters[1];
         int64_t result = parameters[2];
-        if (result < prog->memory_size)
+        int ret        = set_mem_value(prog, result, (first + second));
+        if (ret != 0)
         {
-            prog->memory[result] = first + second;
             prog->head += get_instruction_size(OP_CODE_ADD);
-            ret = INT_CODE_CONTINUE;
+            op_ret = INT_CODE_CONTINUE;
         }
     }
-    return ret;
+    return op_ret;
 }
 
 int multiply_op(intcode_t* const prog, const int64_t* const parameters)
 {
-    int ret = INT_CODE_ERROR;
+    int op_ret = INT_CODE_ERROR;
     /*TODO add boundary checks*/
     /*Assuming parameters has the correct size*/
-    if ((prog != NULL) && (prog->memory != NULL) && (parameters != NULL))
+    if ((prog != NULL) && (parameters != NULL))
     {
         int64_t first  = parameters[0];
         int64_t second = parameters[1];
         int64_t result = parameters[2];
-        if (result < prog->memory_size)
+        int ret        = set_mem_value(prog, result, (first * second));
+        if (ret != 0)
         {
-            prog->memory[result] = first * second;
             prog->head += get_instruction_size(OP_CODE_MULT);
-            ret = INT_CODE_CONTINUE;
+            op_ret = INT_CODE_CONTINUE;
         }
     }
-    return ret;
+    return op_ret;
 }
 
 int input_op(intcode_t* const prog, const int64_t* const parameters)
 {
-    int ret = INT_CODE_ERROR;
+    int op_ret = INT_CODE_ERROR;
     if ((prog != NULL) && (parameters != NULL))
     {
         int64_t val;
@@ -337,9 +379,12 @@ int input_op(intcode_t* const prog, const int64_t* const parameters)
             if (read_from_io_std(prog->std_io_in, &val))
             {
                 /*TODO add boundary check*/
-                prog->memory[parameters[0]] = val;
-                prog->head += get_instruction_size(OP_CODE_INPUT);
-                ret = INT_CODE_CONTINUE;
+                int ret = set_mem_value(prog, parameters[0], val);
+                if (ret != 0)
+                {
+                    prog->head += get_instruction_size(OP_CODE_INPUT);
+                    op_ret = INT_CODE_CONTINUE;
+                }
             }
         }
         else if (prog->io_mode == INT_CODE_MEM_IO)
@@ -353,18 +398,21 @@ int input_op(intcode_t* const prog, const int64_t* const parameters)
             pthread_cond_signal(&prog->mem_io_in->cond);
             pthread_mutex_unlock(&prog->mem_io_in->mut);
 
-            prog->memory[parameters[0]] = val;
-            prog->head += get_instruction_size(OP_CODE_INPUT);
-            ret = INT_CODE_CONTINUE;
+            int ret = set_mem_value(prog, parameters[0], val);
+            if (ret != 0)
+            {
+                prog->head += get_instruction_size(OP_CODE_INPUT);
+                op_ret = INT_CODE_CONTINUE;
+            }
         }
     }
-    return ret;
+    return op_ret;
 }
 
 int output_op(intcode_t* const prog, const int64_t* const parameters)
 {
     /*TODO add boundary checks*/
-    int ret = INT_CODE_ERROR;
+    int op_ret = INT_CODE_ERROR;
     if (parameters != NULL)
     {
         if (prog->io_mode == INT_CODE_STD_IO)
@@ -385,15 +433,15 @@ int output_op(intcode_t* const prog, const int64_t* const parameters)
             pthread_mutex_unlock(&prog->mem_io_out->mut);
         }
         prog->head += get_instruction_size(OP_CODE_OUTPUT);
-        ret = INT_CODE_CONTINUE;
+        op_ret = INT_CODE_CONTINUE;
     }
-    return ret;
+    return op_ret;
 }
 
 int jmp_if_true_op(intcode_t* const prog, const int64_t* const parameters)
 {
     /*TODO add boundary checks*/
-    int ret = INT_CODE_ERROR;
+    int op_ret = INT_CODE_ERROR;
     if (parameters != NULL)
     {
         if (parameters[0] != 0)
@@ -404,15 +452,15 @@ int jmp_if_true_op(intcode_t* const prog, const int64_t* const parameters)
         {
             prog->head += get_instruction_size(OP_CODE_JMP_IF_TRUE);
         }
-        ret = INT_CODE_CONTINUE;
+        op_ret = INT_CODE_CONTINUE;
     }
-    return ret;
+    return op_ret;
 }
 
 int jmp_if_false_op(intcode_t* const prog, const int64_t* const parameters)
 {
     /*TODO add boundary checks*/
-    int ret = INT_CODE_ERROR;
+    int op_ret = INT_CODE_ERROR;
     if (parameters != NULL)
     {
         if (parameters[0] == 0)
@@ -423,60 +471,68 @@ int jmp_if_false_op(intcode_t* const prog, const int64_t* const parameters)
         {
             prog->head += get_instruction_size(OP_CODE_JMP_IF_FALSE);
         }
-        ret = INT_CODE_CONTINUE;
+        op_ret = INT_CODE_CONTINUE;
     }
-    return ret;
+    return op_ret;
 }
 
 int is_less_op(intcode_t* const prog, const int64_t* const parameters)
 {
     /*TODO add boundary checks*/
-    int ret = INT_CODE_ERROR;
+    int op_ret = INT_CODE_ERROR;
     if (parameters != NULL)
     {
+        int ret = 0;
         if (parameters[0] < parameters[1])
         {
-            prog->memory[parameters[2]] = 1;
+            ret = set_mem_value(prog, parameters[2], 1);
         }
         else
         {
-            prog->memory[parameters[2]] = 0;
+            ret = set_mem_value(prog, parameters[2], 0);
         }
-        prog->head += get_instruction_size(OP_CODE_IS_LESS);
-        ret = INT_CODE_CONTINUE;
+        if (ret != 0)
+        {
+            prog->head += get_instruction_size(OP_CODE_IS_LESS);
+            op_ret = INT_CODE_CONTINUE;
+        }
     }
-    return ret;
+    return op_ret;
 }
 int is_equals_op(intcode_t* const prog, const int64_t* const parameters)
 {
     /*TODO add boundary checks*/
-    int ret = INT_CODE_ERROR;
+    int op_ret = INT_CODE_ERROR;
     if (parameters != NULL)
     {
+        int ret = 0;
         if (parameters[0] == parameters[1])
         {
-            prog->memory[parameters[2]] = 1;
+            ret = set_mem_value(prog, parameters[2], 1);
         }
         else
         {
-            prog->memory[parameters[2]] = 0;
+            ret = set_mem_value(prog, parameters[2], 0);
         }
-        prog->head += get_instruction_size(OP_CODE_IS_EQUALS);
-        ret = INT_CODE_CONTINUE;
+        if (ret != 0)
+        {
+            prog->head += get_instruction_size(OP_CODE_IS_EQUALS);
+            op_ret = INT_CODE_CONTINUE;
+        }
     }
-    return ret;
+    return op_ret;
 }
 
 int adjust_rel_base_op(intcode_t* const prog, const int64_t* const parameters)
 {
-    int ret = INT_CODE_ERROR;
+    int op_ret = INT_CODE_ERROR;
     if ((prog != NULL) && (parameters != NULL))
     {
         prog->relative_base += parameters[0];
         prog->head += get_instruction_size(OP_CODE_ADJUST_REL_BASE);
-        ret = INT_CODE_CONTINUE;
+        op_ret = INT_CODE_CONTINUE;
     }
-    return ret;
+    return op_ret;
 }
 
 int error_op(intcode_t* const prog, const int64_t* const parameters)
@@ -549,7 +605,7 @@ static int get_opcode(const int64_t number)
 
 static int is_valid_opcode(const int op_code)
 {
-    return (op_code >= 1 && op_code <= 8) || (op_code == OP_CODE_HALT);
+    return (op_code >= 1 && op_code <= 9) || (op_code == OP_CODE_HALT);
 }
 
 static void
@@ -575,13 +631,12 @@ static int get_parameter_values(const intcode_t* const prog,
 {
     int no_error = 0;
     /*Assuming range checks are made by caller*/
-    if ((prog != NULL) && (prog->memory != NULL) && (parameter_modes != NULL) &&
-        (parameters != NULL))
+    if ((prog != NULL) && (parameter_modes != NULL) && (parameters != NULL))
     {
         no_error = 1;
         for (size_t i = 0; i < num_parameters; i++)
         {
-            int64_t memory_val = prog->memory[prog->head + i + 1];
+            int64_t memory_val = get_mem_value(prog, prog->head + i + 1);
             int64_t param_val  = 0;
             if (parameter_modes[i] == PARAM_MODE_POSITION)
             {
@@ -594,7 +649,7 @@ static int get_parameter_values(const intcode_t* const prog,
                 else
                 {
                     /*The parameter value is stored at the address*/
-                    param_val = prog->memory[memory_val];
+                    param_val = get_mem_value(prog, memory_val);
                 }
             }
             else if (parameter_modes[i] == PARAM_MODE_IMMEDIATE)
@@ -612,7 +667,7 @@ static int get_parameter_values(const intcode_t* const prog,
                 else
                 {
                     /*The parameter value is stored at the address*/
-                    param_val = prog->memory[memory_val + prog->relative_base];
+                    param_val = get_mem_value(prog, memory_val + prog->relative_base);
                 }
             }
             else
@@ -646,6 +701,8 @@ static intcode_op_f get_op_func(const int op_code)
             return jmp_if_true_op;
         case OP_CODE_JMP_IF_FALSE:
             return jmp_if_false_op;
+        case OP_CODE_ADJUST_REL_BASE:
+            return adjust_rel_base_op;
         default:
             return error_op;
     }

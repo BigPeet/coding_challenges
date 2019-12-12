@@ -50,6 +50,8 @@ intcode_t* read_intcode(const char* const file_path);
 intcode_t* create_intcode(int64_t* const content, const size_t content_size);
 void destroy_intcode(intcode_t* const prog);
 void print_intcode(const intcode_t* const prog);
+int set_mem_value(intcode_t* const prog, const size_t address, const int64_t value);
+int64_t get_mem_value(const intcode_t* const prog, const size_t address);
 void set_io_mode(intcode_t* const prog, const intcode_io_mode_t mode);
 void set_mem_io_in(intcode_t* const prog, intcode_io_mem_t* const input_store);
 void set_mem_io_out(intcode_t* const prog, intcode_io_mem_t* const output_store);
