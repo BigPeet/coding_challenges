@@ -54,6 +54,7 @@ if (BUILD_TESTING)
       ${PROJECT_NAME}-test
       test/test_main.cpp
       test/test_challenge.cpp
+      test/test_intcode.cpp
       )
     set_property(TARGET ${PROJECT_NAME}-test PROPERTY CXX_STANDARD 11)
     set_property(TARGET ${PROJECT_NAME}-test PROPERTY CXX_STANDARD_REQUIRED ON)
