@@ -27,7 +27,7 @@ typedef enum
 
 typedef struct
 {
-    int value;
+    int64_t value;
     int consumed;
     pthread_mutex_t mut;
     pthread_cond_t cond;
@@ -35,7 +35,7 @@ typedef struct
 
 typedef struct
 {
-    int* memory;
+    int64_t* memory;
     size_t memory_size;
     size_t head;
     intcode_io_mode_t io_mode;
@@ -46,7 +46,7 @@ typedef struct
 } intcode_t;
 
 intcode_t* read_intcode(const char* const file_path);
-intcode_t* create_intcode(int* const content, const size_t content_size);
+intcode_t* create_intcode(int64_t* const content, const size_t content_size);
 void destroy_intcode(intcode_t* const prog);
 void print_intcode(const intcode_t* const prog);
 void set_io_mode(intcode_t* const prog, const intcode_io_mode_t mode);
@@ -60,15 +60,15 @@ int output_intcode(const intcode_t* const prog);
 int execute(intcode_t* const prog);
 int execute_head_block(intcode_t* const prog, int* const op_code);
 
-int add_op(intcode_t* const prog, const int* const parameters);
-int multiply_op(intcode_t* const prog, const int* const parameters);
-int input_op(intcode_t* const prog, const int* const parameters);
-int output_op(intcode_t* const prog, const int* const parameters);
-int jmp_if_true_op(intcode_t* const prog, const int* const parameters);
-int jmp_if_false_op(intcode_t* const prog, const int* const parameters);
-int is_less_op(intcode_t* const prog, const int* const parameters);
-int is_equals_op(intcode_t* const prog, const int* const parameters);
-int error_op(intcode_t* const prog, const int* const parameters);
+int add_op(intcode_t* const prog, const int64_t* const parameters);
+int multiply_op(intcode_t* const prog, const int64_t* const parameters);
+int input_op(intcode_t* const prog, const int64_t* const parameters);
+int output_op(intcode_t* const prog, const int64_t* const parameters);
+int jmp_if_true_op(intcode_t* const prog, const int64_t* const parameters);
+int jmp_if_false_op(intcode_t* const prog, const int64_t* const parameters);
+int is_less_op(intcode_t* const prog, const int64_t* const parameters);
+int is_equals_op(intcode_t* const prog, const int64_t* const parameters);
+int error_op(intcode_t* const prog, const int64_t* const parameters);
 
 
 #endif /* ifndef INCLUDE_CHALLENGE_LIB_H */

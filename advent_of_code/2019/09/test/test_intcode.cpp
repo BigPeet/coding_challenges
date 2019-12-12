@@ -15,26 +15,22 @@ extern "C" {
 class intcode_test : public ::testing::Test
 {
   protected:
-    void SetUp() override
-    {
-    }
+    void SetUp() override {}
 
-    void TearDown() override
-    {
-    }
+    void TearDown() override {}
 };
 
 TEST_F(intcode_test, add_test_01)
 {
     size_t nums = 4;
-    int memory[nums];
+    int64_t memory[nums];
     memory[0] = 1;
     memory[1] = 10;
     memory[2] = 20;
     memory[3] = 40;
 
-    int parameters[3] = {10, 20, 3};
-    int solution      = 30;
+    int64_t parameters[3] = {10, 20, 3};
+    int solution          = 30;
 
     intcode_t prog;
     prog.memory      = memory;
@@ -49,14 +45,14 @@ TEST_F(intcode_test, add_test_01)
 TEST_F(intcode_test, multiply_test_01)
 {
     size_t nums = 4;
-    int memory[nums];
+    int64_t memory[nums];
     memory[0] = 1;
     memory[1] = 10;
     memory[2] = 20;
     memory[3] = 40;
 
-    int parameters[3] = {10, 20, 3};
-    int solution      = 200;
+    int64_t parameters[3] = {10, 20, 3};
+    int solution          = 200;
 
     intcode_t prog;
     prog.memory      = memory;
@@ -71,7 +67,7 @@ TEST_F(intcode_test, multiply_test_01)
 TEST_F(intcode_test, execute_test_01)
 {
     size_t nums = 5;
-    int memory[nums];
+    int64_t memory[nums];
     memory[0] = 1;
     memory[1] = 0;
     memory[2] = 0;
@@ -102,7 +98,7 @@ TEST_F(intcode_test, execute_test_01)
 TEST_F(intcode_test, execute_test_02)
 {
     size_t nums = 5;
-    int memory[nums];
+    int64_t memory[nums];
     memory[0] = 2;
     memory[1] = 3;
     memory[2] = 0;
@@ -133,7 +129,7 @@ TEST_F(intcode_test, execute_test_02)
 TEST_F(intcode_test, execute_test_03)
 {
     size_t nums = 6;
-    int memory[nums];
+    int64_t memory[nums];
     memory[0] = 2;
     memory[1] = 4;
     memory[2] = 4;
@@ -166,7 +162,7 @@ TEST_F(intcode_test, execute_test_03)
 TEST_F(intcode_test, execute_test_04)
 {
     size_t nums = 9;
-    int memory[nums];
+    int64_t memory[nums];
     memory[0] = 1;
     memory[1] = 1;
     memory[2] = 1;
@@ -205,7 +201,7 @@ TEST_F(intcode_test, execute_test_04)
 TEST_F(intcode_test, execute_test_05)
 {
     size_t nums = 5;
-    int memory[nums];
+    int64_t memory[nums];
     memory[0] = 1001;
     memory[1] = 0;
     memory[2] = 1;
@@ -239,13 +235,13 @@ TEST_F(intcode_test, execute_test_prog_01_01)
 
     // consider whether the input is equal to 8;
     // output 1 (if it is) or 0 (if it is not).
-    int memory[nums]      = {3, 9, 8, 9, 10, 9, 4, 9, 99, -1, 8};
-    intcode_t* prog = create_intcode(memory, nums);
+    int64_t memory[nums] = {3, 9, 8, 9, 10, 9, 4, 9, 99, -1, 8};
+    intcode_t* prog      = create_intcode(memory, nums);
 
     ASSERT_TRUE(prog != NULL);
 
     std::string file_path = "test/test_input_1.txt";
-    std::string solution = "0\n";
+    std::string solution  = "0\n";
 
     testing::internal::CaptureStdout();
     if (freopen(file_path.c_str(), "r", stdin) != NULL)
@@ -256,7 +252,6 @@ TEST_F(intcode_test, execute_test_prog_01_01)
         ASSERT_EQ(ret, 1);
         ASSERT_EQ(output, solution);
     }
-
 }
 
 TEST_F(intcode_test, execute_test_prog_01_02)
@@ -265,11 +260,11 @@ TEST_F(intcode_test, execute_test_prog_01_02)
 
     // consider whether the input is equal to 8;
     // output 1 (if it is) or 0 (if it is not).
-    int memory[nums]      = {3, 9, 8, 9, 10, 9, 4, 9, 99, -1, 8};
-    intcode_t* prog = create_intcode(memory, nums);
+    int64_t memory[nums] = {3, 9, 8, 9, 10, 9, 4, 9, 99, -1, 8};
+    intcode_t* prog      = create_intcode(memory, nums);
 
     std::string file_path = "test/test_input_8.txt";
-    std::string solution = "1\n";
+    std::string solution  = "1\n";
 
     testing::internal::CaptureStdout();
     if (freopen(file_path.c_str(), "r", stdin) != NULL)
@@ -288,11 +283,11 @@ TEST_F(intcode_test, execute_test_prog_01_03)
 
     // consider whether the input is equal to 8;
     // output 1 (if it is) or 0 (if it is not).
-    int memory[nums]      = {3, 9, 8, 9, 10, 9, 4, 9, 99, -1, 8};
-    intcode_t* prog = create_intcode(memory, nums);
+    int64_t memory[nums] = {3, 9, 8, 9, 10, 9, 4, 9, 99, -1, 8};
+    intcode_t* prog      = create_intcode(memory, nums);
 
     std::string file_path = "test/test_input_10.txt";
-    std::string solution = "0\n";
+    std::string solution  = "0\n";
 
     testing::internal::CaptureStdout();
     if (freopen(file_path.c_str(), "r", stdin) != NULL)
@@ -303,4 +298,40 @@ TEST_F(intcode_test, execute_test_prog_01_03)
         ASSERT_EQ(ret, 1);
         ASSERT_EQ(output, solution);
     }
+}
+
+TEST_F(intcode_test, execute_output_large_number_01)
+{
+    size_t nums = 3;
+
+    // Output large number
+    int64_t memory[nums] = {104, 1125899906842624, 99};
+    intcode_t* prog      = create_intcode(memory, nums);
+
+    std::string solution = "1125899906842624\n";
+
+    testing::internal::CaptureStdout();
+    int ret            = execute(prog);
+    std::string output = testing::internal::GetCapturedStdout();
+
+    ASSERT_EQ(ret, 1);
+    ASSERT_EQ(output, solution);
+}
+
+TEST_F(intcode_test, execute_output_large_number_02)
+{
+    size_t nums = 8;
+
+    // Output large number
+    int64_t memory[] = {1102, 34915192, 34915192, 7, 4, 7, 99, 0};
+    intcode_t* prog      = create_intcode(memory, nums);
+
+    std::string solution = "1219070632396864\n";
+
+    testing::internal::CaptureStdout();
+    int ret            = execute(prog);
+    std::string output = testing::internal::GetCapturedStdout();
+
+    ASSERT_EQ(ret, 1);
+    ASSERT_EQ(output, solution);
 }
