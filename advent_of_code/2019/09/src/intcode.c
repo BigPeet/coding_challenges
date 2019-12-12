@@ -13,21 +13,23 @@
 
 typedef enum
 {
-    OP_CODE_ADD          = 1,
-    OP_CODE_MULT         = 2,
-    OP_CODE_INPUT        = 3,
-    OP_CODE_OUTPUT       = 4,
-    OP_CODE_JMP_IF_TRUE  = 5,
-    OP_CODE_JMP_IF_FALSE = 6,
-    OP_CODE_IS_LESS      = 7,
-    OP_CODE_IS_EQUALS    = 8,
-    OP_CODE_HALT         = 99,
+    OP_CODE_ADD             = 1,
+    OP_CODE_MULT            = 2,
+    OP_CODE_INPUT           = 3,
+    OP_CODE_OUTPUT          = 4,
+    OP_CODE_JMP_IF_TRUE     = 5,
+    OP_CODE_JMP_IF_FALSE    = 6,
+    OP_CODE_IS_LESS         = 7,
+    OP_CODE_IS_EQUALS       = 8,
+    OP_CODE_ADJUST_REL_BASE = 9,
+    OP_CODE_HALT            = 99,
 } intcode_op_codes_t;
 
 typedef enum
 {
     PARAM_MODE_POSITION  = 0,
     PARAM_MODE_IMMEDIATE = 1,
+    PARAM_MODE_RELATIVE  = 2,
 } intcode_param_modes_t;
 
 typedef int (*intcode_op_f)(intcode_t* const, const int64_t* const);
@@ -41,14 +43,12 @@ static int get_opcode(const int64_t number);
 static int is_valid_opcode(const int op_code);
 
 static intcode_op_f get_op_func(const int op_code);
-static void get_parameter_modes(const int64_t number,
+static void
+get_parameter_modes(const int64_t number, const size_t num_parameters, int* const parameter_modes);
+
+static int get_parameter_values(const intcode_t* const prog,
                                 const size_t num_parameters,
                                 const int store_param,
-                                int* const parameter_modes);
-
-static int get_parameter_values(const int64_t* const memory,
-                                const size_t head,
-                                const size_t num_parameters,
                                 const int* const parameter_modes,
                                 int64_t* const parameters);
 
@@ -105,14 +105,15 @@ intcode_t* create_intcode(int64_t* const memory, const size_t memory_size)
         prog = (intcode_t*)malloc(sizeof(intcode_t));
         if (prog != NULL)
         {
-            prog->memory      = memory;
-            prog->memory_size = memory_size;
-            prog->head        = 0;
-            prog->io_mode     = INT_CODE_STD_IO;
-            prog->std_io_in   = stdin;
-            prog->std_io_out  = stdout;
-            prog->mem_io_in   = NULL;
-            prog->mem_io_out  = NULL;
+            prog->memory        = memory;
+            prog->memory_size   = memory_size;
+            prog->head          = 0;
+            prog->relative_base = 0;
+            prog->io_mode       = INT_CODE_STD_IO;
+            prog->std_io_in     = stdin;
+            prog->std_io_out    = stdout;
+            prog->mem_io_in     = NULL;
+            prog->mem_io_out    = NULL;
         }
     }
     return prog;
@@ -272,10 +273,9 @@ int execute_head_block(intcode_t* const prog, int* const op_code)
                     {
                         store_param = INTCODE_NO_STORE;
                     }
-                    get_parameter_modes(
-                      prog->memory[head], inst_size - 1, store_param, parameter_modes);
+                    get_parameter_modes(prog->memory[head], inst_size - 1, parameter_modes);
                     if (get_parameter_values(
-                          prog->memory, head, inst_size - 1, parameter_modes, parameters))
+                          prog, inst_size - 1, store_param, parameter_modes, parameters))
                     {
                         ret = get_op_func(*op_code)(prog, parameters);
                     }
@@ -467,6 +467,18 @@ int is_equals_op(intcode_t* const prog, const int64_t* const parameters)
     return ret;
 }
 
+int adjust_rel_base_op(intcode_t* const prog, const int64_t* const parameters)
+{
+    int ret = INT_CODE_ERROR;
+    if ((prog != NULL) && (parameters != NULL))
+    {
+        prog->relative_base += parameters[0];
+        prog->head += get_instruction_size(OP_CODE_ADJUST_REL_BASE);
+        ret = INT_CODE_CONTINUE;
+    }
+    return ret;
+}
+
 int error_op(intcode_t* const prog, const int64_t* const parameters)
 {
     return INT_CODE_ERROR;
@@ -509,7 +521,8 @@ static size_t get_instruction_size(const int op_code)
     {
         inst_size = 3;
     }
-    else if ((op_code == OP_CODE_INPUT) || (op_code == OP_CODE_OUTPUT))
+    else if ((op_code == OP_CODE_INPUT) || (op_code == OP_CODE_OUTPUT) ||
+             (op_code == OP_CODE_ADJUST_REL_BASE))
     {
         inst_size = 2;
     }
@@ -539,51 +552,68 @@ static int is_valid_opcode(const int op_code)
     return (op_code >= 1 && op_code <= 8) || (op_code == OP_CODE_HALT);
 }
 
-static void get_parameter_modes(const int64_t number,
-                                const size_t num_parameters,
-                                const int store_param,
-                                int* const parameter_modes)
+static void
+get_parameter_modes(const int64_t number, const size_t num_parameters, int* const parameter_modes)
 {
     if (NULL != parameter_modes)
     {
-        int modes = number / 100;
+        int64_t modes = number / 100;
         for (size_t i = 0; i < num_parameters; i++)
         {
             int mode           = modes % 10;
             parameter_modes[i] = mode;
             modes /= 10;
         }
-        if ((store_param != INTCODE_NO_STORE) && (store_param < num_parameters))
-        {
-            /*Storage parameters always use the address, i.e. immediate mode*/
-            parameter_modes[store_param] = PARAM_MODE_IMMEDIATE;
-        }
     }
 }
 
-static int get_parameter_values(const int64_t* const memory,
-                                const size_t head,
+static int get_parameter_values(const intcode_t* const prog,
                                 const size_t num_parameters,
+                                const int store_param,
                                 const int* const parameter_modes,
                                 int64_t* const parameters)
 {
     int no_error = 0;
     /*Assuming range checks are made by caller*/
-    if ((memory != NULL) && (parameter_modes != NULL) && (parameters != NULL))
+    if ((prog != NULL) && (prog->memory != NULL) && (parameter_modes != NULL) &&
+        (parameters != NULL))
     {
         no_error = 1;
         for (size_t i = 0; i < num_parameters; i++)
         {
-            int64_t memory_val = memory[head + i + 1];
+            int64_t memory_val = prog->memory[prog->head + i + 1];
             int64_t param_val  = 0;
             if (parameter_modes[i] == PARAM_MODE_POSITION)
             {
                 /*TODO check boundaries*/
-                param_val = memory[memory_val];
+                if ((store_param != INTCODE_NO_STORE) && (store_param == i))
+                {
+                    /*The parameter value is the address where the result of op is stored.*/
+                    param_val = memory_val;
+                }
+                else
+                {
+                    /*The parameter value is stored at the address*/
+                    param_val = prog->memory[memory_val];
+                }
             }
             else if (parameter_modes[i] == PARAM_MODE_IMMEDIATE)
             {
                 param_val = memory_val;
+            }
+            else if (parameter_modes[i] == PARAM_MODE_RELATIVE)
+            {
+                /*TODO check boundaries*/
+                if ((store_param != INTCODE_NO_STORE) && (store_param == i))
+                {
+                    /*The parameter value is the address where the result of op is stored.*/
+                    param_val = memory_val + prog->relative_base;
+                }
+                else
+                {
+                    /*The parameter value is stored at the address*/
+                    param_val = prog->memory[memory_val + prog->relative_base];
+                }
             }
             else
             {
@@ -655,7 +685,7 @@ static void read_from_io_mem(intcode_io_mem_t* const storage, int64_t* value)
 {
     if ((storage != NULL) && (value != NULL))
     {
-        *value = storage->value;
+        *value            = storage->value;
         storage->consumed = 1;
     }
 }

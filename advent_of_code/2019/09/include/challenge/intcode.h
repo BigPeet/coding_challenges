@@ -38,6 +38,7 @@ typedef struct
     int64_t* memory;
     size_t memory_size;
     size_t head;
+    int64_t relative_base;
     intcode_io_mode_t io_mode;
     intcode_io_mem_t* mem_io_in;
     intcode_io_mem_t* mem_io_out;
@@ -68,6 +69,7 @@ int jmp_if_true_op(intcode_t* const prog, const int64_t* const parameters);
 int jmp_if_false_op(intcode_t* const prog, const int64_t* const parameters);
 int is_less_op(intcode_t* const prog, const int64_t* const parameters);
 int is_equals_op(intcode_t* const prog, const int64_t* const parameters);
+int adjust_rel_base_op(intcode_t* const prog, const int64_t* const parameters);
 int error_op(intcode_t* const prog, const int64_t* const parameters);
 
 
