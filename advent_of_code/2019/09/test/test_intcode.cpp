@@ -283,7 +283,7 @@ TEST_F(intcode_test, execute_test_prog_01_03)
 
     // consider whether the input is equal to 8;
     // output 1 (if it is) or 0 (if it is not).
-    int64_t memory[nums] = {3, 9, 8, 9, 10, 9, 4, 9, 99, -1, 8};
+    int64_t memory[] = {3, 9, 8, 9, 10, 9, 4, 9, 99, -1, 8};
     intcode_t* prog      = create_intcode(memory, nums);
 
     std::string file_path = "test/test_input_10.txt";
@@ -305,7 +305,7 @@ TEST_F(intcode_test, execute_output_large_number_01)
     size_t nums = 3;
 
     // Output large number
-    int64_t memory[nums] = {104, 1125899906842624, 99};
+    int64_t memory[] = {104, 1125899906842624, 99};
     intcode_t* prog      = create_intcode(memory, nums);
 
     std::string solution = "1125899906842624\n";
@@ -322,7 +322,7 @@ TEST_F(intcode_test, execute_output_large_number_02)
 {
     size_t nums = 8;
 
-    // Output large number
+    // Output large number (34915192 ** 2)
     int64_t memory[] = {1102, 34915192, 34915192, 7, 4, 7, 99, 0};
     intcode_t* prog      = create_intcode(memory, nums);
 
