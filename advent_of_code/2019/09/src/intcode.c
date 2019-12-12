@@ -10,6 +10,7 @@
 
 #define INTCODE_DELIM ","
 #define INTCODE_NO_STORE -1
+/*#define DEBUG 1*/
 
 typedef enum
 {
@@ -303,7 +304,18 @@ int execute_head_block(intcode_t* const prog, int* const op_code)
     {
         size_t head      = prog->head;
         *op_code         = get_opcode(get_mem_value(prog, prog->head));
+#ifdef DEBUG
+        printf("Op Code: %d\n", *op_code);
+#endif
         size_t inst_size = get_instruction_size(*op_code);
+
+#ifdef DEBUG
+        for (int i = 0; i < inst_size; ++i)
+        {
+            printf("%ld ", prog->memory[head + i]);
+        }
+        printf("\n");
+#endif
         if (*op_code == OP_CODE_HALT)
         {
             ret = INT_CODE_HALT;
@@ -314,13 +326,19 @@ int execute_head_block(intcode_t* const prog, int* const op_code)
             int parameter_modes[inst_size - 1];
             int store_param = inst_size - 2;
             if ((*op_code == OP_CODE_OUTPUT) || (*op_code == OP_CODE_JMP_IF_TRUE) ||
-                (*op_code == OP_CODE_JMP_IF_FALSE))
+                (*op_code == OP_CODE_JMP_IF_FALSE) || (*op_code == OP_CODE_ADJUST_REL_BASE))
             {
                 store_param = INTCODE_NO_STORE;
             }
             get_parameter_modes(get_mem_value(prog, head), inst_size - 1, parameter_modes);
             if (get_parameter_values(prog, inst_size - 1, store_param, parameter_modes, parameters))
             {
+#ifdef DEBUG
+            for (int i = 0; i < inst_size - 1; i++)
+            {
+                printf("%d\t%ld\n", parameter_modes[i], parameters[i]);
+            }
+#endif
                 ret = get_op_func(*op_code)(prog, parameters);
             }
         }
@@ -378,7 +396,6 @@ int input_op(intcode_t* const prog, const int64_t* const parameters)
         {
             if (read_from_io_std(prog->std_io_in, &val))
             {
-                /*TODO add boundary check*/
                 int ret = set_mem_value(prog, parameters[0], val);
                 if (ret != 0)
                 {
