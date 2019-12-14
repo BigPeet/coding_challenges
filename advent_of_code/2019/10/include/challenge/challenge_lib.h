@@ -28,5 +28,7 @@ void print_map(const Map* const map);
 int get_max_visible_asteroids(const Map* const map, Point* const pos);
 int count_visible_asteroids(const Point* const ast_pos,
                             const Map* const map);
+void fire_laser(Map* const map, const Point* const laser_pos);
+void get_blocked_map(const Map* const map, const Point* const origin, int* blocked);
 
 #endif /* ifndef INCLUDE_CHALLENGE_LIB_H */
