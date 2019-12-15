@@ -28,6 +28,9 @@ static void get_system_state(Moon** const moons,
 static int are_equal(const int* state_a,
                      const int* state_b,
                      const int num_moons);
+static void get_primes(const int64_t upper_limit,
+                       int64_t* const storage,
+                       int64_t* const prime_amount);
 
 static int get_max(const int* const cycle_lengths, const int amount);
 
@@ -219,23 +222,45 @@ int steps_for_cycle(Moon** moons, const int num_moons, const int dim)
 
 int64_t least_common_multiple(const int* const cycle_lengths, const int amount)
 {
-    /*This is a brute force approach.*/
-    /*An faster and smarter alternative would be to use primes,
-     * e.g. "Division Method".*/
-    int max      = get_max(cycle_lengths, amount);
-    int64_t mult = 0;
+    /*"Division Method" to find LCM*/
+    int max = get_max(cycle_lengths, amount);
+    int64_t primes[max];
+    int64_t num_of_primes = 0;
+    get_primes(max, primes, &num_of_primes);
+
+    int copy[amount];
+    for (int i = 0; i < amount; ++i)
+    {
+        copy[i] = cycle_lengths[i];
+    }
+
+    int64_t mult = 1;
     if (cycle_lengths != NULL)
     {
         int found = 0;
         while (!found)
         {
-            mult += max;
+            int divided_prime = 0;
+            for (int64_t i = 0; i < num_of_primes && !divided_prime; ++i)
+            {
+                for (int j = 0; j < amount; ++j)
+                {
+                    if (copy[j] % primes[i] == 0)
+                    {
+                        copy[j] /= primes[i];
+                        divided_prime = 1;
+                    }
+                }
+                if (divided_prime)
+                {
+                    mult *= primes[i];
+                }
+            }
+
             found = 1;
             for (int i = 0; i < amount; ++i)
             {
-                found = found && (cycle_lengths[i] > 0) &&
-                        (mult / cycle_lengths[i] != 0) &&
-                        (mult % cycle_lengths[i] == 0);
+                found = found && (copy[i] == 1);
             }
         }
     }
@@ -333,4 +358,38 @@ static int get_max(const int* const cycle_lengths, const int amount)
         }
     }
     return max;
+}
+
+static void get_primes(const int64_t upper_limit,
+                       int64_t* const storage,
+                       int64_t* const prime_amount)
+{
+    assert(storage != NULL);
+    assert(prime_amount != NULL);
+    assert(upper_limit > 0);
+
+    /*Sieve of Eratosthenes...if I remember correctly*/
+
+    int64_t prime_index = 0;
+    int64_t all_numbers[upper_limit + 1];
+
+    for (int64_t i = 0; i < upper_limit + 1; ++i)
+    {
+        all_numbers[i] = i;
+    }
+    all_numbers[1] = 0;
+    for (int64_t i = 2; i < upper_limit; ++i)
+    {
+        int64_t number = all_numbers[i];
+        if (number != 0)
+        {
+            storage[prime_index++] = number;
+            int64_t start          = number * number;
+            for (int64_t j = start; j < upper_limit; j += number)
+            {
+                all_numbers[j] = 0;
+            }
+        }
+    }
+    *prime_amount = prime_index;
 }
