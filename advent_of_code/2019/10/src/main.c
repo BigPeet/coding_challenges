@@ -34,40 +34,21 @@ int main(int argc, char* argv[])
     int height = dimensions[0];
     int width  = dimensions[1];
 
-    int data[height][width];
-    Map map = {.height = height, .width = width, .data = &data[0][0]};
-    read_map(argv[1], &map);
-
-    print_map(&map);
+    Map* map = read_map(argv[1], height, width);
+    if (map == NULL)
+    {
+        printf("Reading map failed.\n");
+        return 0;
+    }
+    print_map(map);
 
     Point best;
-    int max = get_max_visible_asteroids(&map, &best);
-
+    int max = get_max_visible_asteroids(map, &best);
     printf("Maximal visible asteroids %d from (%d, %d)\n", max, best.x, best.y);
 
-    fire_laser(&map, &best);
+    fire_laser(map, &best);
 
-    /*Point solution = {.x = 5, .y = 8};*/
-    /*int count = count_visible_asteroids(&solution, &map);*/
-    /*printf("%d visible asteroids from (%d, %d)\n", count, solution.x, solution.y);*/
-
-    /*Point debug = {.x = 3, .y = 4};*/
-    /*int blocked[map.height][map.width];*/
-    /*get_blocked_map(&map, &debug, &blocked[0][0]);*/
-    /*printf("Blocked:\n");*/
-    /*for (int row = 0; row < map.height; ++row)*/
-    /*{*/
-        /*for (int col = 0; col < map.width; col++)*/
-        /*{*/
-            /*printf("%d ", blocked[row][col]);*/
-        /*}*/
-        /*printf("\n");*/
-    /*}*/
-
-
-    /*int count = count_visible_asteroids(&debug, &map);*/
-    /*printf("%d visible asteroids from (%d, %d)\n", count, debug.x, debug.y);*/
-
+    destroy_map(map);
 
     return 0;
 }

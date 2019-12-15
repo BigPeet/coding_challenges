@@ -21,9 +21,9 @@ typedef struct
     int* data;
 } Map;
 
-void read_map(const char* const file_path,
-              Map* map);
+Map* read_map(const char* const file_path, const int height, const int width);
 void print_map(const Map* const map);
+void destroy_map(Map* const map);
 
 int get_max_visible_asteroids(const Map* const map, Point* const pos);
 int count_visible_asteroids(const Point* const ast_pos,
