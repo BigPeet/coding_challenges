@@ -3,6 +3,7 @@ project(aoc2019_11 VERSION 0.0.1)
 
 # for correct library locations across platforms
 include(GNUInstallDirs)
+find_package(Threads REQUIRED)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -16,6 +17,7 @@ add_library(
   ${PROJECT_NAME}_lib
   SHARED
   src/challenge_lib.c
+  src/intcode.c
 )
 
 add_executable(
@@ -25,6 +27,7 @@ add_executable(
 
 target_link_libraries(${PROJECT_NAME}
   ${PROJECT_NAME}_lib
+  ${CMAKE_THREAD_LIBS_INIT}
 )
 
 target_include_directories(
@@ -53,6 +56,7 @@ if (BUILD_TESTING)
       ${PROJECT_NAME}-test
       test/test_main.cpp
       test/test_challenge.cpp
+      test/test_intcode.cpp
       )
     set_property(TARGET ${PROJECT_NAME}-test PROPERTY CXX_STANDARD 11)
     set_property(TARGET ${PROJECT_NAME}-test PROPERTY CXX_STANDARD_REQUIRED ON)
