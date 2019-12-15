@@ -108,15 +108,16 @@ intcode_t* create_intcode(int64_t* const memory, const size_t memory_size)
         prog = (intcode_t*) malloc(sizeof(intcode_t));
         if (prog != NULL)
         {
-            prog->memory        = memory;
-            prog->memory_size   = memory_size;
-            prog->head          = 0;
-            prog->relative_base = 0;
-            prog->io_mode       = INT_CODE_STD_IO;
-            prog->std_io_in     = stdin;
-            prog->std_io_out    = stdout;
-            prog->mem_io_in     = NULL;
-            prog->mem_io_out    = NULL;
+            prog->memory            = memory;
+            prog->memory_size       = memory_size;
+            prog->head              = 0;
+            prog->relative_base     = 0;
+            prog->io_mode           = INT_CODE_STD_IO;
+            prog->std_io_in         = stdin;
+            prog->std_io_out        = stdout;
+            prog->mem_io_in         = NULL;
+            prog->mem_io_out        = NULL;
+            prog->waiting_for_input = 0;
         }
     }
     return prog;
@@ -381,6 +382,16 @@ int execute_head_block(intcode_t* const prog, int* const op_code)
     return ret;
 }
 
+int waiting_for_input(const intcode_t* const prog)
+{
+    int waiting = 0;
+    if (prog != NULL)
+    {
+        waiting = prog->waiting_for_input;
+    }
+    return waiting;
+}
+
 int add_op(intcode_t* const prog, const int64_t* const parameters)
 {
     int op_ret = INT_CODE_ERROR;
@@ -427,6 +438,7 @@ int input_op(intcode_t* const prog, const int64_t* const parameters)
     if ((prog != NULL) && (parameters != NULL))
     {
         int64_t val;
+        prog->waiting_for_input = 1;
         if (prog->io_mode == INT_CODE_STD_IO)
         {
             if (read_from_io_std(prog->std_io_in, &val))
@@ -437,6 +449,7 @@ int input_op(intcode_t* const prog, const int64_t* const parameters)
                     prog->head += get_instruction_size(OP_CODE_INPUT);
                     op_ret = INT_CODE_CONTINUE;
                 }
+                prog->waiting_for_input = 0;
             }
         }
         else if (prog->io_mode == INT_CODE_MEM_IO)
@@ -457,6 +470,7 @@ int input_op(intcode_t* const prog, const int64_t* const parameters)
                 prog->head += get_instruction_size(OP_CODE_INPUT);
                 op_ret = INT_CODE_CONTINUE;
             }
+            prog->waiting_for_input = 0;
         }
     }
     return op_ret;
@@ -483,6 +497,7 @@ int output_op(intcode_t* const prog, const int64_t* const parameters)
                                   &prog->mem_io_out->mut);
             }
             write_to_io_mem(prog->mem_io_out, parameters[0]);
+            /*prog->output_ready = 1;*/
             pthread_cond_signal(&prog->mem_io_out->cond);
             pthread_mutex_unlock(&prog->mem_io_out->mut);
         }

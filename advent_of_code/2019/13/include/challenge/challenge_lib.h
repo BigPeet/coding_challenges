@@ -32,25 +32,26 @@ typedef struct
 {
     int x;
     int y;
-    TileType type;
+    int type;
 } Tile;
 
 typedef struct
 {
     intcode_t* brain;
     int finished;
-} Builder;
+} Engine;
 
 typedef struct
 {
     TileType* game_area;
-    Builder* builder;
+    Engine* engine;
     int height;
     int width;
+    int score;
 } Game;
 
 /*Thread functions*/
-void* builder_func(void* args);
+void* engine_func(void* args);
 void* game_func(void* args);
 
 Game* create_game(const int height, const int width);
@@ -58,6 +59,6 @@ void destroy_game(Game* const game);
 void add_tile(Game* const game, const Tile* const tile);
 
 int count_tiles(const Game* const game, const TileType type);
-void print_game(const Game* const game);
+void display_game(const Game* const game);
 
 #endif /* ifndef INCLUDE_CHALLENGE_LIB_H */

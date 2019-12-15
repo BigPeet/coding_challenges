@@ -44,6 +44,7 @@ typedef struct
     intcode_io_mem_t* mem_io_out;
     FILE* std_io_in;
     FILE* std_io_out;
+    int waiting_for_input;
 } intcode_t;
 
 intcode_t* read_intcode(const char* const file_path);
@@ -59,6 +60,7 @@ void set_std_io_in(intcode_t* const prog, FILE* const input_stream);
 void set_std_io_out(intcode_t* const prog, FILE* const output_stream);
 intcode_t* copy_intcode(const intcode_t* const prog);
 int output_intcode(const intcode_t* const prog);
+int waiting_for_input(const intcode_t* const prog);
 
 intcode_io_mem_t* create_io_mem();
 void destroy_io_mem(intcode_io_mem_t* const store);

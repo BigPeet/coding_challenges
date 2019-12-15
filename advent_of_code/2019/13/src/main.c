@@ -35,6 +35,9 @@ int main(int argc, char* argv[])
     set_mem_io_in(prog, io_in);
     set_mem_io_out(prog, io_out);
 
+    /*Part 2: add quarters*/
+    prog->memory[0] = 2;
+
     if ((prog == NULL) || (io_in == NULL) || (io_out == NULL))
     {
         printf("Error reading programm or allocating IO memory\n");
@@ -49,27 +52,28 @@ int main(int argc, char* argv[])
         return 0;
     }
 
-    /*Setup builder*/
-    Builder builder;
-    builder.brain = prog;
-    builder.finished = 0;
-    game->builder = &builder;
+    /*Setup engine*/
+    Engine engine;
+    engine.brain = prog;
+    engine.finished = 0;
+    game->engine = &engine;
 
-    /*Start builder and game threads*/
-    pthread_t builder_thread;
-    pthread_create(&builder_thread, NULL, builder_func, &builder);
+    /*Start engine and game threads*/
+    pthread_t engine_thread;
+    pthread_create(&engine_thread, NULL, engine_func, &engine);
 
     pthread_t game_thread;
     pthread_create(&game_thread, NULL, game_func, game);
 
 
     /*Wait for threads to finish.*/
-    pthread_join(builder_thread, NULL);
+    pthread_join(engine_thread, NULL);
     pthread_join(game_thread, NULL);
 
     /*Print results*/
     int total_blocks = count_tiles(game, BLOCK);
     printf("Number of Block tiles: %d\n", total_blocks);
+    printf("Game Score: %d\n",  game->score);
 
     /*Clean up*/
     destroy_io_mem(io_in);

@@ -4,13 +4,16 @@ project(aoc2019_13 VERSION 0.0.1)
 # for correct library locations across platforms
 include(GNUInstallDirs)
 find_package(Threads REQUIRED)
+find_package(Curses REQUIRED)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(BUILD_TESTING 0)
 
 # BUILD
 
 include_directories(SYSTEM
   include
+  ${CURSES_INCLUDE_DIR}
   )
 
 add_library(
@@ -28,6 +31,7 @@ add_executable(
 target_link_libraries(${PROJECT_NAME}
   ${PROJECT_NAME}_lib
   ${CMAKE_THREAD_LIBS_INIT}
+  ${CURSES_LIBRARIES}
 )
 
 target_include_directories(
