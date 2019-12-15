@@ -50,8 +50,25 @@ void* control_func(void* args)
         if ((current_pos.x < 0) || (current_pos.x >= overview->width) ||
             (current_pos.y < 0) || (current_pos.y >= overview->height))
         {
-            printf("Robot has left the field.\n");
-            return NULL;
+            /*Robot left the field, increase hull in the correct direction.*/
+            Direction dir;
+            if (current_pos.x < 0)
+            {
+              dir = LEFT;
+            }
+            else if (current_pos.x >= overview->width)
+            {
+              dir = RIGHT;
+            }
+            else if (current_pos.y < 0)
+            {
+              dir = UP;
+            }
+            else if (current_pos.y >= overview->height)
+            {
+              dir = DOWN;
+            }
+            resize_overview(overview, dir);
         }
 
         Direction current_dir = overview->robot->direction;
@@ -111,6 +128,36 @@ void move(Robot* const robot)
     }
 }
 
+void resize_overview(Overview* const overview, const Direction dir)
+{
+    int new_height = ((dir == UP) || (dir == DOWN)) ? overview->height + 10
+                                                    : overview->height;
+    int new_width = ((dir == RIGHT) || (dir == LEFT)) ? overview->width + 10
+                                                      : overview->width;
+
+    int* new_hull = (int*) calloc(new_height, new_width * sizeof(int));
+    if (new_hull != NULL)
+    {
+        int start_y = (dir == UP) ? 10 : 0;
+        int start_x = (dir == LEFT) ? 10 : 0;
+        for (int i = start_y; i < overview->height; ++i)
+        {
+            for (int j = start_x; j < overview->width; ++j)
+            {
+                int old_index       = (i * overview->width) + j;
+                int new_index       = (i * new_width) + j;
+                new_hull[new_index] = overview->hull[old_index];
+            }
+        }
+        overview->robot->pos.x += start_x;
+        overview->robot->pos.y += start_y;
+        free(overview->hull);
+        overview->hull = new_hull;
+        overview->height = new_height;
+        overview->width = new_width;
+    }
+}
+
 int count_painted_fields(const Overview* const overview)
 {
     int count = 0;
@@ -131,6 +178,8 @@ int count_painted_fields(const Overview* const overview)
     }
     return count;
 }
+
+
 
 void print_overview(const Overview* const overview)
 {

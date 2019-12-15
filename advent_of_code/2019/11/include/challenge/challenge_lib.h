@@ -43,6 +43,7 @@ typedef struct
 
 Direction turn(const Direction current, const int command);
 void move(Robot* const robot);
+void resize_overview(Overview* const overview, const Direction dir);
 
 void print_overview(const Overview* const overview);
 int count_painted_fields(const Overview* const overview);

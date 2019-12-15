@@ -12,10 +12,10 @@
 #include "stdio.h"
 #include "stdlib.h"
 
-/*Give the robot a (hopefully) large enough starting field*/
-/*Might want to resize dynamically, if necessary*/
-#define INITIAL_HEIGHT 101
-#define INITIAL_WIDTH  101
+/*Give the robot a starting hull*/
+/*Hull area is resized dynamically*/
+#define INITIAL_HEIGHT 25
+#define INITIAL_WIDTH 25
 
 
 int main(int argc, char* argv[])
@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
     }
 
     /*Initialize the program with IO memory.*/
-    intcode_t* prog = read_intcode(argv[1]);
+    intcode_t* prog          = read_intcode(argv[1]);
     intcode_io_mem_t* io_in  = create_io_mem();
     intcode_io_mem_t* io_out = create_io_mem();
     set_io_mode(prog, INT_CODE_MEM_IO);
@@ -51,12 +51,15 @@ int main(int argc, char* argv[])
         return 0;
     }
 
-    /*TODO using the stack might be an issue here*/
     Position starting_pos = {.x = INITIAL_WIDTH / 2, .y = INITIAL_HEIGHT / 2};
     robot->direction = UP;
     robot->finished  = 0;
     robot->brain     = prog;
     robot->pos       = starting_pos;
+
+    /*Make starting position white (for Part 2)*/
+    hull[(starting_pos.y * INITIAL_WIDTH) + starting_pos.x] = 1;
+
     overview->height = INITIAL_HEIGHT;
     overview->width  = INITIAL_WIDTH;
     overview->hull   = hull;
@@ -74,16 +77,28 @@ int main(int argc, char* argv[])
     pthread_join(robot_thread, NULL);
     pthread_join(control_thread, NULL);
 
+    /*Print results*/
     int total_painted_once = count_painted_fields(overview);
     printf("Fields painted at least once: %d\n", total_painted_once);
+    print_overview(overview);
+    printf("Final size of hull: (%d, %d)\n", overview->width, overview->height);
 
 
-    /*TODO additional clean up*/
-
+    /*Clean up*/
     destroy_io_mem(io_in);
     destroy_io_mem(io_out);
     destroy_intcode(prog);
-
-
+    if (robot != NULL)
+    {
+        free(robot);
+    }
+    if (overview->hull != NULL)
+    {
+        free(overview->hull);
+    }
+    if (overview != NULL)
+    {
+        free(overview);
+    }
     return 0;
 }
