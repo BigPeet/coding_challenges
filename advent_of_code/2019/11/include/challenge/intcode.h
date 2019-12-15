@@ -60,6 +60,9 @@ void set_std_io_out(intcode_t* const prog, FILE* const output_stream);
 intcode_t* copy_intcode(const intcode_t* const prog);
 int output_intcode(const intcode_t* const prog);
 
+intcode_io_mem_t* create_io_mem();
+void destroy_io_mem(intcode_io_mem_t* const store);
+
 int execute(intcode_t* const prog);
 int execute_head_block(intcode_t* const prog, int* const op_code);
 

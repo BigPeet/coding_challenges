@@ -44,8 +44,9 @@ static int get_opcode(const int64_t number);
 static int is_valid_opcode(const int op_code);
 
 static intcode_op_f get_op_func(const int op_code);
-static void
-get_parameter_modes(const int64_t number, const size_t num_parameters, int* const parameter_modes);
+static void get_parameter_modes(const int64_t number,
+                                const size_t num_parameters,
+                                int* const parameter_modes);
 
 static int get_parameter_values(const intcode_t* const prog,
                                 const size_t num_parameters,
@@ -55,7 +56,8 @@ static int get_parameter_values(const intcode_t* const prog,
 
 static void write_to_io_std(FILE* const stream, const int64_t value);
 static int read_from_io_std(FILE* const stream, int64_t* value);
-static void write_to_io_mem(intcode_io_mem_t* const storage, const int64_t value);
+static void write_to_io_mem(intcode_io_mem_t* const storage,
+                            const int64_t value);
 static void read_from_io_mem(intcode_io_mem_t* const storage, int64_t* value);
 
 
@@ -68,8 +70,8 @@ intcode_t* read_intcode(const char* const file_path)
         size_t num_ints  = 0;
         get_size_info(file_path, &num_chars, &num_ints);
 
-        char* str       = (char*)malloc(sizeof(char) * num_chars);
-        int64_t* memory = (int64_t*)malloc(sizeof(int64_t) * num_ints);
+        char* str       = (char*) malloc(sizeof(char) * num_chars);
+        int64_t* memory = (int64_t*) malloc(sizeof(int64_t) * num_ints);
         FILE* fp        = fopen(file_path, "r");
         if ((fp != NULL) && (str != NULL) && (memory != NULL))
         {
@@ -103,7 +105,7 @@ intcode_t* create_intcode(int64_t* const memory, const size_t memory_size)
     intcode_t* prog = NULL;
     if (memory != NULL)
     {
-        prog = (intcode_t*)malloc(sizeof(intcode_t));
+        prog = (intcode_t*) malloc(sizeof(intcode_t));
         if (prog != NULL)
         {
             prog->memory        = memory;
@@ -132,7 +134,9 @@ void destroy_intcode(intcode_t* const prog)
     }
 }
 
-int set_mem_value(intcode_t* const prog, const size_t address, const int64_t value)
+int set_mem_value(intcode_t* const prog,
+                  const size_t address,
+                  const int64_t value)
 {
     int success = 0;
     if ((prog != NULL) && (prog->memory != NULL))
@@ -258,7 +262,8 @@ intcode_t* copy_intcode(const intcode_t* const prog)
     {
         if ((prog->memory != NULL) && (prog->memory_size > 0))
         {
-            int64_t* memory_copy = (int64_t*)malloc(sizeof(int64_t) * prog->memory_size);
+            int64_t* memory_copy =
+                (int64_t*) malloc(sizeof(int64_t) * prog->memory_size);
             if (memory_copy != NULL)
             {
                 for (size_t i = 0; i < prog->memory_size; ++i)
@@ -282,6 +287,29 @@ int output_intcode(const intcode_t* const prog)
     return out;
 }
 
+intcode_io_mem_t* create_io_mem()
+{
+    intcode_io_mem_t* store =
+        (intcode_io_mem_t*) malloc(sizeof(intcode_io_mem_t));
+
+    if (store != NULL)
+    {
+        store->value    = 0;
+        store->consumed = 1;
+        pthread_mutex_init(&store->mut, NULL);
+        pthread_cond_init(&store->cond, NULL);
+    }
+
+    return store;
+}
+void destroy_io_mem(intcode_io_mem_t* const store)
+{
+    if (store != NULL)
+    {
+        free(store);
+    }
+}
+
 int execute(intcode_t* const prog)
 {
     int ret = INT_CODE_ERROR;
@@ -302,8 +330,8 @@ int execute_head_block(intcode_t* const prog, int* const op_code)
     int ret = INT_CODE_ERROR;
     if (prog != NULL)
     {
-        size_t head      = prog->head;
-        *op_code         = get_opcode(get_mem_value(prog, prog->head));
+        size_t head = prog->head;
+        *op_code    = get_opcode(get_mem_value(prog, prog->head));
 #ifdef DEBUG
         printf("Op Code: %d\n", *op_code);
 #endif
@@ -325,19 +353,26 @@ int execute_head_block(intcode_t* const prog, int* const op_code)
             int64_t parameters[inst_size - 1];
             int parameter_modes[inst_size - 1];
             int store_param = inst_size - 2;
-            if ((*op_code == OP_CODE_OUTPUT) || (*op_code == OP_CODE_JMP_IF_TRUE) ||
-                (*op_code == OP_CODE_JMP_IF_FALSE) || (*op_code == OP_CODE_ADJUST_REL_BASE))
+            if ((*op_code == OP_CODE_OUTPUT) ||
+                (*op_code == OP_CODE_JMP_IF_TRUE) ||
+                (*op_code == OP_CODE_JMP_IF_FALSE) ||
+                (*op_code == OP_CODE_ADJUST_REL_BASE))
             {
                 store_param = INTCODE_NO_STORE;
             }
-            get_parameter_modes(get_mem_value(prog, head), inst_size - 1, parameter_modes);
-            if (get_parameter_values(prog, inst_size - 1, store_param, parameter_modes, parameters))
+            get_parameter_modes(
+                get_mem_value(prog, head), inst_size - 1, parameter_modes);
+            if (get_parameter_values(prog,
+                                     inst_size - 1,
+                                     store_param,
+                                     parameter_modes,
+                                     parameters))
             {
 #ifdef DEBUG
-            for (int i = 0; i < inst_size - 1; i++)
-            {
-                printf("%d\t%ld\n", parameter_modes[i], parameters[i]);
-            }
+                for (int i = 0; i < inst_size - 1; i++)
+                {
+                    printf("%d\t%ld\n", parameter_modes[i], parameters[i]);
+                }
 #endif
                 ret = get_op_func(*op_code)(prog, parameters);
             }
@@ -409,7 +444,8 @@ int input_op(intcode_t* const prog, const int64_t* const parameters)
             pthread_mutex_lock(&prog->mem_io_in->mut);
             while (prog->mem_io_in->consumed)
             {
-                pthread_cond_wait(&prog->mem_io_in->cond, &prog->mem_io_in->mut);
+                pthread_cond_wait(&prog->mem_io_in->cond,
+                                  &prog->mem_io_in->mut);
             }
             read_from_io_mem(prog->mem_io_in, &val);
             pthread_cond_signal(&prog->mem_io_in->cond);
@@ -443,7 +479,8 @@ int output_op(intcode_t* const prog, const int64_t* const parameters)
             {
                 /*spin*/
                 pthread_cond_signal(&prog->mem_io_out->cond);
-                pthread_cond_wait(&prog->mem_io_out->cond, &prog->mem_io_out->mut);
+                pthread_cond_wait(&prog->mem_io_out->cond,
+                                  &prog->mem_io_out->mut);
             }
             write_to_io_mem(prog->mem_io_out, parameters[0]);
             pthread_cond_signal(&prog->mem_io_out->cond);
@@ -557,8 +594,9 @@ int error_op(intcode_t* const prog, const int64_t* const parameters)
     return INT_CODE_ERROR;
 }
 
-static void
-get_size_info(const char* const file_path, size_t* const total_chars, size_t* const amount_integers)
+static void get_size_info(const char* const file_path,
+                          size_t* const total_chars,
+                          size_t* const amount_integers)
 {
     /*Again, inefficient but lazy*/
     if (file_path != NULL)
@@ -585,12 +623,13 @@ get_size_info(const char* const file_path, size_t* const total_chars, size_t* co
 static size_t get_instruction_size(const int op_code)
 {
     size_t inst_size = 1;
-    if ((op_code == OP_CODE_ADD) || (op_code == OP_CODE_MULT) || (op_code == OP_CODE_IS_LESS) ||
-        (op_code == OP_CODE_IS_EQUALS))
+    if ((op_code == OP_CODE_ADD) || (op_code == OP_CODE_MULT) ||
+        (op_code == OP_CODE_IS_LESS) || (op_code == OP_CODE_IS_EQUALS))
     {
         inst_size = 4;
     }
-    else if ((op_code == OP_CODE_JMP_IF_TRUE) || (op_code == OP_CODE_JMP_IF_FALSE))
+    else if ((op_code == OP_CODE_JMP_IF_TRUE) ||
+             (op_code == OP_CODE_JMP_IF_FALSE))
     {
         inst_size = 3;
     }
@@ -625,8 +664,9 @@ static int is_valid_opcode(const int op_code)
     return (op_code >= 1 && op_code <= 9) || (op_code == OP_CODE_HALT);
 }
 
-static void
-get_parameter_modes(const int64_t number, const size_t num_parameters, int* const parameter_modes)
+static void get_parameter_modes(const int64_t number,
+                                const size_t num_parameters,
+                                int* const parameter_modes)
 {
     if (NULL != parameter_modes)
     {
@@ -660,7 +700,8 @@ static int get_parameter_values(const intcode_t* const prog,
                 /*TODO check boundaries*/
                 if ((store_param != INTCODE_NO_STORE) && (store_param == i))
                 {
-                    /*The parameter value is the address where the result of op is stored.*/
+                    /*The parameter value is the address where the result of op
+                     * is stored.*/
                     param_val = memory_val;
                 }
                 else
@@ -678,13 +719,15 @@ static int get_parameter_values(const intcode_t* const prog,
                 /*TODO check boundaries*/
                 if ((store_param != INTCODE_NO_STORE) && (store_param == i))
                 {
-                    /*The parameter value is the address where the result of op is stored.*/
+                    /*The parameter value is the address where the result of op
+                     * is stored.*/
                     param_val = memory_val + prog->relative_base;
                 }
                 else
                 {
                     /*The parameter value is stored at the address*/
-                    param_val = get_mem_value(prog, memory_val + prog->relative_base);
+                    param_val =
+                        get_mem_value(prog, memory_val + prog->relative_base);
                 }
             }
             else
@@ -746,7 +789,8 @@ static int read_from_io_std(FILE* const stream, int64_t* value)
     return success;
 }
 
-static void write_to_io_mem(intcode_io_mem_t* const storage, const int64_t value)
+static void write_to_io_mem(intcode_io_mem_t* const storage,
+                            const int64_t value)
 {
     if (storage != NULL)
     {

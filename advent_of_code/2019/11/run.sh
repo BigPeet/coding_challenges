@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-./build/aoc2019_11
+./build/aoc2019_11 input.txt
