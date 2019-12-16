@@ -59,7 +59,10 @@ void* game_func(void* args)
 
     while (!game->engine->finished)
     {
+        /*Send input if required*/
+        send_control_cmd(game);
 
+        /*Read output*/
         Tile tile;
         read_tile(game->engine, &tile);
         if ((tile.x == -1) && (tile.y == 0))
@@ -70,15 +73,6 @@ void* game_func(void* args)
         {
             add_tile(game, &tile);
         }
-
-        /*Without this sleep, a deadlock might occur.*/
-        usleep(1);
-
-        if (waiting_for_input(game->engine->brain))
-        {
-            send_control_cmd(game);
-        }
-
         display_game(game);
     }
 
@@ -281,24 +275,26 @@ static void send_control_cmd(const Game* const game)
     assert(game->engine->brain != NULL);
     assert(game->engine->brain->mem_io_in != NULL);
 
-    intcode_io_mem_t* input = game->engine->brain->mem_io_in;
-    pthread_mutex_lock(&input->mut);
-    while (!input->consumed && !game->engine->finished)
+    if (waiting_for_input(game->engine->brain))
     {
-        pthread_cond_wait(&input->cond, &input->mut);
-    }
+        intcode_io_mem_t* input = game->engine->brain->mem_io_in;
 
-    int ball_x   = get_x_coord(game, BALL);
-    int paddle_x = get_x_coord(game, PADDLE);
-    int value    = 0;
-    if ((ball_x != -1) && (paddle_x != -1))
-    {
-        value = (ball_x > paddle_x) ? 1 : (ball_x < paddle_x) ? -1 : 0;
+        int ball_x   = get_x_coord(game, BALL);
+        int paddle_x = get_x_coord(game, PADDLE);
+        int value    = 0;
+        if ((ball_x != -1) && (paddle_x != -1))
+        {
+            value = (ball_x > paddle_x) ? 1 : (ball_x < paddle_x) ? -1 : 0;
+        }
+
+        /*Just always sent the current input.*/
+        /*Don't care about whether the old one was consumed.*/
+        pthread_mutex_lock(&input->mut);
+        input->value    = value;
+        input->consumed = 0;
+        pthread_cond_signal(&input->cond);
+        pthread_mutex_unlock(&input->mut);
     }
-    input->value    = value;
-    input->consumed = 0;
-    pthread_cond_signal(&input->cond);
-    pthread_mutex_unlock(&input->mut);
 }
 
 static char type_to_char(const TileType type)
