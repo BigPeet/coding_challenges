@@ -7,10 +7,13 @@
 
 #include "challenge/challenge_lib.h"
 #include "assert.h"
-#include "ncurses.h"
 #include "stdio.h"
 #include "stdlib.h"
 #include "unistd.h"
+
+#ifdef NCURSES
+#include "ncurses.h"
+#endif
 
 static void resize_game(Game* const game, const Direction dir);
 static void read_tile(const Engine* const engine, Tile* const tile);
@@ -54,8 +57,10 @@ void* game_func(void* args)
     }
     Game* game = (Game*) args;
 
+#ifdef NCURSES
     initscr();
     curs_set(0);
+#endif
 
     while (!game->engine->finished)
     {
@@ -74,9 +79,15 @@ void* game_func(void* args)
             add_tile(game, &tile);
         }
         display_game(game);
+
+        /*This cycle is somewhat finicky to timing.*/
+        /*Adding the sleep helps to prevent dead-lock.*/
+        usleep(1);
     }
 
+#ifdef NCURSES
     endwin();
+#endif
     return NULL;
 }
 
@@ -156,20 +167,30 @@ int count_tiles(const Game* const game, const TileType type)
 
 void display_game(const Game* const game)
 {
-    /*Print using ncurses*/
-    /*Install libncurses5-dev*/
-
+#ifdef NCURSES
     /*Assuming the curse screen has already been initialized.*/
     mvprintw(0, 0, "Game Score: %d", game->score);
+#else
+    printf("Game Score: %d\n", game->score);
+#endif
     for (int i = 0; i < game->height; ++i)
     {
         for (int j = 0; j < game->width; ++j)
         {
             TileType type = game->game_area[(i * game->width) + j];
+#ifdef NCURSES
             mvprintw(i + 1, j, "%c", type_to_char(type));
+#else
+            printf("%c", type_to_char(type));
+#endif
         }
+#ifndef NCURSES
+        printf("\n");
+#endif
     }
+#ifdef NCURSES
     refresh();
+#endif
 }
 
 static void resize_game(Game* const game, const Direction dir)

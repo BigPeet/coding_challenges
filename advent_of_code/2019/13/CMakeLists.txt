@@ -4,10 +4,9 @@ project(aoc2019_13 VERSION 0.0.1)
 # for correct library locations across platforms
 include(GNUInstallDirs)
 find_package(Threads REQUIRED)
-find_package(Curses REQUIRED)
+find_package(Curses)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(BUILD_TESTING 0)
 
 # BUILD
 
@@ -27,6 +26,7 @@ add_executable(
   ${PROJECT_NAME}
   src/main.c
 )
+
 
 target_link_libraries(${PROJECT_NAME}
   ${PROJECT_NAME}_lib
@@ -50,6 +50,12 @@ target_compile_options(
   #-Wpedantic
   )
 
+if (${CURSES_FOUND})
+  add_definitions(-DNCURSES)
+else()
+  message(STATUS "Building without ncurses support.")
+endif()
+
 # Testing
 
 if (BUILD_TESTING)
@@ -70,6 +76,7 @@ if (BUILD_TESTING)
       ${PROJECT_NAME}_lib
       GTest::GTest
       GTest::Main
+      ${CURSES_LIBRARIES}
       )
 
     add_test(
