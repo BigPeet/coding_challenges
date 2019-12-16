@@ -1,40 +1,51 @@
 /*
  *
  *  Author: Peter Wolf <pwolf2310@gmail.com>
+ *  Date: 2019-12-16
  *
  */
 
+#include "challenge/challenge_lib.h"
+#include "stdbool.h"
 #include "stdio.h"
 #include "stdlib.h"
-#include "stdbool.h"
-#include "challenge/challenge_lib.h"
-
-void read_input_numbers(const int argc, char** argv, int* input)
-{
-    for (int i = 1; i < argc; i++)
-    {
-        input[i - 1] = atoi(argv[i]);
-    }
-}
 
 int main(int argc, char* argv[])
 {
-    if (argc < 2)
+    if (argc != 2)
     {
-        printf("Insufficient amount of arguments.\n");
+        printf("This executabel takes exactly one argument.\n");
+        printf("Usage: aoc2019_14 FILE_PATH.\n");
         return 0;
     }
 
-    int amount_of_numbers = argc - 1;
-    int numbers[amount_of_numbers];
-    read_input_numbers(argc, argv, numbers);
-
-    printf("Number sequence: ");
-    for (int i = 0; i < amount_of_numbers; i++)
+    int num_of_reactions = 0;
+    ReactionList* list   = (ReactionList*)malloc(sizeof(ReactionList));
+    if (list == NULL)
     {
-        printf("%d ", numbers[i]);
+        return 0;
     }
-    printf("\n");
 
+    list->reactions = parse_input(argv[1], &num_of_reactions);
+    if (list->reactions == NULL)
+    {
+        return 0;
+    }
+    list->size = num_of_reactions;
+
+    Material** stash = initialize_stash(list);
+
+    char* to      = "ORE";
+    Material fuel = {.amount = 1, .name = "FUEL"};
+    int total     = reduce_to(&fuel, to, list, stash);
+    printf("Total %d of %s required to produce %d %s\n", total, to, fuel.amount, fuel.name);
+
+    /*Clean up*/
+    for (int i = 0; i < list->size; ++i)
+    {
+        destroy_material(stash[i]);
+    }
+    free(stash);
+    destroy_reaction_list(list);
     return 0;
 }

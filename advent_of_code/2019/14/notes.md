@@ -37,3 +37,7 @@ If that does not work on the given examples, then a more complex strategy / sear
 One solution for this could be to first calculate "cost" of each material independently and gather the spare material.
 Then for each spare material check where it would reduce the cost the most.
 This again might affect other spare material though (e.g. if that spare A is used for XYZ, then this spare B would not have been produced).
+
+The idea above worked.
+
+* First Solution: 579797

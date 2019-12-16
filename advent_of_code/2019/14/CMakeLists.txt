@@ -5,8 +5,14 @@ project(aoc2019_14 VERSION 0.0.1)
 include(GNUInstallDirs)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_BUILD_TYPE "RelWithDebInfo")
 
 # BUILD
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+  message(STATUS "Building with debug output.")
+  add_definitions(-DDEBUG)
+endif()
 
 include_directories(SYSTEM
   include
