@@ -1,6 +1,6 @@
 Some initial thoughts on how to tackle this:
 
-Every row of the input is a FORMULA.
+Every row of the input is a REACTION.
 Every formula has a list of INPUTS and a single OUTPUT.
 These are MATERIALS consisting of an amount and an identifier.
 
@@ -31,5 +31,9 @@ The function `reduce_to_ore()` should therefore have access to the following inf
 
 One difficulty that might come up is the efficient use of spare material.
 There might be a situation, where using that spare A might save 5 ORE or 10 ORE depending on how it is used.
-But for the start, I will assume that spare material should be used ASAP.
+But for the start, I will assume that spare material should be used greedily.
+
 If that does not work on the given examples, then a more complex strategy / search has to be done.
+One solution for this could be to first calculate "cost" of each material independently and gather the spare material.
+Then for each spare material check where it would reduce the cost the most.
+This again might affect other spare material though (e.g. if that spare A is used for XYZ, then this spare B would not have been produced).
