@@ -12,7 +12,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include_directories(SYSTEM
   include
-  ${CURSES_INCLUDE_DIR}
   )
 
 add_library(
@@ -20,19 +19,30 @@ add_library(
   SHARED
   src/challenge_lib.c
   src/intcode.c
-)
+  )
 
 add_executable(
   ${PROJECT_NAME}
   src/main.c
-)
-
+  )
 
 target_link_libraries(${PROJECT_NAME}
   ${PROJECT_NAME}_lib
   ${CMAKE_THREAD_LIBS_INIT}
-  ${CURSES_LIBRARIES}
-)
+  )
+
+if (${CURSES_FOUND})
+  add_definitions(-DNCURSES)
+  include_directories(SYSTEM
+    ${CURSES_INCLUDE_DIR}
+    )
+  target_link_libraries(${PROJECT_NAME}
+    ${CURSES_LIBRARIES}
+    )
+else()
+  message(STATUS "Building without ncurses support.")
+endif()
+
 
 target_include_directories(
   ${PROJECT_NAME}
@@ -49,12 +59,6 @@ target_compile_options(
   #-Werror
   #-Wpedantic
   )
-
-if (${CURSES_FOUND})
-  add_definitions(-DNCURSES)
-else()
-  message(STATUS "Building without ncurses support.")
-endif()
 
 # Testing
 
@@ -76,8 +80,15 @@ if (BUILD_TESTING)
       ${PROJECT_NAME}_lib
       GTest::GTest
       GTest::Main
-      ${CURSES_LIBRARIES}
       )
+    if (${CURSES_FOUND})
+      target_link_libraries(
+        ${PROJECT_NAME}-test
+        PRIVATE
+        ${CURSES_LIBRARIES}
+        )
+    endif()
+
 
     add_test(
       ${PROJECT_NAME}-test
