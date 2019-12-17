@@ -7,6 +7,7 @@
 
 #include "challenge/challenge_lib.h"
 #include "assert.h"
+#include "math.h"
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
@@ -24,10 +25,9 @@ static Material** copy_inputs(const Reaction* const reaction);
 static Reaction* get_reaction(const char* const name, const ReactionList* const list);
 static Reaction* create_reaction();
 static Material* create_material();
-static void
-reduce_with_stash(Material* const needed, Material* const* const stash, const int stash_size);
-static void
-add_to_stash(Material* const needed, Material* const* const stash, const int stash_size);
+static void reduce_with_stash(Material* const needed, Material* const* const stash, const int stash_size);
+static void add_to_stash(Material* const needed, Material* const* const stash, const int stash_size);
+static void clear_stash(Material** stash, const int stash_size);
 
 Reaction** parse_input(const char* const file_path, int* const num_reactions)
 {
@@ -120,6 +120,27 @@ void print_reaction_list(const ReactionList* const list)
     }
 }
 
+void print_stash(Material* const* const stash, const int stash_size)
+{
+    if (stash == NULL)
+    {
+        return;
+    }
+    for (int i = 0; i < stash_size; ++i)
+    {
+        print_material(stash[i]);
+    }
+}
+
+void print_material(const Material* const mat)
+{
+    if (mat == NULL)
+    {
+        return;
+    }
+    printf("%ld %s\n", mat->amount, mat->name);
+}
+
 static void
 reduce_with_stash(Material* const needed, Material* const* const stash, const int stash_size)
 {
@@ -132,10 +153,18 @@ reduce_with_stash(Material* const needed, Material* const* const stash, const in
 
         if (strcmp(stashed->name, needed->name) == 0)
         {
-            while ((stashed->amount > 0) && (needed->amount > 0))
+            if ((stashed->amount > 0) && (needed->amount > 0))
             {
-                stashed->amount--;
-                needed->amount--;
+                if (stashed->amount > needed->amount)
+                {
+                    stashed->amount -= needed->amount;
+                    needed->amount = 0;
+                }
+                else if (needed->amount > stashed->amount)
+                {
+                    needed->amount -= stashed->amount;
+                    stashed->amount = 0;
+                }
             }
             break;
         }
@@ -161,16 +190,16 @@ static void add_to_stash(Material* const add, Material* const* const stash, cons
     }
 }
 
-int reduce_to(const Material* const from,
-              const char* const to,
-              const ReactionList* const list,
-              Material* const* const stash)
+int64_t reduce_to(const Material* const from,
+                  const char* const to,
+                  const ReactionList* const list,
+                  Material* const* const stash)
 {
-    int total = 0;
+    int64_t total = 0;
     if ((from != NULL) && (to != NULL) && (list != NULL) && (stash != NULL))
     {
 #ifdef DEBUG
-        printf("Reduce %d %s to %s", from->amount, from->name, to);
+        printf("Reduce %ld %s to %s", from->amount, from->name, to);
 #endif
 
         Material* from_cpy = copy_material(from);
@@ -182,7 +211,7 @@ int reduce_to(const Material* const from,
         /*Check if the 'from' material can be satisfied with stash*/
         reduce_with_stash(from_cpy, stash, list->size);
 
-        int reduced_amount = from_cpy->amount;
+        int64_t reduced_amount = from_cpy->amount;
         destroy_material(from_cpy);
 
         if (reduced_amount <= 0)
@@ -204,17 +233,10 @@ int reduce_to(const Material* const from,
             {
                 return 0;
             }
-            int r_amount     = r->output->amount;
-            int applications = 1;
-            int extra        = 0;
-            /*printf("Needed amount: %d, produced amount with single application: %d\n", reduced_amount, r_amount);*/
-            while (r_amount < reduced_amount)
-            {
-                r_amount += r->output->amount;
-                applications++;
-            }
-            /*printf("Produced amount with %d applications: %d\n", applications, r_amount);*/
-            extra = r_amount - reduced_amount;
+            int64_t r_amount     = r->output->amount;
+            int64_t applications = ceil((double)reduced_amount / (double)r_amount);
+            r_amount *= applications;
+            int64_t extra = r_amount - reduced_amount;
 
             /*Multiply for required amount and Substract stashed materials from inputs.*/
             for (int i = 0; i < r->input_size; ++i)
@@ -228,7 +250,7 @@ int reduce_to(const Material* const from,
             {
                 total = r->inputs[0]->amount * applications;
 #ifdef DEBUG
-                printf(" => Direct ORE conversion: %d ORE.\n", total);
+                printf(" => Direct ORE conversion: %ld ORE.\n", total);
 #endif
             }
             /*Else iterate over inputs and recursively call reduce and sum up to total*/
@@ -256,6 +278,57 @@ int reduce_to(const Material* const from,
         }
     }
     return total;
+}
+
+int64_t produce(const char* const target,
+                const int64_t ore_storage,
+                const int64_t one_time_ore_per_fuel,
+                const ReactionList* const list)
+{
+    /*Produce the target Material with the provided stash.*/
+    int64_t total_amount = -1;
+    if ((target != NULL) && (list != NULL))
+    {
+        char* name = (char*)malloc(sizeof(char) * strlen(target) + 1);
+        strcpy(name, target);
+
+        /*Binary search*/
+        int64_t lower_bound = ore_storage / one_time_ore_per_fuel;
+        int64_t upper_bound = 2 * lower_bound;
+
+        Material product = {.amount = lower_bound, .name = name};
+        Material** stash = initialize_stash(list);
+        while (lower_bound < upper_bound)
+        {
+            clear_stash(stash, list->size);
+            int64_t middle = (lower_bound + upper_bound) / 2;
+            product.amount         = middle;
+
+            int64_t ore_for_middle = reduce_to(&product, "ORE", list, stash);
+
+            if (ore_for_middle > ore_storage)
+            {
+                upper_bound = middle - 1;
+            }
+            else if (ore_for_middle < ore_storage)
+            {
+                lower_bound  = middle + 1;
+                total_amount = middle;
+            }
+            else
+            {
+                total_amount = middle;
+                break;
+            }
+        }
+        for (int i = 0; i < list->size; ++i)
+        {
+            destroy_material(stash[i]);
+        }
+        free(stash);
+        free(name);
+    }
+    return total_amount;
 }
 
 void destroy_reaction_list(ReactionList* const list)
@@ -455,9 +528,9 @@ void print_reaction(const Reaction* const reaction)
     {
         for (int i = 0; i < reaction->input_size; ++i)
         {
-            printf("%d %s ", reaction->inputs[i]->amount, reaction->inputs[i]->name);
+            printf("%ld %s ", reaction->inputs[i]->amount, reaction->inputs[i]->name);
         }
-        printf("=> %d %s\n", reaction->output->amount, reaction->output->name);
+        printf("=> %ld %s\n", reaction->output->amount, reaction->output->name);
     }
 }
 
@@ -505,4 +578,15 @@ static Material** copy_inputs(const Reaction* const reaction)
         }
     }
     return inputs;
+}
+
+static void clear_stash(Material** stash, const int stash_size)
+{
+    assert(stash != NULL);
+
+    for (int i = 0; i < stash_size; ++i)
+    {
+        assert(stash[i] != NULL);
+        stash[i]->amount = 0;
+    }
 }

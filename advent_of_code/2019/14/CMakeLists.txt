@@ -6,6 +6,7 @@ include(GNUInstallDirs)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE "RelWithDebInfo")
+#set(CMAKE_BUILD_TYPE "Debug")
 
 # BUILD
 
@@ -31,6 +32,7 @@ add_executable(
 
 target_link_libraries(${PROJECT_NAME}
   ${PROJECT_NAME}_lib
+  m
 )
 
 target_include_directories(

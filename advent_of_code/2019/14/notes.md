@@ -40,4 +40,8 @@ This again might affect other spare material though (e.g. if that spare A is use
 
 The idea above worked.
 
+It admittedly took me a while to move from the "naive" brute-force version to the solution changing the amount in the `reduce_to` function.
+Some small adjustments to the part-1 version were necessary to make it more performant with large numbers.
+
 * First Solution: 579797
+* Second Solution: 2521844

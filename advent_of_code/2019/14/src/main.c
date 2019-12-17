@@ -7,8 +7,10 @@
 
 #include "challenge/challenge_lib.h"
 #include "stdbool.h"
+#include "stdint.h"
 #include "stdio.h"
 #include "stdlib.h"
+#include "string.h"
 
 int main(int argc, char* argv[])
 {
@@ -35,17 +37,27 @@ int main(int argc, char* argv[])
 
     Material** stash = initialize_stash(list);
 
-    char* to      = "ORE";
-    Material fuel = {.amount = 1, .name = "FUEL"};
-    int total     = reduce_to(&fuel, to, list, stash);
-    printf("Total %d of %s required to produce %d %s\n", total, to, fuel.amount, fuel.name);
+    /*Part 1*/
+    char* to         = "ORE";
+    Material fuel    = {.amount = 1, .name = "FUEL"};
+    int ore_per_fuel = reduce_to(&fuel, to, list, stash);
+    printf("Total %d of %s required to produce %ld %s\n", ore_per_fuel, to, fuel.amount, fuel.name);
 
-    /*Clean up*/
+    /*Clean up stash*/
     for (int i = 0; i < list->size; ++i)
     {
         destroy_material(stash[i]);
     }
     free(stash);
+
+    /*Part 2*/
+    /*Create new stash.*/
+    int64_t ore_storage = 1000000000000;
+    int64_t total_fuel = produce(fuel.name, ore_storage, ore_per_fuel, list);
+    printf("%ld ORE produce %ld amount of FUEL.\n", ore_storage, total_fuel);
+
+
+    /*Clean up*/
     destroy_reaction_list(list);
     return 0;
 }
