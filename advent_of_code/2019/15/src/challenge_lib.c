@@ -16,6 +16,10 @@
 #endif
 
 #define DISTANCE_OFFSET 16
+#define DISTANCE_MASK (65535 << DISTANCE_OFFSET)
+#define VISITED_OFFSET 2
+#define VISITED_MASK (16383 << VISITED_OFFSET)
+#define TILE_OFFSET 0
 #define TILE_MASK 3
 #define RESIZE_AMOUNT 10
 
@@ -67,6 +71,7 @@ static Direction reverse_direction(const Direction dir);
 static int distance_from_to(Overview* const overview,
                             const Position from,
                             const Position to);
+static int get_max_distance_from(Overview* const overview, const Position from);
 static void build_distance_map(Overview* const overview,
                                const int distance,
                                const int incoming_from);
@@ -75,6 +80,10 @@ static void set_distance(Overview* const overview,
                          const Position pos,
                          int16_t distance);
 static int16_t get_distance(Overview* const overview, const Position pos);
+static void set_visited(Overview* const overview,
+                        const Position pos,
+                        int16_t distance);
+static int16_t get_visited(Overview* const overview, const Position pos);
 static void set_tile(Overview* const overview,
                      const Position pos,
                      const Tile tile);
@@ -86,7 +95,6 @@ void* robot_func(void* args)
     {
         return NULL;
     }
-    printf("MASK: %d\n", DISTANCE_MASK);
     Robot* robot = (Robot*) args;
     int ret      = execute(robot->brain);
     if (ret != INT_CODE_HALT)
@@ -135,9 +143,15 @@ void* control_func(void* args)
 #endif
     }
 
+    /*Part 1*/
     int distance_to_oxygen =
         distance_from_to(overview, overview->oxygen_pos, overview->robot_start);
 
+    /*You don't actually need the robot from here on out, since the whole map
+     * should be discovered.*/
+
+    /*Part 2*/
+    int max_distance = get_max_distance_from(overview, overview->oxygen_pos);
 
 #ifdef NCURSES
     endwin();
@@ -150,6 +164,7 @@ void* control_func(void* args)
     }
 
     printf("Distance from Oxygen to Starting point: %d\n", distance_to_oxygen);
+    printf("Max. Distance from Oxygen: %d\n", max_distance);
     print_overview(overview);
     return NULL;
 }
@@ -252,6 +267,9 @@ static void update(Overview* const overview,
         robot->pos = new_pos;
         set_tile(overview, robot->pos, ROBOT);
 
+        int visited = get_visited(overview, robot->pos);
+        set_visited(overview, robot->pos, visited + 1);
+
         if (value == FOUND)
         {
             overview->oxygen_found = 1;
@@ -297,8 +315,6 @@ static void resize_overview(Overview* const overview, const Direction dir)
 static Direction plan_next_dir(Planner* const planner)
 {
     assert(planner != NULL);
-
-    /*TODO implement faster exploration strategy*/
     return planner->plan(planner);
 }
 
@@ -328,26 +344,27 @@ static Direction seek_unknown(Planner* const planner)
         }
     }
 
-    /*Move to random empty tile*/
-    if (!planner->has_been_seeded)
+    /*Move to least visited tile*/
+    Direction ret = UP;
+    int visited   = __INT_MAX__;
+    for (int d = 0; d < NUM_OF_DIRECTIONS; ++d)
     {
-        srand(time(0));
-        planner->has_been_seeded = 1;
+        Position p =
+            move_pos(planner->overview, planner->overview->robot->pos, d);
+        Tile t = get_tile(planner->overview, p);
+        if (t == EMPTY)
+        {
+            int visited_t = get_visited(planner->overview, p);
+            if (visited_t < visited)
+            {
+                visited = visited_t;
+                ret     = d;
+            }
+        }
     }
 
-    Direction d = (Direction)(rand() % NUM_OF_DIRECTIONS);
-    Position p  = move_pos(planner->overview, planner->overview->robot->pos, d);
-    Tile t      = get_tile(planner->overview, p);
-    while (t == WALL)
-    {
-        d = (Direction)(rand() % NUM_OF_DIRECTIONS);
-        p = move_pos(planner->overview, planner->overview->robot->pos, d);
-        t = get_tile(planner->overview, p);
-    }
-
-    return d;
+    return ret;
 }
-
 
 static int distance_from_to(Overview* const overview,
                             const Position from,
@@ -368,6 +385,7 @@ static int distance_from_to(Overview* const overview,
     }
 
     /*Move robot to from (currently not implemented)*/
+    /*Just assuming that this is called from the 'from' position.*/
     Position cur_pos = overview->robot->pos;
     if ((cur_pos.x == from.x) && (cur_pos.y == from.y))
     {
@@ -377,11 +395,55 @@ static int distance_from_to(Overview* const overview,
     return get_distance(overview, to);
 }
 
+static int get_max_distance_from(Overview* const overview, const Position from)
+{
+    assert(overview != NULL);
+    assert(overview->robot != NULL);
+    assert(overview->area != NULL);
+
+    /*Initialize distance map with -1.*/
+    for (int i = 0; i < overview->height; ++i)
+    {
+        for (int j = 0; j < overview->width; ++j)
+        {
+            Position p = {.x = j, .y = i};
+            set_distance(overview, p, -1);
+        }
+    }
+
+    /*Move robot to from (currently not implemented)*/
+    /*Just assuming that this is called from the 'from' position.*/
+    Position cur_pos = overview->robot->pos;
+    if ((cur_pos.x == from.x) && (cur_pos.y == from.y))
+    {
+        build_distance_map(overview, 0, -1);
+    }
+
+    int16_t max_distance = 0;
+    for (int i = 0; i < overview->height; ++i)
+    {
+        for (int j = 0; j < overview->width; ++j)
+        {
+            Position p = {.x = j, .y = i};
+            int p_dist = get_distance(overview, p);
+            if (p_dist > max_distance)
+            {
+                max_distance = p_dist;
+            }
+        }
+    }
+
+    return max_distance;
+}
+
+
 static void build_distance_map(Overview* const overview,
                                const int distance,
                                const int incoming_from)
 {
     int16_t dist = distance;
+
+    display_overview(overview);
 
     /*Short discovery*/
     for (int d = 0; d < NUM_OF_DIRECTIONS; ++d)
@@ -414,8 +476,6 @@ static void build_distance_map(Overview* const overview,
 
     /*Update distance value for this field.*/
     set_distance(overview, overview->robot->pos, dist);
-
-    /*display_overview(overview);*/
 
     /*Propagate distance*/
     for (int d = 0; d < NUM_OF_DIRECTIONS; ++d)
@@ -453,7 +513,7 @@ static void display_overview(const Overview* const overview)
     {
 #ifdef NCURSES
         /*Assuming the curse screen has already been initialized.*/
-        usleep(100);
+        usleep(3000);
         mvprintw(0, 0, "Overview:");
 #else
         printf("Overview:");
@@ -569,9 +629,9 @@ static void set_distance(Overview* const overview,
     assert(pos.y >= 0);
     assert(pos.x < overview->height);
 
-    int index = (pos.y * overview->width) + pos.x;
-    overview->area[index] =
-        (overview->area[index] & TILE_MASK) | (distance << DISTANCE_OFFSET);
+    int index             = (pos.y * overview->width) + pos.x;
+    overview->area[index] = (overview->area[index] & ~DISTANCE_MASK) |
+                            (distance << DISTANCE_OFFSET);
 }
 
 static int16_t get_distance(Overview* const overview, const Position pos)
@@ -584,7 +644,8 @@ static int16_t get_distance(Overview* const overview, const Position pos)
     assert(pos.x < overview->height);
 
     int index = (pos.y * overview->width) + pos.x;
-    return (int16_t)(overview->area[index] >> DISTANCE_OFFSET);
+    return (int16_t)((overview->area[index] & DISTANCE_MASK) >>
+                     DISTANCE_OFFSET);
 }
 
 static void set_tile(Overview* const overview,
@@ -599,7 +660,8 @@ static void set_tile(Overview* const overview,
     assert(pos.x < overview->height);
     int index = (pos.y * overview->width) + pos.x;
 
-    overview->area[index] = (overview->area[index] & ~TILE_MASK) | tile;
+    overview->area[index] =
+        (overview->area[index] & ~TILE_MASK) | (tile << TILE_OFFSET);
 }
 
 static Tile get_tile(Overview* const overview, const Position pos)
@@ -612,5 +674,40 @@ static Tile get_tile(Overview* const overview, const Position pos)
     assert(pos.x < overview->height);
     int index = (pos.y * overview->width) + pos.x;
 
-    return overview->area[index] & TILE_MASK;
+    return (overview->area[index] & TILE_MASK) >> TILE_OFFSET;
+}
+
+static void set_visited(Overview* const overview,
+                        const Position pos,
+                        int16_t visited)
+{
+    assert(overview != NULL);
+    assert(overview->area != NULL);
+    assert(pos.x >= 0);
+    assert(pos.x < overview->width);
+    assert(pos.y >= 0);
+    assert(pos.x < overview->height);
+
+    int visited_max = (VISITED_MASK >> VISITED_OFFSET);
+    if (visited > visited_max)
+    {
+        visited = visited_max;
+    }
+
+    int index = (pos.y * overview->width) + pos.x;
+    overview->area[index] =
+        (overview->area[index] & ~VISITED_MASK) | (visited << VISITED_OFFSET);
+}
+
+static int16_t get_visited(Overview* const overview, const Position pos)
+{
+    assert(overview != NULL);
+    assert(overview->area != NULL);
+    assert(pos.x >= 0);
+    assert(pos.x < overview->width);
+    assert(pos.y >= 0);
+    assert(pos.x < overview->height);
+    int index = (pos.y * overview->width) + pos.x;
+
+    return (overview->area[index] & VISITED_MASK) >> VISITED_OFFSET;
 }

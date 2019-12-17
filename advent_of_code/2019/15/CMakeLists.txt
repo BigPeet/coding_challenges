@@ -5,7 +5,7 @@ project(aoc2019_15 VERSION 0.0.1)
 include(GNUInstallDirs)
 
 find_package(Threads REQUIRED)
-#find_package(Curses)
+find_package(Curses)
 
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

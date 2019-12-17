@@ -28,3 +28,14 @@ This will require keeping track of:
 
 This path search also needs to explore though, since the robot might not have uncovered all the possible paths.
 To explore the robot is needed.
+
+
+I've decided to use a middle way between lazy random exploration and "sophisticated explorer".
+If there is an unknown field, go there. If not, go to the field least visited.
+
+
+Regarding the second part: This seems to be a "distance" question, since the room will be filled, when the field with the highest distance to the oxygen system is reached.
+Luckily I built a distance map for part 1. So I should be able to just use the highest distance for part 2.
+
+* First Solution: 232
+* Second Solution: 320
