@@ -18,3 +18,15 @@ For the n-th value: you skip n values, take n values, skip n values, negate n va
 Now applying the first offset:
 
 For the n-th value: You skip (n-i) values, take n values, skip n values, negate n values. set i=0. Repeast until no values are left.
+
+For the second part, I will need to reduce the time.
+I can imagine that I have to use the fact somehow, that the last row is only the last number, the second to last row is the last number and the second to last number, etc. (applying the ones-reduction ofc).
+This way the second half of the input can be transformed rather quickly.
+
+I'm pretty sure that further optimization would require to identify which partial sums can be reused, etc.
+But in the end I found that the offset points us towards the second half of the output sequence anyway.
+
+This feels somewhat cheap, but allows me to skip further optimizations and finish this one.
+
+* First Solution: 29956495
+* Second Solution: 73556504
