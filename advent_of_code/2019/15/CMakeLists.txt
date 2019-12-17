@@ -1,8 +1,12 @@
 cmake_minimum_required(VERSION 3.5.1)
-project(challenge_XXX VERSION 0.0.1)
+project(aoc2019_15 VERSION 0.0.1)
 
 # for correct library locations across platforms
 include(GNUInstallDirs)
+
+find_package(Threads REQUIRED)
+#find_package(Curses)
+
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE "RelWithDebInfo")
@@ -22,6 +26,7 @@ add_library(
   ${PROJECT_NAME}_lib
   SHARED
   src/challenge_lib.c
+  src/intcode.c
 )
 
 add_executable(
@@ -31,7 +36,20 @@ add_executable(
 
 target_link_libraries(${PROJECT_NAME}
   ${PROJECT_NAME}_lib
+  ${CMAKE_THREAD_LIBS_INIT}
 )
+
+if (${CURSES_FOUND})
+  add_definitions(-DNCURSES)
+  include_directories(SYSTEM
+    ${CURSES_INCLUDE_DIR}
+    )
+  target_link_libraries(${PROJECT_NAME}
+    ${CURSES_LIBRARIES}
+    )
+else()
+  message(STATUS "Building without ncurses support.")
+endif()
 
 target_include_directories(
   ${PROJECT_NAME}
@@ -69,6 +87,14 @@ if (BUILD_TESTING)
       GTest::GTest
       GTest::Main
       )
+
+    if (${CURSES_FOUND})
+      target_link_libraries(
+        ${PROJECT_NAME}-test
+        PRIVATE
+        ${CURSES_LIBRARIES}
+        )
+    endif()
 
     add_test(
       ${PROJECT_NAME}-test
