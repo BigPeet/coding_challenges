@@ -45,5 +45,7 @@ I would break it down into the following tasks:
     * Then find a combination of three of these patterns that cover the whole original string.
     * If the resulting main movement routine is too large, continue searching
     * An open question is, if any path can be divided into three viable "sub-routines". Or if this has to be something taken into account during the creation of the path.
+        * I might check this with some "manual" paths.
+        * One possible consideration: If there are two (or three) equally good candidates at an intersection, take the one that does not require turning.
 
 Then these inputs have to be provided to the robot and the final output has to be read.
