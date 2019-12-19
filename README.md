@@ -2,7 +2,7 @@
 
 ## Sources
 
-Challenges are taken from the following sources:
+Sources for coding challenges:
 
 * https://dailycodingproblem.com
 * https://adventofcode.com
@@ -10,6 +10,7 @@ Challenges are taken from the following sources:
 * https://codewars.com
 * https://hackerrank.com
 * https://geeksforgeeks.com
+* https://exercism.io
 
 ## Language(s)
 
