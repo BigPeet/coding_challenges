@@ -62,7 +62,24 @@ Using the python script "part02_path_stuff.py" I found a solution for a path I'v
 * B: L,12,R,4,L,12,R,6
 * C: R,4,L,12,L,12,R,6
 * Sequence:  A,B,A,C,B,A,C,A,C,B
+    * To provide '12' as input to the robot, I will split it into 6,6.
 
 For now I will just use these found solutions in the C program to check if it will solve the challenge.
 If I feel motivated, I will also implement the "path generation" and reimplement the "dividing step" in C, so the C code can handle different inputs.
 But due to running low on spare time, I will likely move on to Day 18 instead.
+
+
+* Second solution: 1143523
+
+I had some trouble when trying to hook up these functions to the robot.
+First I didn't expect the Robot to provide further output, but it is literally requesting "Main: " or "Function A: ".
+
+After I figured that out, I stumbled because even since I specified "n" for live feed, I got another image output (the last camera image).
+I waited for a single output (the solution), but got another image.
+
+Ok, easy enough. Just check for outputs greater than 255 (to rule out ASCII messages), but somehow that still slipped through due to timing issues.
+I finally understood what was happening, when setting the IO mode back to stdout.
+I fixe the issue and now the output is printed fine.
+
+
+And looking around: The 2nd step could have been achieved by "zipping" (as in compressing) the original Path.

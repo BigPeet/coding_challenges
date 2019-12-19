@@ -42,6 +42,7 @@ typedef struct
     ASCII* system;
     Robot* robot;
     int* area;
+    int initialized;
     Position output_pos;
     int height;
     int width;
