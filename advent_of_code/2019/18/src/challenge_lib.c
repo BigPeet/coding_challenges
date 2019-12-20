@@ -10,9 +10,9 @@
 #include "ctype.h"
 #include "stdio.h"
 #include "stdlib.h"
+#include "string.h"
 
-typedef enum
-{
+typedef enum {
     UP    = 0,
     DOWN  = 1,
     RIGHT = 2,
@@ -25,14 +25,32 @@ typedef enum
 #define ENTRANCE '@'
 
 
-static Overview*
-create_overview(const int width, const int height, const int num_keys, const int num_doors);
+typedef struct
+{
+    char* id;
+    int steps;
+} Solution;
+
+typedef struct
+{
+    Solution** solutions;
+    int num_solutions;
+    int capacity;
+} SolutionStorage;
+
+static Overview* create_overview(const int width,
+                                 const int height,
+                                 const int num_keys,
+                                 const int num_doors);
 void destroy_overview(Overview* const overview);
+static SolutionStorage* create_storage();
 static Map* create_map(const int width, const int height);
 static void destroy_map(Map* const map);
 static void pickup(Key* const key);
-static int*
-distance_map(const Map* const map, const Position pos, Door** const doors, const int num_doors);
+static int* distance_map(const Map* const map,
+                         const Position pos,
+                         Door** const doors,
+                         const int num_doors);
 static void build_distance_map_rec(const Map* const map,
                                    Door** const doors,
                                    const int num_doors,
@@ -41,20 +59,39 @@ static void build_distance_map_rec(const Map* const map,
                                    const int incoming_from,
                                    int* const distance_map);
 static Position move_pos(const Position pos, const Direction dir);
-/*static char get_value(const Map* const map, const Position pos);*/
-static int is_locked(Door** const doors, const int num_doors, const Position pos);
+static char get_value(const Map* const map, const Position pos);
+static int is_locked(Door** const doors,
+                     const int num_doors,
+                     const Position pos);
 static Direction reverse_direction(const Direction dir);
-static int is_reachable(const int* dist_map, const int width, const int height, const Position pos);
+static int is_reachable(const int* dist_map,
+                        const int width,
+                        const int height,
+                        const Position pos);
 static int minimal_steps_rec(const Map* const map,
                              const Position pos,
+                             SolutionStorage* const storage,
+                             Solution* const current_solution,
                              Key** const keys,
                              Door** const doors,
                              const int count,
                              const int num_keys,
                              const int num_doors);
 static Door** copy_doors(Door** const doors, const int num_doors);
-static Key**
-copy_keys(Key** const keys, Door** const doors, const int num_keys, const int num_doors);
+static Key** copy_keys(Key** const keys,
+                       Door** const doors,
+                       const int num_keys,
+                       const int num_doors);
+static SolutionStorage* create_storage();
+static Solution* create_solution(const int num_keys, const int steps);
+static void store_solution(SolutionStorage* const storage, Solution* solution);
+static int stored_value(const SolutionStorage* const storage,
+                        const Solution* const solution);
+static void destroy_solution(Solution* const solution);
+static void destroy_storage(SolutionStorage* const storage);
+static Solution* add_key_to_solution(const Solution* const solution,
+                                     const Key* const key,
+                                     const int num_keys);
 
 Overview* read_input(const char* const file_path,
                      const int width,
@@ -100,11 +137,11 @@ Overview* read_input(const char* const file_path,
             if ((c >= 65) && (c <= 90))
             {
                 /*Door*/
-                Door* d = (Door*)malloc(sizeof(Door));
+                Door* d = (Door*) malloc(sizeof(Door));
                 if (d != NULL)
                 {
-                    d->id                         = tolower(c);
-                    d->pos                        = (Position){.x = x, .y = y};
+                    d->id  = tolower(c);
+                    d->pos = (Position){.x = x, .y = y};
                     d->opened                     = 0;
                     overview->doors[door_index++] = d;
                 }
@@ -112,12 +149,13 @@ Overview* read_input(const char* const file_path,
             else if ((c >= 97) && (c <= 122))
             {
                 /*Key*/
-                Key* k = (Key*)malloc(sizeof(Key));
+                Key* k = (Key*) malloc(sizeof(Key));
                 if (k != NULL)
                 {
-                    k->id                       = c;
-                    k->pos                      = (Position){.x = x, .y = y};
+                    k->id  = c;
+                    k->pos = (Position){.x = x, .y = y};
                     k->picked_up                = 0;
+                    k->door                     = NULL;
                     overview->keys[key_index++] = k;
                 }
             }
@@ -162,7 +200,7 @@ void destroy_overview(Overview* const overview)
         destroy_map(overview->map);
         if (overview->doors != NULL)
         {
-            for (int i = 0; i < overview->num_keys; ++i)
+            for (int i = 0; i < overview->num_doors; ++i)
             {
                 if (overview->doors[i] != NULL)
                 {
@@ -189,22 +227,29 @@ void destroy_overview(Overview* const overview)
 int minimal_steps(const Overview* const overview)
 {
     int step_count = 0;
-    if ((overview != NULL) && (overview->map != NULL) && (overview->doors != NULL) &&
-        (overview->keys != NULL))
+    if ((overview != NULL) && (overview->map != NULL) &&
+        (overview->doors != NULL) && (overview->keys != NULL))
     {
-        step_count = minimal_steps_rec(overview->map,
+        SolutionStorage* storage = create_storage();
+        Solution* solution       = create_solution(overview->num_keys, -1);
+        step_count               = minimal_steps_rec(overview->map,
                                        overview->entrance,
+                                       storage,
+                                       solution,
                                        overview->keys,
                                        overview->doors,
                                        0,
                                        overview->num_keys,
                                        overview->num_doors);
+        destroy_storage(storage);
     }
     return step_count;
 }
 
 static int minimal_steps_rec(const Map* const map,
                              const Position pos,
+                             SolutionStorage* const storage,
+                             Solution* const current_solution,
                              Key** const keys,
                              Door** const doors,
                              const int count,
@@ -214,13 +259,23 @@ static int minimal_steps_rec(const Map* const map,
     int step_count = count;
     int distances[num_keys];
 
+    /*Apparently, optimization is needed here for larger key-door numbers.*/
+    /*So memorize remaining step count for key and door configurations.*/
+    int steps = stored_value(storage, current_solution);
+    if (steps != -1)
+    {
+        printf(
+            "Found prior solution for %s: %d\n", current_solution->id, steps);
+        destroy_solution(current_solution);
+        return steps + count;
+    }
+
     int* dist_map       = distance_map(map, pos, doors, num_doors);
     int reachable_count = 0;
     for (int i = 0; i < num_keys; ++i)
     {
         Key* k       = keys[i];
         distances[i] = dist_map[(k->pos.y * map->width) + k->pos.x];
-        printf("Key %c is picked_up: %d\n", k->id, k->picked_up);
         if (distances[i] != -1 && !k->picked_up)
         {
             reachable_count++;
@@ -228,47 +283,53 @@ static int minimal_steps_rec(const Map* const map,
     }
     free(dist_map);
 
-    if (reachable_count == 1)
+    if (reachable_count > 0)
     {
+        step_count = __INT_MAX__;
         for (int i = 0; i < num_keys; ++i)
         {
             if ((distances[i] != -1) && (!keys[i]->picked_up))
             {
-                printf("Only reachable Key %c at distance %d\n", keys[i]->id, distances[i]);
-                pickup(keys[i]);
-                step_count = minimal_steps_rec(
-                  map, keys[i]->pos, keys, doors, count + distances[i], num_keys, num_doors);
-            }
-        }
-    }
-    else
-    {
-        for (int i = 0; i < num_keys; ++i)
-        {
-            if ((distances[i] != -1) && (!keys[i]->picked_up))
-            {
-                printf("Reachable Key %c at distance %d\n", keys[i]->id, distances[i]);
                 Door** door_cpys = copy_doors(doors, num_doors);
-                printf("Copied doors:\n");
-                for (int i = 0; i < num_doors; ++i)
-                {
-                    printf("Door copied: %c\n", door_cpys[i]->id);
-                }
-                Key** key_cpys = copy_keys(keys, door_cpys, num_keys, num_doors);
+                Key** key_cpys =
+                    copy_keys(keys, door_cpys, num_keys, num_doors);
                 pickup(key_cpys[i]);
-                step_count = minimal_steps_rec(map,
-                                               keys[i]->pos,
-                                               key_cpys,
-                                               door_cpys,
-                                               count + distances[i],
-                                               num_keys,
-                                               num_doors);
+                Solution* new_solution = add_key_to_solution(
+                    current_solution, key_cpys[i], num_keys);
+                int key_step_count = minimal_steps_rec(map,
+                                                       keys[i]->pos,
+                                                       storage,
+                                                       new_solution,
+                                                       key_cpys,
+                                                       door_cpys,
+                                                       count + distances[i],
+                                                       num_keys,
+                                                       num_doors);
+                if (key_step_count < step_count)
+                {
+                    step_count = key_step_count;
+                }
+
+                /*Clean up*/
+                for (int j = 0; j < num_doors; ++j)
+                {
+                    free(door_cpys[j]);
+                }
+                for (int j = 0; j < num_keys; ++j)
+                {
+                    free(key_cpys[j]);
+                }
                 free(door_cpys);
                 free(key_cpys);
             }
         }
     }
 
+    current_solution->steps = step_count;
+    printf("Store solution for %s: %d\n",
+           current_solution->id,
+           current_solution->steps);
+    store_solution(storage, current_solution);
 
     return step_count;
 }
@@ -276,13 +337,13 @@ static int minimal_steps_rec(const Map* const map,
 static Door** copy_doors(Door** const doors, const int num_doors)
 {
     assert(doors != NULL);
-    Door** copy = (Door**)malloc(sizeof(Door*) * num_doors);
+    Door** copy = (Door**) malloc(sizeof(Door*) * num_doors);
 
     if (copy != NULL)
     {
         for (int i = 0; i < num_doors; ++i)
         {
-            Door* d = (Door*)malloc(sizeof(Door));
+            Door* d = (Door*) malloc(sizeof(Door));
             if (d != NULL)
             {
                 d->id     = doors[i]->id;
@@ -295,23 +356,25 @@ static Door** copy_doors(Door** const doors, const int num_doors)
     return copy;
 }
 
-static Key**
-copy_keys(Key** const keys, Door** const doors, const int num_keys, const int num_doors)
+static Key** copy_keys(Key** const keys,
+                       Door** const doors,
+                       const int num_keys,
+                       const int num_doors)
 {
     assert(keys != NULL);
-    Key** copy = (Key**)malloc(sizeof(Key*) * num_keys);
+    Key** copy = (Key**) malloc(sizeof(Key*) * num_keys);
 
     if (copy != NULL)
     {
         for (int i = 0; i < num_keys; ++i)
         {
-            /*printf("copying key %c\n", keys[i]->id);*/
-            Key* k = (Key*)malloc(sizeof(Key));
+            Key* k = (Key*) malloc(sizeof(Key));
             if (k != NULL)
             {
                 k->id        = keys[i]->id;
                 k->picked_up = keys[i]->picked_up;
                 k->pos       = keys[i]->pos;
+                k->door      = NULL;
                 for (int j = 0; j < num_doors; ++j)
                 {
                     Door* d = doors[j];
@@ -328,7 +391,10 @@ copy_keys(Key** const keys, Door** const doors, const int num_keys, const int nu
     return copy;
 }
 
-static int is_reachable(const int* dist_map, const int width, const int height, const Position pos)
+static int is_reachable(const int* dist_map,
+                        const int width,
+                        const int height,
+                        const Position pos)
 {
     int reachable = 0;
     if ((pos.y >= 0) && (pos.y < height) && (pos.x >= 0) && (pos.x < width))
@@ -338,8 +404,10 @@ static int is_reachable(const int* dist_map, const int width, const int height, 
     return reachable;
 }
 
-static Overview*
-create_overview(const int width, const int height, const int num_keys, const int num_doors)
+static Overview* create_overview(const int width,
+                                 const int height,
+                                 const int num_keys,
+                                 const int num_doors)
 {
     Map* map = create_map(width, height);
     if (map == NULL)
@@ -347,15 +415,15 @@ create_overview(const int width, const int height, const int num_keys, const int
         return NULL;
     }
 
-    Overview* overview = (Overview*)malloc(sizeof(Overview));
+    Overview* overview = (Overview*) malloc(sizeof(Overview));
     if (overview == NULL)
     {
         destroy_map(map);
         return NULL;
     }
 
-    Door** doors = (Door**)malloc(sizeof(Door*) * num_doors);
-    Key** keys   = (Key**)malloc(sizeof(Key*) * num_keys);
+    Door** doors = (Door**) malloc(sizeof(Door*) * num_doors);
+    Key** keys   = (Key**) malloc(sizeof(Key*) * num_keys);
 
     overview->map       = map;
     overview->doors     = doors;
@@ -367,11 +435,11 @@ create_overview(const int width, const int height, const int num_keys, const int
 
 static Map* create_map(const int width, const int height)
 {
-    Map* map = (Map*)malloc(sizeof(Map));
+    Map* map = (Map*) malloc(sizeof(Map));
 
     if (map != NULL)
     {
-        map->data   = (char*)malloc(sizeof(char) * width * height);
+        map->data   = (char*) malloc(sizeof(char) * width * height);
         map->width  = width;
         map->height = height;
     }
@@ -394,23 +462,22 @@ static void pickup(Key* const key)
 {
     if (key != NULL)
     {
+        key->picked_up = 1;
         if (key->door != NULL)
         {
-            key->picked_up = 1;
-            if (key->door != NULL)
-            {
-                key->door->opened = 1;
-            }
+            key->door->opened = 1;
         }
     }
 }
 
-static int*
-distance_map(const Map* const map, const Position pos, Door** const doors, const int num_doors)
+static int* distance_map(const Map* const map,
+                         const Position pos,
+                         Door** const doors,
+                         const int num_doors)
 {
     assert(map != NULL);
 
-    int* dist_map = (int*)malloc(sizeof(int) * map->height * map->width);
+    int* dist_map = (int*) malloc(sizeof(int) * map->height * map->width);
 
     if (dist_map != NULL)
     {
@@ -427,7 +494,9 @@ distance_map(const Map* const map, const Position pos, Door** const doors, const
     return dist_map;
 }
 
-static int is_locked(Door** const doors, const int num_doors, const Position pos)
+static int is_locked(Door** const doors,
+                     const int num_doors,
+                     const Position pos)
 {
     int is_locked = 0;
     for (int i = 0; i < num_doors; ++i)
@@ -487,21 +556,32 @@ static void build_distance_map_rec(const Map* const map,
             if (dist < distance)
             {
                 /*distance has been updated, backpropagate.*/
-                build_distance_map_rec(
-                  map, doors, num_doors, p, dist + 1, reverse_direction(d), distance_map);
+                build_distance_map_rec(map,
+                                       doors,
+                                       num_doors,
+                                       p,
+                                       dist + 1,
+                                       reverse_direction(d),
+                                       distance_map);
             }
             continue;
         }
         char c = get_value(map, p);
         if (c != WALL)
         {
-            if ((c == EMPTY) || (c == ENTRANCE) || (!is_locked(doors, num_doors, p)))
+            if ((c == EMPTY) || (c == ENTRANCE) ||
+                (!is_locked(doors, num_doors, p)))
             {
                 int p_dist = distance_map[(p.y * map->width) + p.x];
                 if ((p_dist == -1) || (p_dist > (dist + 1)))
                 {
-                    build_distance_map_rec(
-                      map, doors, num_doors, p, dist + 1, reverse_direction(d), distance_map);
+                    build_distance_map_rec(map,
+                                           doors,
+                                           num_doors,
+                                           p,
+                                           dist + 1,
+                                           reverse_direction(d),
+                                           distance_map);
                 }
             }
         }
@@ -533,12 +613,13 @@ static Position move_pos(const Position pos, const Direction dir)
     return new_pos;
 }
 
-char get_value(const Map* const map, const Position pos)
+static char get_value(const Map* const map, const Position pos)
 {
     char val = -1;
     if (map != NULL)
     {
-        if ((pos.x < map->width) && (pos.x >= 0) && (pos.y < map->height) && (pos.y >= 0))
+        if ((pos.x < map->width) && (pos.x >= 0) && (pos.y < map->height) &&
+            (pos.y >= 0))
         {
             val = map->data[(pos.y * map->width) + pos.x];
         }
@@ -573,5 +654,113 @@ void print_map(const Map* const map)
             }
             printf("\n");
         }
+    }
+}
+
+static SolutionStorage* create_storage()
+{
+    SolutionStorage* storage =
+        (SolutionStorage*) malloc(sizeof(SolutionStorage));
+    if (storage != NULL)
+    {
+        storage->num_solutions = 0;
+        storage->capacity      = 10;
+        storage->solutions     = (Solution**) malloc(sizeof(Solution*) * 10);
+    }
+    return storage;
+}
+
+static Solution* create_solution(const int num_keys, const int steps)
+{
+    Solution* solution = (Solution*) malloc(sizeof(Solution));
+    if (solution != NULL)
+    {
+        char* id = (char*) malloc(sizeof(char) * num_keys + 1);
+        if (id != NULL)
+        {
+            id[0] = '\0';
+        }
+        solution->id    = id;
+        solution->steps = steps;
+    }
+    return solution;
+}
+
+static Solution* add_key_to_solution(const Solution* const solution,
+                                     const Key* const key,
+                                     const int num_keys)
+{
+    Solution* added = create_solution(num_keys, -1);
+    if (solution != NULL && added != NULL)
+    {
+        strcpy(added->id, solution->id);
+        int prev_length            = strlen(added->id);
+        added->id[prev_length]     = key->id;
+        added->id[prev_length + 1] = '\0';
+    }
+    return added;
+}
+
+static void store_solution(SolutionStorage* const storage, Solution* solution)
+{
+    assert(storage != NULL);
+    assert(storage->solutions != NULL);
+    assert(solution != NULL);
+
+    storage->solutions[storage->num_solutions++] = solution;
+
+    if (storage->num_solutions == storage->capacity)
+    {
+        storage->capacity *= 2;
+        storage->solutions = (Solution**) realloc(
+            storage->solutions, sizeof(Solution*) * storage->capacity);
+    }
+}
+
+static int stored_value(const SolutionStorage* const storage,
+                        const Solution* const solution)
+{
+    assert(storage != NULL);
+    assert(storage->solutions != NULL);
+
+    if (solution != NULL)
+    {
+        for (int i = 0; i < storage->num_solutions; ++i)
+        {
+            assert(storage->solutions[i] != NULL);
+            if (strcmp(storage->solutions[i]->id, solution->id) == 0)
+            {
+                return storage->solutions[i]->steps;
+            }
+        }
+    }
+    return -1;
+}
+
+static void destroy_solution(Solution* const solution)
+{
+    if (solution != NULL)
+    {
+        if (solution->id != NULL)
+        {
+            free(solution->id);
+        }
+        free(solution);
+    }
+}
+
+static void destroy_storage(SolutionStorage* const storage)
+{
+    if (storage != NULL)
+    {
+        if (storage->solutions != NULL)
+        {
+            for (int i = 0; i < storage->num_solutions; ++i)
+            {
+                destroy_solution(storage->solutions[i]);
+            }
+            free(storage->solutions);
+        }
+        free(storage);
     }
 }

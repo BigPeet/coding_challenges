@@ -28,3 +28,13 @@ My first approach will be:
 
 I'm pretty sure that example works (as in will result in the correct outcome).
 But it might run into time or memory issues, when used on the large input.
+
+Okay without storing results while finding the minimal path, the algorithm runs into trouble when tackling higher key amounts.
+My first idea to store "solutions" in form of key-pick order is wrong.
+
+The important part are the remaining keys.
+If there is only 1 key remaining, the solution is 0 + the distance between our current position (previously collected key) and the remaining key. So 0 could be stored for all 1-key fields.
+
+If there are 2 keys remaining I only need to know the minimal path to solve them + the key I need to collect next. Then I know that I need the distance to that key + the stored solution for this 2-key-field.
+
+So a solution should store the set of remaining key and the position of the first key to get.

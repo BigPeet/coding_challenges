@@ -49,12 +49,14 @@ typedef struct
 } Overview;
 
 
-Overview* read_input(const char* const file_path, const int width, const int height, const int num_keys, const int num_doors);
+Overview* read_input(const char* const file_path,
+                     const int width,
+                     const int height,
+                     const int num_keys,
+                     const int num_doors);
 void destroy_overview(Overview* const overview);
-
 void print_map(const Map* const map);
 
-char get_value(const Map* const map, const Position pos);
 int minimal_steps(const Overview* const overview);
 
 #endif /* ifndef INCLUDE_CHALLENGE_LIB_H */
