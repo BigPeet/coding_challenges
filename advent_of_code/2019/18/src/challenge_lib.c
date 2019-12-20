@@ -89,9 +89,12 @@ static int stored_value(const SolutionStorage* const storage,
                         const Solution* const solution);
 static void destroy_solution(Solution* const solution);
 static void destroy_storage(SolutionStorage* const storage);
-static Solution* add_key_to_solution(const Solution* const solution,
-                                     const Key* const key,
-                                     const int num_keys);
+static void set_keys_of_solution(Solution* const solution,
+                                 Key** const keys,
+                                 const int num_keys);
+static Solution* remove_key_from_solution(const Solution* const solution,
+                                          const Key* const key,
+                                          const int num_keys);
 
 Overview* read_input(const char* const file_path,
                      const int width,
@@ -232,6 +235,7 @@ int minimal_steps(const Overview* const overview)
     {
         SolutionStorage* storage = create_storage();
         Solution* solution       = create_solution(overview->num_keys, -1);
+        set_keys_of_solution(solution, overview->keys, overview->num_keys);
         step_count               = minimal_steps_rec(overview->map,
                                        overview->entrance,
                                        storage,
@@ -260,13 +264,12 @@ static int minimal_steps_rec(const Map* const map,
     int distances[num_keys];
 
     /*Apparently, optimization is needed here for larger key-door numbers.*/
-    /*So memorize remaining step count for key and door configurations.*/
     int steps = stored_value(storage, current_solution);
     if (steps != -1)
     {
         printf(
             "Found prior solution for %s: %d\n", current_solution->id, steps);
-        destroy_solution(current_solution);
+        /*destroy_solution(current_solution);*/
         return steps + count;
     }
 
@@ -290,11 +293,17 @@ static int minimal_steps_rec(const Map* const map,
         {
             if ((distances[i] != -1) && (!keys[i]->picked_up))
             {
+
+                /*TODO fix the number of saved steps.
+                 * Instead of storing the total amount, the solutions need to save the remaining amoung.
+                 * E.g. if there is only 1 key left, the the stored amount should be 0. Additionally the position of the "next" key needs to be stored.
+                 * The result is then stored amount + the distance from the last key to the next key*/
+
                 Door** door_cpys = copy_doors(doors, num_doors);
                 Key** key_cpys =
                     copy_keys(keys, door_cpys, num_keys, num_doors);
                 pickup(key_cpys[i]);
-                Solution* new_solution = add_key_to_solution(
+                Solution* new_solution = remove_key_from_solution(
                     current_solution, key_cpys[i], num_keys);
                 int key_step_count = minimal_steps_rec(map,
                                                        keys[i]->pos,
@@ -686,19 +695,45 @@ static Solution* create_solution(const int num_keys, const int steps)
     return solution;
 }
 
-static Solution* add_key_to_solution(const Solution* const solution,
-                                     const Key* const key,
-                                     const int num_keys)
+static void set_keys_of_solution(Solution* const solution,
+                                 Key** const keys,
+                                 const int num_keys)
 {
-    Solution* added = create_solution(num_keys, -1);
-    if (solution != NULL && added != NULL)
+    assert(solution != NULL);
+    assert(keys != NULL);
+
+    int length = 0;
+    for (int i = 0; i < num_keys; ++i)
     {
-        strcpy(added->id, solution->id);
-        int prev_length            = strlen(added->id);
-        added->id[prev_length]     = key->id;
-        added->id[prev_length + 1] = '\0';
+        solution->id[i] = keys[i]->id;
+        length++;
     }
-    return added;
+    solution->id[length] = '\0';
+}
+
+static Solution* remove_key_from_solution(const Solution* const solution,
+                                          const Key* const key,
+                                          const int num_keys)
+{
+    Solution* removed = create_solution(num_keys, -1);
+    if (solution != NULL && removed != NULL)
+    {
+        strcpy(removed->id, solution->id);
+        int prev_length = strlen(removed->id);
+        int found       = 0;
+        for (int i = 0; i < prev_length; ++i)
+        {
+            if (removed->id[i] == key->id)
+            {
+                found = 1;
+            }
+            if (found)
+            {
+                removed->id[i] = removed->id[i + 1];
+            }
+        }
+    }
+    return removed;
 }
 
 static void store_solution(SolutionStorage* const storage, Solution* solution)
