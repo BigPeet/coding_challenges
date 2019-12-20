@@ -1,11 +1,12 @@
 cmake_minimum_required(VERSION 3.5.1)
-project(challenge_XXX VERSION 0.0.1)
+project(aoc2019_18 VERSION 0.0.1)
 
 # for correct library locations across platforms
 include(GNUInstallDirs)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_BUILD_TYPE "RelWithDebInfo")
+#set(CMAKE_BUILD_TYPE "RelWithDebInfo")
+set(CMAKE_BUILD_TYPE "Debug")
 
 # BUILD
 

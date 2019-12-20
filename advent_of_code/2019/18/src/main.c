@@ -1,40 +1,51 @@
 /*
  *
  *  Author: Peter Wolf <pwolf2310@gmail.com>
+ *  Date: 2019-12-19
  *
  */
 
+#include "challenge/challenge_lib.h"
+#include "stdbool.h"
 #include "stdio.h"
 #include "stdlib.h"
-#include "stdbool.h"
-#include "challenge/challenge_lib.h"
 
 void read_input_numbers(const int argc, char** argv, int* input)
 {
-    for (int i = 1; i < argc; i++)
+    for (int i = 0; i < argc; i++)
     {
-        input[i - 1] = atoi(argv[i]);
+        input[i] = atoi(argv[i]);
     }
 }
 
 int main(int argc, char* argv[])
 {
-    if (argc < 2)
+    if (argc != 6)
     {
-        printf("Insufficient amount of arguments.\n");
+        printf("This executabel takes exactly 4 arguments.\n");
+        printf("Usage: aoc2019_18 FILE_PATH HEIGHT WIDTH NUM_KEYS NUM_DOORS.\n");
         return 0;
     }
 
-    int amount_of_numbers = argc - 1;
+    int amount_of_numbers = argc - 2;
     int numbers[amount_of_numbers];
-    read_input_numbers(argc, argv, numbers);
+    read_input_numbers(amount_of_numbers, argv + 2, numbers);
 
-    printf("Number sequence: ");
-    for (int i = 0; i < amount_of_numbers; i++)
+    Overview* overview = read_input(argv[1], numbers[0], numbers[1], numbers[2], numbers[3]);
+    if (overview == NULL)
     {
-        printf("%d ", numbers[i]);
+        return 0;
     }
-    printf("\n");
+    printf("Overview size: %d, %d. Keys: %d\n",
+           overview->map->width,
+           overview->map->height,
+           overview->num_keys);
 
+    print_map(overview->map);
+
+    int step_count = minimal_steps(overview);
+    printf("Minimal step count for all keys: %d\n", step_count);
+
+    destroy_overview(overview);
     return 0;
 }

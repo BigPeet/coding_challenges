@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-./build/challenge_XXX
+./build/aoc2019_18 input.txt 81 81 26
