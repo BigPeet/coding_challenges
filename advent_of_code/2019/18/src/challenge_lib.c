@@ -28,6 +28,7 @@ typedef enum {
 typedef struct
 {
     char* id;
+    Key* next;
     int steps;
 } Solution;
 
@@ -83,7 +84,7 @@ static Key** copy_keys(Key** const keys,
                        const int num_keys,
                        const int num_doors);
 static SolutionStorage* create_storage();
-static Solution* create_solution(const int num_keys, const int steps);
+static Solution* create_solution(const int num_keys, const int steps, Key* const next);
 static void store_solution(SolutionStorage* const storage, Solution* solution);
 static int stored_value(const SolutionStorage* const storage,
                         const Solution* const solution);
@@ -234,7 +235,7 @@ int minimal_steps(const Overview* const overview)
         (overview->doors != NULL) && (overview->keys != NULL))
     {
         SolutionStorage* storage = create_storage();
-        Solution* solution       = create_solution(overview->num_keys, -1);
+        Solution* solution       = create_solution(overview->num_keys, -1, NULL);
         set_keys_of_solution(solution, overview->keys, overview->num_keys);
         step_count               = minimal_steps_rec(overview->map,
                                        overview->entrance,
@@ -260,10 +261,11 @@ static int minimal_steps_rec(const Map* const map,
                              const int num_keys,
                              const int num_doors)
 {
-    int step_count = count;
+    int step_count = 0;
     int distances[num_keys];
 
     /*Apparently, optimization is needed here for larger key-door numbers.*/
+    /*A solution contains the set of remaining keys and info about the next key.*/
     int steps = stored_value(storage, current_solution);
     if (steps != -1)
     {
@@ -288,6 +290,7 @@ static int minimal_steps_rec(const Map* const map,
 
     if (reachable_count > 0)
     {
+        Key* next = NULL;
         step_count = __INT_MAX__;
         for (int i = 0; i < num_keys; ++i)
         {
@@ -314,9 +317,11 @@ static int minimal_steps_rec(const Map* const map,
                                                        count + distances[i],
                                                        num_keys,
                                                        num_doors);
+                key_step_count += distances[i];
                 if (key_step_count < step_count)
                 {
                     step_count = key_step_count;
+                    next = key_cpys[i];
                 }
 
                 /*Clean up*/
@@ -326,19 +331,21 @@ static int minimal_steps_rec(const Map* const map,
                 }
                 for (int j = 0; j < num_keys; ++j)
                 {
-                    free(key_cpys[j]);
+                    /*free(key_cpys[j]);*/
                 }
                 free(door_cpys);
-                free(key_cpys);
+                /*free(key_cpys);*/
             }
         }
-    }
-
     current_solution->steps = step_count;
-    printf("Store solution for %s: %d\n",
+    current_solution->next = next;
+    printf("Store solution for %c -> %s: %d\n",
+        current_solution->next->id,
            current_solution->id,
            current_solution->steps);
     store_solution(storage, current_solution);
+    }
+
 
     return step_count;
 }
@@ -679,7 +686,7 @@ static SolutionStorage* create_storage()
     return storage;
 }
 
-static Solution* create_solution(const int num_keys, const int steps)
+static Solution* create_solution(const int num_keys, const int steps, Key* const next)
 {
     Solution* solution = (Solution*) malloc(sizeof(Solution));
     if (solution != NULL)
@@ -691,6 +698,7 @@ static Solution* create_solution(const int num_keys, const int steps)
         }
         solution->id    = id;
         solution->steps = steps;
+        solution->next  = next;
     }
     return solution;
 }
@@ -715,7 +723,7 @@ static Solution* remove_key_from_solution(const Solution* const solution,
                                           const Key* const key,
                                           const int num_keys)
 {
-    Solution* removed = create_solution(num_keys, -1);
+    Solution* removed = create_solution(num_keys, -1, NULL);
     if (solution != NULL && removed != NULL)
     {
         strcpy(removed->id, solution->id);
@@ -763,7 +771,7 @@ static int stored_value(const SolutionStorage* const storage,
         for (int i = 0; i < storage->num_solutions; ++i)
         {
             assert(storage->solutions[i] != NULL);
-            if (strcmp(storage->solutions[i]->id, solution->id) == 0)
+            if ((strcmp(storage->solutions[i]->id, solution->id) == 0) && (storage->solutions[i]->next == solution->next))
             {
                 return storage->solutions[i]->steps;
             }
