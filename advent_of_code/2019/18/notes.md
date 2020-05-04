@@ -38,3 +38,12 @@ If there is only 1 key remaining, the solution is 0 + the distance between our c
 If there are 2 keys remaining I only need to know the minimal path to solve them + the key I need to collect next. Then I know that I need the distance to that key + the stored solution for this 2-key-field.
 
 So a solution should store the set of remaining key and the position of the first key to get.
+
+-------------------------------
+
+So after testing this, this will still lead to an insanely long runtime for "larger" number of keys.
+
+So I will need to completely change my approach.
+After admittedly reading up on the issue, I will try a graph-based approach.
+
+Transforming the maze and the keys into a graph/tree allows the use of breadth-first-search to find the shortest path.
