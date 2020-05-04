@@ -86,7 +86,7 @@ static Key** copy_keys(Key** const keys,
 static SolutionStorage* create_storage();
 static Solution* create_solution(const int num_keys, const int steps, Key* const next);
 static void store_solution(SolutionStorage* const storage, Solution* solution);
-static int stored_value(const SolutionStorage* const storage,
+static int load_solution_value(const SolutionStorage* const storage,
                         const Solution* const solution);
 static void destroy_solution(Solution* const solution);
 static void destroy_storage(SolutionStorage* const storage);
@@ -261,20 +261,10 @@ static int minimal_steps_rec(const Map* const map,
                              const int num_keys,
                              const int num_doors)
 {
-    int step_count = 0;
+    int need_to_store_solution = 0;
+    int step_count             = 0;
+    int distance_to_next       = 0;
     int distances[num_keys];
-
-    /*Apparently, optimization is needed here for larger key-door numbers.*/
-    /*A solution contains the set of remaining keys and info about the next key.*/
-    int steps = stored_value(storage, current_solution);
-    if (steps != -1)
-    {
-        printf(
-            "Found prior solution for %s: %d\n", current_solution->id, steps);
-        /*destroy_solution(current_solution);*/
-        return steps + count;
-    }
-
     int* dist_map       = distance_map(map, pos, doors, num_doors);
     int reachable_count = 0;
     for (int i = 0; i < num_keys; ++i)
@@ -290,25 +280,52 @@ static int minimal_steps_rec(const Map* const map,
 
     if (reachable_count > 0)
     {
-        Key* next = NULL;
-        step_count = __INT_MAX__;
+        int min_total_steps = __INT_MAX__;
+        step_count          = __INT_MAX__;
+        distance_to_next    = __INT_MAX__;
+        Key* next           = NULL;
         for (int i = 0; i < num_keys; ++i)
         {
             if ((distances[i] != -1) && (!keys[i]->picked_up))
             {
+                int solution_steps    = __INT_MAX__;
+                int total_steps       = __INT_MAX__;
+                int used_stored_value = 0;
 
-                /*TODO fix the number of saved steps.
-                 * Instead of storing the total amount, the solutions need to save the remaining amoung.
-                 * E.g. if there is only 1 key left, the the stored amount should be 0. Additionally the position of the "next" key needs to be stored.
-                 * The result is then stored amount + the distance from the last key to the next key*/
+                /*Check if a solution for the remaining key set and this reachable key as next key
+                 * exist.*/
+                Solution stored_solution;
+                stored_solution.id   = current_solution->id;
+                stored_solution.next = keys[i];
+                int steps            = load_solution_value(storage, &stored_solution);
+                if (steps != -1)
+                {
+                    /*Found a stored solution*/
+                    /*printf("Found prior solution for (%s, %c): %d\n",*/
+                           /*stored_solution.id,*/
+                           /*stored_solution.next->id,*/
+                           /*steps);*/
+                    used_stored_value = 1;
+                    solution_steps = steps;
+                    total_steps    = solution_steps + distances[i];
+                }
+                else
+                {
+                    /*Find the solution.*/
 
-                Door** door_cpys = copy_doors(doors, num_doors);
-                Key** key_cpys =
-                    copy_keys(keys, door_cpys, num_keys, num_doors);
-                pickup(key_cpys[i]);
-                Solution* new_solution = remove_key_from_solution(
-                    current_solution, key_cpys[i], num_keys);
-                int key_step_count = minimal_steps_rec(map,
+                    /*Copy the doors and keys.*/
+                    Door** door_cpys = copy_doors(doors, num_doors);
+                    Key** key_cpys   = copy_keys(keys, door_cpys, num_keys, num_doors);
+
+                    /*'Pick up' the key and remove this reachable key from the remaining set of
+                     * keys.*/
+                    pickup(key_cpys[i]);
+                    Solution* new_solution =
+                      remove_key_from_solution(current_solution, key_cpys[i], num_keys);
+
+                    /*Recursively find a solution for the reduced set of keys and opened doors,
+                     * starting at the position of the picked up key.*/
+                    solution_steps = minimal_steps_rec(map,
                                                        keys[i]->pos,
                                                        storage,
                                                        new_solution,
@@ -317,37 +334,45 @@ static int minimal_steps_rec(const Map* const map,
                                                        count + distances[i],
                                                        num_keys,
                                                        num_doors);
-                key_step_count += distances[i];
-                if (key_step_count < step_count)
-                {
-                    step_count = key_step_count;
-                    next = key_cpys[i];
+                    total_steps    = solution_steps + distances[i];
+
+                    /*Clean up*/
+                    for (int j = 0; j < num_doors; ++j)
+                    {
+                        free(door_cpys[j]);
+                    }
+                    for (int j = 0; j < num_keys; ++j)
+                    {
+                        /*free(key_cpys[j]);*/
+                    }
+                    free(door_cpys);
+                    /*free(key_cpys);*/
                 }
 
-                /*Clean up*/
-                for (int j = 0; j < num_doors; ++j)
+                /*Check if the found solution is the minimal solution.*/
+                if (total_steps < min_total_steps)
                 {
-                    free(door_cpys[j]);
+                    step_count             = solution_steps;
+                    distance_to_next       = distances[i];
+                    next                   = keys[i];
+                    min_total_steps        = total_steps;
+                    need_to_store_solution = used_stored_value ? 0 : 1;
                 }
-                for (int j = 0; j < num_keys; ++j)
-                {
-                    /*free(key_cpys[j]);*/
-                }
-                free(door_cpys);
-                /*free(key_cpys);*/
             }
         }
-    current_solution->steps = step_count;
-    current_solution->next = next;
-    printf("Store solution for %c -> %s: %d\n",
-        current_solution->next->id,
-           current_solution->id,
-           current_solution->steps);
-    store_solution(storage, current_solution);
+        current_solution->steps = step_count;
+        current_solution->next  = next;
+        /*TODO: only store, if new solution was found*/
+        if (need_to_store_solution)
+        {
+            /*printf("Store solution for (%s, %c): %d\n",*/
+                   /*current_solution->id,*/
+                   /*current_solution->next->id,*/
+                   /*current_solution->steps);*/
+            store_solution(storage, current_solution);
+        }
     }
-
-
-    return step_count;
+    return step_count + distance_to_next;
 }
 
 static Door** copy_doors(Door** const doors, const int num_doors)
@@ -760,7 +785,12 @@ static void store_solution(SolutionStorage* const storage, Solution* solution)
     }
 }
 
-static int stored_value(const SolutionStorage* const storage,
+static int char_compare(const void* a, const void* b)
+{
+    return (const char*)a - (const char*)b;
+}
+
+static int load_solution_value(const SolutionStorage* const storage,
                         const Solution* const solution)
 {
     assert(storage != NULL);
@@ -768,12 +798,37 @@ static int stored_value(const SolutionStorage* const storage,
 
     if (solution != NULL)
     {
-        for (int i = 0; i < storage->num_solutions; ++i)
+        /*1. check if next key is valid*/
+        if (solution->next != NULL)
         {
-            assert(storage->solutions[i] != NULL);
-            if ((strcmp(storage->solutions[i]->id, solution->id) == 0) && (storage->solutions[i]->next == solution->next))
+            assert(solution->id != NULL);
+            /*printf("Trying to load value for solution %s with next %c\n", solution->id, solution->next->id);*/
+            /*2. copy id and sort it.*/
+            char provided_id[strlen(solution->id) + 1];
+            strcpy(provided_id, solution->id);
+
+            /*TODO might want to move sorting to creating solutions*/
+            qsort(provided_id, strlen(provided_id), sizeof(const char), char_compare);
+
+            for (int i = 0; i < storage->num_solutions; ++i)
             {
-                return storage->solutions[i]->steps;
+                assert(storage->solutions[i] != NULL);
+                assert(storage->solutions[i]->next != NULL);
+                assert(storage->solutions[i]->id != NULL);
+                /*3. check if stored next key is equal to provided next key*/
+                if (solution->next->id == storage->solutions[i]->next->id)
+                {
+                    /*4. copy stored id and sort it.*/
+                    char stored_id[strlen(storage->solutions[i]->id) + 1];
+                    strcpy(stored_id, storage->solutions[i]->id);
+                    qsort(stored_id, strlen(stored_id), sizeof(const char*), char_compare);
+
+                    /*5. Compare provided id and stored id*/
+                    if (strcmp(provided_id, stored_id) == 0)
+                    {
+                        return storage->solutions[i]->steps;
+                    }
+                }
             }
         }
     }
