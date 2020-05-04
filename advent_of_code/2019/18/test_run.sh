@@ -5,3 +5,4 @@
 #./build/aoc2019_18 test_input_03.txt 24 5 7 5
 #./build/aoc2019_18 test_input_04.txt 21 9 16 8
 #./build/aoc2019_18 test_input_05.txt 24 6 9 5
+./build/aoc2019_18 test_input_06.txt 13 12 6 5
