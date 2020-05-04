@@ -47,3 +47,6 @@ So I will need to completely change my approach.
 After admittedly reading up on the issue, I will try a graph-based approach.
 
 Transforming the maze and the keys into a graph/tree allows the use of breadth-first-search to find the shortest path.
+
+But since I've spend a lot of time on this already, I will implemenent this new approach in Python (having easy access to all the necessary data structs there).
+If I have an approach that can handle the provided inputs, I will either leave the Python solution or implement it in C later.
