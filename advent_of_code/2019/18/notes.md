@@ -50,3 +50,7 @@ Transforming the maze and the keys into a graph/tree allows the use of breadth-f
 
 But since I've spend a lot of time on this already, I will implemenent this new approach in Python (having easy access to all the necessary data structs there).
 If I have an approach that can handle the provided inputs, I will either leave the Python solution or implement it in C later.
+
+-------------------------------
+
+The BFS in python has worked (it still takes ~2mins) and the first solution is 3646.
