@@ -61,3 +61,5 @@ I use the heap queue in heapq in this case.
 
 
 This advanced approach will make it easier to incorporate the additional robots for part 2.
+
+The solution for part two is 1730.
