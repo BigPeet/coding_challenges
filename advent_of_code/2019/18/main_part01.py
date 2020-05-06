@@ -2,6 +2,7 @@
 
 import sys
 import queue
+import heapq
 
 def parse_input(input):
     keys = set()
@@ -14,32 +15,33 @@ def parse_input(input):
     width = len(area[0])
     for y, row in enumerate(area):
         for x, field in enumerate(row):
-            if field.isalpha():
-                key = field.lower()
-                keys.add(key)
+            if field.islower():
+                keys.add((field, (x, y)))
             elif field == "@":
                 start = (x, y)
     return area, (width, height), start, keys
 
-def bfs(area, size, start, keys):
+def bfs(area, size, start):
     q = queue.Queue()
-    remaining_keys = "".join(sorted([k for k in keys]))
     visited = set()
-
-    visited.add((start, remaining_keys))
-    q.put((start, remaining_keys, 0))
+    distances = dict()
+    q.put((start, 0, set()))
 
     while not q.empty():
-        cur = q.get()
-        cur_pos = cur[0]
-        cur_keys = set(cur[1])
-        cur_steps = cur[2]
+        pos, steps, doors = q.get()
 
-        if len(cur_keys) == 0:
-            return cur_steps
+        if pos in visited:
+            continue
+        visited.add(pos)
+
+        val = area[pos[1]][pos[0]]
+        if val.islower():
+            # found a key, note down distance of key to start and the doors in
+            # the way
+            distances[val] = (steps, doors)
 
         for ds in [(-1, 0), (0, 1), (1, 0), (0, -1)]:
-            new_pos = (cur_pos[0] + ds[0], cur_pos[1] + ds[1])
+            new_pos = (pos[0] + ds[0], pos[1] + ds[1])
             if (new_pos[0] < 0) or (new_pos[0] >= size[0]) or (new_pos[1] < 0)\
             or (new_pos[1] >= size[1]):
                 # out of bounds
@@ -50,29 +52,34 @@ def bfs(area, size, start, keys):
                 # hit wall
                 continue
 
-
-            if val.isalpha() and val.isupper() and val.lower() in cur_keys:
-                # locked door
-                continue
-
-            if (new_pos, "".join(sorted([k for k in cur_keys]))) in visited:
-                # already visited
-                continue
-
-
-            if val.isalpha() and val.islower() and val in cur_keys:
-                # remove key from set
-                cur_keys.remove(val)
+            # check for door
+            new_doors = doors.copy()
+            if val.isupper():
+                new_doors.add(val.lower())
 
             # Add to queue
-            hashed_keys = "".join(sorted([k for k in cur_keys]))
-            q.put((new_pos, hashed_keys, cur_steps + 1))
-            visited.add((new_pos, hashed_keys))
+            q.put((new_pos, steps + 1, new_doors))
 
-            if val.isalpha() and val.islower():
-                # add key again for remainder of this exploration step
-                cur_keys.add(val)
+    return distances
 
+
+def dijkstra(keys, distances):
+    q = [(0, "@", frozenset([label for label, pos in keys]))]
+    dist = dict()
+    while len(q) > 0:
+        steps, label, remaining_keys = heapq.heappop(q)
+        if (label, remaining_keys) in dist:
+            continue
+        dist[(label, remaining_keys)] = steps
+
+        if len(remaining_keys) == 0:
+            return steps
+
+        for n_label, (n_steps, n_doors) in distances[label].items():
+            if n_doors.isdisjoint(remaining_keys) and n_label in remaining_keys:
+                n_keys = set(remaining_keys)
+                n_keys.remove(n_label)
+                heapq.heappush(q, (n_steps + steps, n_label, frozenset(n_keys)))
     return -1
 
 
@@ -86,6 +93,11 @@ if __name__ == "__main__":
     if start is None:
         print("Error in parsing input: No start defined.")
     else:
-        steps = bfs(area, size, start, keys)
+        distances = dict()
+        distances["@"] = bfs(area, size, start)
+        for key, pos in keys:
+            distances[key] = bfs(area, size, pos)
+
+        steps = dijkstra(keys, distances)
         print("Minimal path length:", steps)
 

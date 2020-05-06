@@ -53,4 +53,11 @@ If I have an approach that can handle the provided inputs, I will either leave t
 
 -------------------------------
 
-The BFS in python has worked (it still takes ~2mins) and the first solution is 3646.
+The first BFS in python has worked (it still takes ~2mins) and the first solution is 3646.
+
+I now added an advanced step to use BFS first to get a distance graph and then use a dijkstra approach to find the minimal path.
+This is way quicker, but is dependend on having a quick access to the node with the minimal distance.
+I use the heap queue in heapq in this case.
+
+
+This advanced approach will make it easier to incorporate the additional robots for part 2.
