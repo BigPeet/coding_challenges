@@ -24,9 +24,6 @@ def parse_input(input):
             w.append(val)
         area.append(w)
 
-    for l in area:
-        print("".join(l))
-
     portals = dict()
 
     for y in range(len(lines) - 1):
@@ -85,10 +82,6 @@ def bfs(area, portals, start):
 
         if pos in visited:
             continue
-
-        # print("Pos:", pos)
-        # print("visited:", visited)
-
         visited.add(pos)
 
         portal = get_portal_at(portals, pos)
@@ -115,7 +108,6 @@ def bfs(area, portals, start):
                     # portal
                     goal = get_goal_portal_from(portals, portal[1])
                     if goal:
-                        # print("Portal to", goal[1], "found.")
                         q.put((goal[1], steps + 1))
                 continue
 
@@ -125,57 +117,15 @@ def bfs(area, portals, start):
 
     return distances
 
-
-def dijkstra(keys, distances, starts):
-    q = []
-    start_labels = tuple("@" + str(i) for i in range(len(starts)))
-    q.append((0, start_labels, frozenset([label for label, pos in keys])))
-    dist = dict()
-    while len(q) > 0:
-        steps, labels, remaining_keys = heapq.heappop(q)
-        if (labels, remaining_keys) in dist:
-            continue
-        dist[(labels, remaining_keys)] = steps
-
-        if len(remaining_keys) == 0:
-            return steps
-
-        for i, label in enumerate(labels):
-            for n_label, (n_steps, n_doors) in distances[label].items():
-                if n_doors.isdisjoint(remaining_keys) and n_label in remaining_keys:
-                    n_keys = set(remaining_keys)
-                    n_keys.remove(n_label)
-                    n_labels = tuple(labels[:i] + (n_label,) + labels[i+1:])
-                    heapq.heappush(q, (n_steps + steps, n_labels, frozenset(n_keys)))
-    return -1
-
-
 if __name__ == "__main__":
     content = ""
     with open(sys.argv[1], "r") as f:
         content = f.read()
-    print(content)
     area, portals = parse_input(content)
-    print(portals)
 
-    distances = dict()
-    for label, positions in portals.items():
-        for pos in positions:
-            distances[label + str(pos)] = bfs(area, portals, pos)
-
-    for k, v in distances.items():
-        print("Start: ", k, ":", v)
-
-    start = "AA" + str(portals["AA"][0])
+    start = portals["AA"][0]
     end = "ZZ" + str(portals["ZZ"][0])
+    distances = bfs(area, portals, start)
 
-    steps = distances[start][end]
+    steps = distances[end]
     print("Minimal path length:", steps)
-
-    # distances = dict()
-    # for i, pos in enumerate(starts):
-        # distances["@" + str(i)] = bfs(area, size, pos)
-    # for key, pos in keys:
-        # distances[key] = bfs(area, size, pos)
-    # steps = dijkstra(keys, distances, starts)
-
