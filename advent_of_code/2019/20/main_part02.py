@@ -2,13 +2,11 @@
 
 import sys
 import queue
-import heapq
 
 INNER = 0
 OUTER = 1
 
 def add_portal(portals, label, position, outer):
-    print(label, position, outer)
     if label not in portals.keys():
         portals[label] = [None, None]
     if outer:
@@ -91,7 +89,7 @@ def get_goal_portal_from(portals, given_pos):
 
 
 
-def bfs(area, portals, start, goal):
+def bfs(area, portals, start, end, max_level=1000):
     q = queue.Queue()
     visited = set()
     distances = dict()
@@ -100,19 +98,19 @@ def bfs(area, portals, start, goal):
     while not q.empty():
         pos, level, steps = q.get()
 
+        if level > max_level:
+            # prevent looking for too long, if no solution exists
+            continue
+
         if (pos, level) in visited:
             continue
         visited.add((pos, level))
 
 
         portal = get_portal_at(portals, pos)
-        if pos != start and portal:
-            # found a portal, note down distance to start
-            distances[portal[0] + str(portal[2])] = steps
-
-            if pos == goal and level == 0:
-                # found goal
-                return distances
+        if pos == end and level == 0:
+            # found end
+            return steps
 
         for ds in [(-1, 0), (0, 1), (1, 0), (0, -1)]:
             new_pos = (pos[0] + ds[0], pos[1] + ds[1])
@@ -132,12 +130,12 @@ def bfs(area, portals, start, goal):
                     # hit an empty field, while standing on a portal: go through
                     # portal
                     goal = get_goal_portal_from(portals, portal[1])
-                    if goal:
+                    if goal and goal[1]:
                         if portal[2] == OUTER:
                             new_level = level - 1
                         else:
                             new_level = level + 1
-                        q.put((goal[1], steps + 1, new_level))
+                        q.put((goal[1], new_level, steps + 1))
                 continue
 
 
@@ -154,32 +152,8 @@ def bfs(area, portals, start, goal):
                         # treat every outer portal except AA and ZZ as wall on
                         # level 0
                         continue
-            q.put((new_pos, steps + 1, level))
+            q.put((new_pos, level, steps + 1))
 
-    return distances
-
-
-def dijkstra(keys, distances, starts):
-    q = []
-    start_labels = tuple("@" + str(i) for i in range(len(starts)))
-    q.append((0, start_labels, frozenset([label for label, pos in keys])))
-    dist = dict()
-    while len(q) > 0:
-        steps, labels, remaining_keys = heapq.heappop(q)
-        if (labels, remaining_keys) in dist:
-            continue
-        dist[(labels, remaining_keys)] = steps
-
-        if len(remaining_keys) == 0:
-            return steps
-
-        for i, label in enumerate(labels):
-            for n_label, (n_steps, n_doors) in distances[label].items():
-                if n_doors.isdisjoint(remaining_keys) and n_label in remaining_keys:
-                    n_keys = set(remaining_keys)
-                    n_keys.remove(n_label)
-                    n_labels = tuple(labels[:i] + (n_label,) + labels[i+1:])
-                    heapq.heappush(q, (n_steps + steps, n_labels, frozenset(n_keys)))
     return -1
 
 
@@ -189,13 +163,8 @@ if __name__ == "__main__":
         content = f.read()
     area, portals = parse_input(content)
 
-    print(content)
-
-    print(portals)
-
     start = portals["AA"][OUTER]
     end = portals["ZZ"][OUTER]
-    distances = bfs(area, portals, start, end)
 
-    steps = distances[end]
+    steps = bfs(area, portals, start, end)
     print("Minimal path length:", steps)
