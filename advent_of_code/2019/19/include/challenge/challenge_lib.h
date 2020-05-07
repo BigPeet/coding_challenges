@@ -10,8 +10,9 @@
 
 #include "challenge/intcode.h"
 
+int64_t scan_coordinate(const intcode_t* const prog, const int x, const int y);
+
 /*Thread functions*/
 void* system_func(void* args);
-void* control_func(void* args);
 
 #endif /* ifndef INCLUDE_CHALLENGE_LIB_H */

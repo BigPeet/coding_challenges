@@ -51,6 +51,25 @@ static int64_t read_output(const intcode_t* const prog)
     return read_value;
 }
 
+static int64_t provide_coordinate(const intcode_t* const prog,
+                                  const int x,
+                                  const int y)
+{
+    int64_t resp = -1;
+    while (!waiting_for_input(prog))
+    {
+        usleep(10);
+    }
+    provide_input(prog, x);
+    while (!waiting_for_input(prog))
+    {
+        usleep(10);
+    }
+    provide_input(prog, y);
+    resp = read_output(prog);
+    return resp;
+}
+
 void* system_func(void* args)
 {
     if (args == NULL)
@@ -66,22 +85,38 @@ void* system_func(void* args)
     return NULL;
 }
 
-void* control_func(void* args)
+int64_t scan_coordinate(const intcode_t* const prog, const int x, const int y)
 {
-    if (args == NULL)
+    int64_t result = -1;
+    if (prog == NULL)
     {
-        return NULL;
+        return result;
     }
-    intcode_t* prog    = (intcode_t*) args;
 
-    /*Only reading access*/
-    while (!waiting_for_input(prog))
+    intcode_t* exe_code      = copy_intcode(prog);
+    intcode_io_mem_t* io_in  = create_io_mem();
+    intcode_io_mem_t* io_out = create_io_mem();
+    set_io_mode(exe_code, INT_CODE_MEM_IO);
+    set_mem_io_in(exe_code, io_in);
+    set_mem_io_out(exe_code, io_out);
+
+    if ((exe_code == NULL) || (io_in == NULL) || (io_out == NULL))
     {
-        /*Read Response*/
-        int64_t resp = read_output(prog);
-        printf("Response: %d\n", resp);
-        usleep(10);
+        printf("Error reading programm or allocating IO memory\n");
+        return -1;
     }
-    provide_input(prog, -1);
-    return NULL;
+
+    pthread_t system_thread;
+    pthread_create(&system_thread, NULL, system_func, exe_code);
+
+    result = provide_coordinate(exe_code, x, y);
+
+    /*Wait for threads to finish.*/
+    pthread_join(system_thread, NULL);
+
+    destroy_io_mem(io_in);
+    destroy_io_mem(io_out);
+    destroy_intcode(exe_code);
+
+    return result;
 }
