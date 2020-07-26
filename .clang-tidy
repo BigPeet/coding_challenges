@@ -1,0 +1,9 @@
+---
+# enable all checks except the named ones (they are subtracted):
+Checks:          '*,-android-*,-fuchsia-*,-google-*,-zircon-*,-abseil-*,-llvm-*,-objc-*'
+
+# no warning as errors
+WarningsAsErrors: ''
+
+HeaderFilterRegex: ''
+FormatStyle:     none
