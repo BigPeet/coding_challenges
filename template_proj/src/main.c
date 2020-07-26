@@ -4,10 +4,10 @@
  *
  */
 
+#include "challenge/challenge_lib.h"
+#include "stdbool.h"
 #include "stdio.h"
 #include "stdlib.h"
-#include "stdbool.h"
-#include "challenge/challenge_lib.h"
 
 void read_input_numbers(const int argc, char** argv, int* input)
 {
