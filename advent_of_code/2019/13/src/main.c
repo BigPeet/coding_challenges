@@ -54,9 +54,9 @@ int main(int argc, char* argv[])
 
     /*Setup engine*/
     Engine engine;
-    engine.brain = prog;
+    engine.brain    = prog;
     engine.finished = 0;
-    game->engine = &engine;
+    game->engine    = &engine;
 
     /*Start engine and game threads*/
     pthread_t engine_thread;
@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
     /*Print results*/
     int total_blocks = count_tiles(game, BLOCK);
     printf("Number of Block tiles: %d\n", total_blocks);
-    printf("Game Score: %d\n",  game->score);
+    printf("Game Score: %d\n", game->score);
 
     /*Clean up*/
     destroy_io_mem(io_in);

@@ -27,9 +27,7 @@ typedef struct
     size_t width;
 } image_t;
 
-image_t* parse_image(const char* const file_path,
-                     const size_t height,
-                     const size_t width);
+image_t* parse_image(const char* const file_path, const size_t height, const size_t width);
 void destroy_image(image_t* const img);
 void print_image(const image_t* const img);
 void show_image(const image_t* const img);

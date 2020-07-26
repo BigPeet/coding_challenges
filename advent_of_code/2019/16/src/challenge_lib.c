@@ -32,12 +32,12 @@ Sequence* read_sequence(const char* const file_path)
     if (file_path != NULL)
     {
         int size = count_chars(file_path);
-        seq      = (Sequence*)malloc(sizeof(Sequence));
+        seq      = (Sequence*) malloc(sizeof(Sequence));
         if (seq == NULL)
         {
             return NULL;
         }
-        int* numbers = (int*)malloc(sizeof(int) * size);
+        int* numbers = (int*) malloc(sizeof(int) * size);
         if (numbers == NULL)
         {
             free(seq);
@@ -65,10 +65,10 @@ Sequence* read_sequence(const char* const file_path)
 
 Sequence* create_sequence(const int size)
 {
-    Sequence* seq = (Sequence*)malloc(sizeof(Sequence));
+    Sequence* seq = (Sequence*) malloc(sizeof(Sequence));
     if (seq != NULL)
     {
-        int* numbers = (int*)malloc(sizeof(int) * size);
+        int* numbers = (int*) malloc(sizeof(int) * size);
         if (numbers != NULL)
         {
             seq->numbers = numbers;
@@ -99,12 +99,12 @@ Sequence* copy_sequence(const Sequence* const seq)
     Sequence* copy = NULL;
     if ((seq != NULL) && (seq->numbers != NULL))
     {
-        copy = (Sequence*)malloc(sizeof(Sequence));
+        copy = (Sequence*) malloc(sizeof(Sequence));
         if (copy != NULL)
         {
             if (seq->size > 0)
             {
-                int* copy_numbers = (int*)malloc(sizeof(int) * seq->size);
+                int* copy_numbers = (int*) malloc(sizeof(int) * seq->size);
                 if (copy_numbers != NULL)
                 {
                     for (int i = 0; i < seq->size; ++i)
@@ -145,12 +145,12 @@ Sequence* get_subsequence(const Sequence* const seq, const int start, const int 
     Sequence* sub_seq = NULL;
     if ((seq != NULL) && (seq->numbers != NULL))
     {
-        sub_seq = (Sequence*)malloc(sizeof(Sequence));
+        sub_seq = (Sequence*) malloc(sizeof(Sequence));
         if (sub_seq != NULL)
         {
             if (start >= 0 && length > 0 && ((start + length) <= seq->size))
             {
-                int* sub_seq_numbers = (int*)malloc(sizeof(int) * length);
+                int* sub_seq_numbers = (int*) malloc(sizeof(int) * length);
                 if (sub_seq_numbers != NULL)
                 {
                     int sub_idx = 0;
@@ -195,13 +195,13 @@ Sequence* repeat_sequence(const Sequence* const seq, const int amount)
     Sequence* rep_seq = NULL;
     if ((seq != NULL) && (seq->numbers != NULL))
     {
-        rep_seq = (Sequence*)malloc(sizeof(Sequence));
+        rep_seq = (Sequence*) malloc(sizeof(Sequence));
         if (rep_seq != NULL)
         {
             if (amount > 0)
             {
                 int length           = amount * seq->size;
-                int* rep_seq_numbers = (int*)malloc(sizeof(int) * length);
+                int* rep_seq_numbers = (int*) malloc(sizeof(int) * length);
                 if (rep_seq_numbers != NULL)
                 {
                     for (int i = 0; i < length; ++i)

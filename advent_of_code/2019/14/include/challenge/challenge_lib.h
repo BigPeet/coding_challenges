@@ -39,7 +39,7 @@ void destroy_material(Material* const material);
 void print_reaction(const Reaction* const reaction);
 void print_reaction_list(const ReactionList* const list);
 void print_material(const Material* const mat);
-void print_stash(Material * const * const stash, const int stash_size);
+void print_stash(Material* const* const stash, const int stash_size);
 
 int64_t reduce_to(const Material* const from,
                   const char* const to,

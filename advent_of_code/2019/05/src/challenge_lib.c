@@ -406,14 +406,12 @@ static void get_size_info(const char* const file_path,
 static size_t get_instruction_size(const int op_code)
 {
     size_t inst_size = 1;
-    if ((op_code == OP_CODE_ADD) || (op_code == OP_CODE_MULT) ||
-        (op_code == OP_CODE_IS_LESS) ||
+    if ((op_code == OP_CODE_ADD) || (op_code == OP_CODE_MULT) || (op_code == OP_CODE_IS_LESS) ||
         (op_code == OP_CODE_IS_EQUALS))
     {
         inst_size = 4;
     }
-    else if ((op_code == OP_CODE_JMP_IF_TRUE) ||
-             (op_code == OP_CODE_JMP_IF_FALSE))
+    else if ((op_code == OP_CODE_JMP_IF_TRUE) || (op_code == OP_CODE_JMP_IF_FALSE))
     {
         inst_size = 3;
     }
@@ -461,8 +459,7 @@ static void get_parameter_modes(const int number,
             parameter_modes[i] = mode;
             modes /= 10;
         }
-        if ((store_param != INTCODE_NO_STORE) &&
-            (store_param < num_parameters))
+        if ((store_param != INTCODE_NO_STORE) && (store_param < num_parameters))
         {
             /*Storage parameters always use the address, i.e. immediate mode*/
             parameter_modes[store_param] = PARAM_MODE_IMMEDIATE;

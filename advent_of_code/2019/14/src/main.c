@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
     }
 
     int num_of_reactions = 0;
-    ReactionList* list   = (ReactionList*)malloc(sizeof(ReactionList));
+    ReactionList* list   = (ReactionList*) malloc(sizeof(ReactionList));
     if (list == NULL)
     {
         return 0;
@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
     /*Part 2*/
     /*Create new stash.*/
     int64_t ore_storage = 1000000000000;
-    int64_t total_fuel = produce(fuel.name, ore_storage, ore_per_fuel, list);
+    int64_t total_fuel  = produce(fuel.name, ore_storage, ore_per_fuel, list);
     printf("%ld ORE produce %ld amount of FUEL.\n", ore_storage, total_fuel);
 
 

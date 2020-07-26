@@ -197,13 +197,10 @@ static void resize_game(Game* const game, const Direction dir)
 {
     assert(game != NULL);
     assert(game->game_area != NULL);
-    int new_height =
-        ((dir == UP) || (dir == DOWN)) ? game->height + 10 : game->height;
-    int new_width =
-        ((dir == RIGHT) || (dir == LEFT)) ? game->width + 10 : game->width;
+    int new_height = ((dir == UP) || (dir == DOWN)) ? game->height + 10 : game->height;
+    int new_width  = ((dir == RIGHT) || (dir == LEFT)) ? game->width + 10 : game->width;
 
-    TileType* new_area =
-        (TileType*) calloc(new_height, new_width * sizeof(TileType));
+    TileType* new_area = (TileType*) calloc(new_height, new_width * sizeof(TileType));
 
     if (new_area != NULL)
     {

@@ -12,7 +12,8 @@
 #include "stdlib.h"
 #include "string.h"
 
-typedef enum {
+typedef enum
+{
     UP    = 0,
     DOWN  = 1,
     RIGHT = 2,
@@ -61,14 +62,9 @@ static void build_distance_map_rec(const Map* const map,
                                    int* const distance_map);
 static Position move_pos(const Position pos, const Direction dir);
 static char get_value(const Map* const map, const Position pos);
-static int is_locked(Door** const doors,
-                     const int num_doors,
-                     const Position pos);
+static int is_locked(Door** const doors, const int num_doors, const Position pos);
 static Direction reverse_direction(const Direction dir);
-static int is_reachable(const int* dist_map,
-                        const int width,
-                        const int height,
-                        const Position pos);
+static int is_reachable(const int* dist_map, const int width, const int height, const Position pos);
 static int minimal_steps_rec(const Map* const map,
                              const Position pos,
                              SolutionStorage* const storage,
@@ -87,12 +83,10 @@ static SolutionStorage* create_storage();
 static Solution* create_solution(const int num_keys, const int steps, Key* const next);
 static void store_solution(SolutionStorage* const storage, Solution* solution);
 static int load_solution_value(const SolutionStorage* const storage,
-                        const Solution* const solution);
+                               const Solution* const solution);
 static void destroy_solution(Solution* const solution);
 static void destroy_storage(SolutionStorage* const storage);
-static void set_keys_of_solution(Solution* const solution,
-                                 Key** const keys,
-                                 const int num_keys);
+static void set_keys_of_solution(Solution* const solution, Key** const keys, const int num_keys);
 static Solution* remove_key_from_solution(const Solution* const solution,
                                           const Key* const key,
                                           const int num_keys);
@@ -144,8 +138,8 @@ Overview* read_input(const char* const file_path,
                 Door* d = (Door*) malloc(sizeof(Door));
                 if (d != NULL)
                 {
-                    d->id  = tolower(c);
-                    d->pos = (Position){.x = x, .y = y};
+                    d->id                         = tolower(c);
+                    d->pos                        = (Position){.x = x, .y = y};
                     d->opened                     = 0;
                     overview->doors[door_index++] = d;
                 }
@@ -156,8 +150,8 @@ Overview* read_input(const char* const file_path,
                 Key* k = (Key*) malloc(sizeof(Key));
                 if (k != NULL)
                 {
-                    k->id  = c;
-                    k->pos = (Position){.x = x, .y = y};
+                    k->id                       = c;
+                    k->pos                      = (Position){.x = x, .y = y};
                     k->picked_up                = 0;
                     k->door                     = NULL;
                     overview->keys[key_index++] = k;
@@ -231,13 +225,13 @@ void destroy_overview(Overview* const overview)
 int minimal_steps(const Overview* const overview)
 {
     int step_count = 0;
-    if ((overview != NULL) && (overview->map != NULL) &&
-        (overview->doors != NULL) && (overview->keys != NULL))
+    if ((overview != NULL) && (overview->map != NULL) && (overview->doors != NULL) &&
+        (overview->keys != NULL))
     {
         SolutionStorage* storage = create_storage();
         Solution* solution       = create_solution(overview->num_keys, -1, NULL);
         set_keys_of_solution(solution, overview->keys, overview->num_keys);
-        step_count               = minimal_steps_rec(overview->map,
+        step_count = minimal_steps_rec(overview->map,
                                        overview->entrance,
                                        storage,
                                        solution,
@@ -302,12 +296,12 @@ static int minimal_steps_rec(const Map* const map,
                 {
                     /*Found a stored solution*/
                     /*printf("Found prior solution for (%s, %c): %d\n",*/
-                           /*stored_solution.id,*/
-                           /*stored_solution.next->id,*/
-                           /*steps);*/
+                    /*stored_solution.id,*/
+                    /*stored_solution.next->id,*/
+                    /*steps);*/
                     used_stored_value = 1;
-                    solution_steps = steps;
-                    total_steps    = solution_steps + distances[i];
+                    solution_steps    = steps;
+                    total_steps       = solution_steps + distances[i];
                 }
                 else
                 {
@@ -321,7 +315,7 @@ static int minimal_steps_rec(const Map* const map,
                      * keys.*/
                     pickup(key_cpys[i]);
                     Solution* new_solution =
-                      remove_key_from_solution(current_solution, key_cpys[i], num_keys);
+                        remove_key_from_solution(current_solution, key_cpys[i], num_keys);
 
                     /*Recursively find a solution for the reduced set of keys and opened doors,
                      * starting at the position of the picked up key.*/
@@ -366,9 +360,9 @@ static int minimal_steps_rec(const Map* const map,
         if (need_to_store_solution)
         {
             /*printf("Store solution for (%s, %c): %d\n",*/
-                   /*current_solution->id,*/
-                   /*current_solution->next->id,*/
-                   /*current_solution->steps);*/
+            /*current_solution->id,*/
+            /*current_solution->next->id,*/
+            /*current_solution->steps);*/
             store_solution(storage, current_solution);
         }
     }
@@ -432,10 +426,7 @@ static Key** copy_keys(Key** const keys,
     return copy;
 }
 
-static int is_reachable(const int* dist_map,
-                        const int width,
-                        const int height,
-                        const Position pos)
+static int is_reachable(const int* dist_map, const int width, const int height, const Position pos)
 {
     int reachable = 0;
     if ((pos.y >= 0) && (pos.y < height) && (pos.x >= 0) && (pos.x < width))
@@ -535,9 +526,7 @@ static int* distance_map(const Map* const map,
     return dist_map;
 }
 
-static int is_locked(Door** const doors,
-                     const int num_doors,
-                     const Position pos)
+static int is_locked(Door** const doors, const int num_doors, const Position pos)
 {
     int is_locked = 0;
     for (int i = 0; i < num_doors; ++i)
@@ -610,8 +599,7 @@ static void build_distance_map_rec(const Map* const map,
         char c = get_value(map, p);
         if (c != WALL)
         {
-            if ((c == EMPTY) || (c == ENTRANCE) ||
-                (!is_locked(doors, num_doors, p)))
+            if ((c == EMPTY) || (c == ENTRANCE) || (!is_locked(doors, num_doors, p)))
             {
                 int p_dist = distance_map[(p.y * map->width) + p.x];
                 if ((p_dist == -1) || (p_dist > (dist + 1)))
@@ -659,8 +647,7 @@ static char get_value(const Map* const map, const Position pos)
     char val = -1;
     if (map != NULL)
     {
-        if ((pos.x < map->width) && (pos.x >= 0) && (pos.y < map->height) &&
-            (pos.y >= 0))
+        if ((pos.x < map->width) && (pos.x >= 0) && (pos.y < map->height) && (pos.y >= 0))
         {
             val = map->data[(pos.y * map->width) + pos.x];
         }
@@ -700,8 +687,7 @@ void print_map(const Map* const map)
 
 static SolutionStorage* create_storage()
 {
-    SolutionStorage* storage =
-        (SolutionStorage*) malloc(sizeof(SolutionStorage));
+    SolutionStorage* storage = (SolutionStorage*) malloc(sizeof(SolutionStorage));
     if (storage != NULL)
     {
         storage->num_solutions = 0;
@@ -728,9 +714,7 @@ static Solution* create_solution(const int num_keys, const int steps, Key* const
     return solution;
 }
 
-static void set_keys_of_solution(Solution* const solution,
-                                 Key** const keys,
-                                 const int num_keys)
+static void set_keys_of_solution(Solution* const solution, Key** const keys, const int num_keys)
 {
     assert(solution != NULL);
     assert(keys != NULL);
@@ -780,18 +764,17 @@ static void store_solution(SolutionStorage* const storage, Solution* solution)
     if (storage->num_solutions == storage->capacity)
     {
         storage->capacity *= 2;
-        storage->solutions = (Solution**) realloc(
-            storage->solutions, sizeof(Solution*) * storage->capacity);
+        storage->solutions =
+            (Solution**) realloc(storage->solutions, sizeof(Solution*) * storage->capacity);
     }
 }
 
 static int char_compare(const void* a, const void* b)
 {
-    return (const char*)a - (const char*)b;
+    return (const char*) a - (const char*) b;
 }
 
-static int load_solution_value(const SolutionStorage* const storage,
-                        const Solution* const solution)
+static int load_solution_value(const SolutionStorage* const storage, const Solution* const solution)
 {
     assert(storage != NULL);
     assert(storage->solutions != NULL);
@@ -802,7 +785,8 @@ static int load_solution_value(const SolutionStorage* const storage,
         if (solution->next != NULL)
         {
             assert(solution->id != NULL);
-            /*printf("Trying to load value for solution %s with next %c\n", solution->id, solution->next->id);*/
+            /*printf("Trying to load value for solution %s with next %c\n", solution->id,
+             * solution->next->id);*/
             /*2. copy id and sort it.*/
             char provided_id[strlen(solution->id) + 1];
             strcpy(provided_id, solution->id);

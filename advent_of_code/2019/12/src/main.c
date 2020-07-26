@@ -7,9 +7,9 @@
 
 #include "challenge/challenge_lib.h"
 #include "stdbool.h"
+#include "stdint.h"
 #include "stdio.h"
 #include "stdlib.h"
-#include "stdint.h"
 
 #define NUM_OF_MOONS 4
 
@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
     }
 
     /*Part 1*/
-    Moon** copy = copy_system(moons, NUM_OF_MOONS);
+    Moon** copy        = copy_system(moons, NUM_OF_MOONS);
     int num_iterations = atoi(argv[2]);
     simulate_iterations(copy, NUM_OF_MOONS, num_iterations);
 

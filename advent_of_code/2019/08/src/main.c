@@ -43,10 +43,8 @@ int main(int argc, char* argv[])
         {
             printf("Layer %zu has %zu 0s.\n", layer_index + 1, count);
 
-            size_t num_of_ones =
-                layer_count_occurences(img->layers[layer_index], 1);
-            size_t num_of_twos =
-                layer_count_occurences(img->layers[layer_index], 2);
+            size_t num_of_ones = layer_count_occurences(img->layers[layer_index], 1);
+            size_t num_of_twos = layer_count_occurences(img->layers[layer_index], 2);
 
             printf("Layer %zu has %zu 1s and %zu 2s: %zu * %zu = %zu\n",
                    layer_index + 1,

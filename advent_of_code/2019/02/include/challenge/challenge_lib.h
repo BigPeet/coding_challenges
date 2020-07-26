@@ -45,14 +45,8 @@ int execute(intcode_t* const prog);
 int execute_head_block(intcode_t* const prog);
 void move_head(intcode_t* const prog);
 
-void add_op(intcode_t* const prog,
-            const int first,
-            const int second,
-            const int result);
-void multiply_op(intcode_t* const prog,
-                 const int first,
-                 const int second,
-                 const int result);
+void add_op(intcode_t* const prog, const int first, const int second, const int result);
+void multiply_op(intcode_t* const prog, const int first, const int second, const int result);
 
 
 #endif /* ifndef INCLUDE_CHALLENGE_LIB_H */

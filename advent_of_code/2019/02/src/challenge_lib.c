@@ -204,10 +204,7 @@ int execute_head_block(intcode_t* const prog)
     return ret;
 }
 
-void add_op(intcode_t* const prog,
-            const int first,
-            const int second,
-            const int result)
+void add_op(intcode_t* const prog, const int first, const int second, const int result)
 {
     if ((prog != NULL) && (prog->memory != NULL))
     {
@@ -219,10 +216,7 @@ void add_op(intcode_t* const prog,
     }
 }
 
-void multiply_op(intcode_t* const prog,
-                 const int first,
-                 const int second,
-                 const int result)
+void multiply_op(intcode_t* const prog, const int first, const int second, const int result)
 {
     if ((prog != NULL) && (prog->memory != NULL))
     {

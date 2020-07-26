@@ -85,8 +85,7 @@ int main(int argc, char* argv[])
 
                 if (output == target)
                 {
-                    printf(
-                        "Found solution: Noun = %d, Verb = %d.\n", noun, verb);
+                    printf("Found solution: Noun = %d, Verb = %d.\n", noun, verb);
                 }
                 else
                 {

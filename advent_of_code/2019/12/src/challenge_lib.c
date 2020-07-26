@@ -16,18 +16,11 @@
 #define COORD_DELIM ","
 
 static void step(Moon** const moons, const int num_moons, const int dim);
-static void update_velocities(Moon** const moons,
-                              const int num_moons,
-                              const int dim);
+static void update_velocities(Moon** const moons, const int num_moons, const int dim);
 static void update_velocity(Moon* const a, const Moon* const b, const int dim);
 static void update_position(Moon* const moon, const int dim);
-static void get_system_state(Moon** const moons,
-                             const int num_moons,
-                             const int dim,
-                             int* state);
-static int are_equal(const int* state_a,
-                     const int* state_b,
-                     const int num_moons);
+static void get_system_state(Moon** const moons, const int num_moons, const int dim, int* state);
+static int are_equal(const int* state_a, const int* state_b, const int num_moons);
 static void get_primes(const int64_t upper_limit,
                        int64_t* const storage,
                        int64_t* const prime_amount);
@@ -147,9 +140,7 @@ void print_moon(const Moon* const moon)
     }
 }
 
-void simulate_iterations(Moon** const moons,
-                         const int num_moons,
-                         const int num_iterations)
+void simulate_iterations(Moon** const moons, const int num_moons, const int num_iterations)
 {
     for (int i = 0; i < num_iterations; ++i)
     {
@@ -267,10 +258,7 @@ int64_t least_common_multiple(const int* const cycle_lengths, const int amount)
     return mult;
 }
 
-static void get_system_state(Moon** const moons,
-                             const int num_moons,
-                             const int dim,
-                             int* state)
+static void get_system_state(Moon** const moons, const int num_moons, const int dim, int* state)
 {
     assert(moons != NULL);
     assert(state != NULL);
@@ -282,9 +270,7 @@ static void get_system_state(Moon** const moons,
     }
 }
 
-static int are_equal(const int* state_a,
-                     const int* state_b,
-                     const int num_moons)
+static int are_equal(const int* state_a, const int* state_b, const int num_moons)
 {
     assert(state_a != NULL);
     assert(state_b != NULL);
@@ -308,9 +294,7 @@ static void step(Moon** const moons, const int num_moons, const int dim)
     }
 }
 
-static void update_velocities(Moon** const moons,
-                              const int num_moons,
-                              const int dim)
+static void update_velocities(Moon** const moons, const int num_moons, const int dim)
 {
     assert(moons != NULL);
     for (int i = 0; i < num_moons; ++i)

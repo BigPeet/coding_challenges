@@ -16,11 +16,11 @@ static void object_combine(space_object_t* const object, const space_object_t* c
 
 map_t* map_create()
 {
-    map_t* map = (map_t*)malloc(sizeof(map_t));
+    map_t* map = (map_t*) malloc(sizeof(map_t));
     if (map != NULL)
     {
         map->num_objects = 0;
-        map->objects     = (space_object_t**)malloc(0);
+        map->objects     = (space_object_t**) malloc(0);
     }
     return map;
 }
@@ -39,8 +39,8 @@ int map_add_object(map_t* const map, space_object_t* const object)
         else
         {
             map->num_objects++;
-            map->objects =
-              (space_object_t**)realloc(map->objects, sizeof(space_object_t*) * map->num_objects);
+            map->objects = (space_object_t**) realloc(map->objects,
+                                                      sizeof(space_object_t*) * map->num_objects);
             if (map->objects != NULL)
             {
                 index               = map->num_objects - 1;
@@ -123,7 +123,7 @@ void object_init(space_object_t* const object, char* const name)
     {
         object->name              = name;
         object->num_direct_orbits = 0;
-        object->orbits            = (space_object_t**)malloc(sizeof(space_object_t*) * 0);
+        object->orbits            = (space_object_t**) malloc(sizeof(space_object_t*) * 0);
     }
 }
 
@@ -132,8 +132,9 @@ void object_add_orbit(space_object_t* const object, space_object_t* const orbit)
     if ((object != NULL) && (orbit != NULL))
     {
         object->num_direct_orbits++;
-        object->orbits = (space_object_t**)realloc(
-          object->orbits, sizeof(space_object_t*) * object->num_direct_orbits);
+        object->orbits =
+            (space_object_t**) realloc(object->orbits,
+                                       sizeof(space_object_t*) * object->num_direct_orbits);
         if (object->orbits != NULL)
         {
             object->orbits[object->num_direct_orbits - 1] = orbit;
@@ -237,7 +238,7 @@ int parse_map(const char* const file_path, map_t* const map)
         FILE* fp = fopen(file_path, "r");
         if (fp != NULL)
         {
-            char* line = (char*)malloc(sizeof(char) * BUFFER_LENGTH);
+            char* line = (char*) malloc(sizeof(char) * BUFFER_LENGTH);
             if (line != NULL)
             {
                 size_t num_attempts = 0;
@@ -250,8 +251,8 @@ int parse_map(const char* const file_path, map_t* const map)
                         num_attempts = 0;
                         offset       = 0;
 
-                        space_object_t* center  = (space_object_t*)malloc(sizeof(space_object_t));
-                        space_object_t* orbiter = (space_object_t*)malloc(sizeof(space_object_t));
+                        space_object_t* center  = (space_object_t*) malloc(sizeof(space_object_t));
+                        space_object_t* orbiter = (space_object_t*) malloc(sizeof(space_object_t));
                         if ((center != NULL) && (orbiter != NULL))
                         {
                             if (parse_objects(line, center, orbiter))
@@ -266,14 +267,14 @@ int parse_map(const char* const file_path, map_t* const map)
                         }
 
                         free(line);
-                        line = (char*)malloc(sizeof(char) * BUFFER_LENGTH);
+                        line = (char*) malloc(sizeof(char) * BUFFER_LENGTH);
                     }
                     else
                     {
                         num_attempts++;
                         offset = strlen(line);
-                        line =
-                          (char*)realloc(line, sizeof(char) * BUFFER_LENGTH * (num_attempts + 1));
+                        line   = (char*) realloc(line,
+                                               sizeof(char) * BUFFER_LENGTH * (num_attempts + 1));
                     }
                 }
                 if (line != NULL)
@@ -299,7 +300,7 @@ int parse_objects(char* const line, space_object_t* const center, space_object_t
         char* token = strtok(line, ORBIT_DELIM);
         if (token != NULL)
         {
-            char* name = (char*)malloc(sizeof(char) * strlen(token) + 1);
+            char* name = (char*) malloc(sizeof(char) * strlen(token) + 1);
             if (name != NULL)
             {
                 object_init(center, strcpy(name, token));
@@ -310,7 +311,7 @@ int parse_objects(char* const line, space_object_t* const center, space_object_t
         if (token != NULL)
         {
             /*Cut off the \n character*/
-            char* name               = (char*)malloc(sizeof(char) * strlen(token));
+            char* name               = (char*) malloc(sizeof(char) * strlen(token));
             token[strlen(token) - 1] = '\0';
             object_init(orbiter, strcpy(name, token));
         }

@@ -71,8 +71,7 @@ void* control_func(void* args)
     usleep(3000);
 
     /*Only reading access*/
-    while (!waiting_for_input(overview->system->brain) &&
-           !overview->system->finished)
+    while (!waiting_for_input(overview->system->brain) && !overview->system->finished)
     {
         /*Read Response*/
         int64_t resp = read_output(overview->system);
@@ -86,8 +85,8 @@ void* control_func(void* args)
     /*The area should be initialized now.*/
     /*The current output position should now be at the bottom right.*/
     /*We can therefore "lock in" the area.*/
-    overview->height = overview->output_pos.y - 1;
-    overview->initialized  = 1;
+    overview->height      = overview->output_pos.y - 1;
+    overview->initialized = 1;
 
     if (overview->system->finished)
     {
@@ -96,9 +95,8 @@ void* control_func(void* args)
 #ifdef NCURSES
         endwin();
 #endif
-        int num_intersections = 0;
-        Position* scaff_intersections =
-            find_scaff_intersections(overview, &num_intersections);
+        int num_intersections         = 0;
+        Position* scaff_intersections = find_scaff_intersections(overview, &num_intersections);
 
         print_overview(overview);
 
@@ -224,8 +222,7 @@ static void update(Overview* const overview, const int64_t value)
     }
 
     /*Save value to area overview at current output position*/
-    int index =
-        (overview->output_pos.y * overview->width) + overview->output_pos.x;
+    int index             = (overview->output_pos.y * overview->width) + overview->output_pos.x;
     overview->area[index] = value;
 
 
@@ -238,8 +235,8 @@ static void update(Overview* const overview, const int64_t value)
         overview->output_pos.y++;
         overview->output_pos.x = 0;
     }
-    else if ((c == '^') || (c == '<') || (c == '>') || (c == 'v') ||
-             (c == '#') || (c == '.') || (c == 'X'))
+    else if ((c == '^') || (c == '<') || (c == '>') || (c == 'v') || (c == '#') || (c == '.') ||
+             (c == 'X'))
     {
         if ((c == '^') || (c == '<') || (c == '>') || (c == 'v') || (c == 'X'))
         {
@@ -264,10 +261,8 @@ static void update(Overview* const overview, const int64_t value)
         overview->output_pos.x++;
         d = RIGHT;
     }
-    if ((overview->output_pos.x < 0) ||
-        (overview->output_pos.x >= overview->width) ||
-        (overview->output_pos.y < 0) ||
-        (overview->output_pos.y >= overview->height))
+    if ((overview->output_pos.x < 0) || (overview->output_pos.x >= overview->width) ||
+        (overview->output_pos.y < 0) || (overview->output_pos.y >= overview->height))
     {
         if (!overview->initialized)
         {
@@ -280,12 +275,10 @@ static void update(Overview* const overview, const int64_t value)
 
 static void resize_overview(Overview* const overview, const Direction dir)
 {
-    int new_height = ((dir == UP) || (dir == DOWN))
-                         ? overview->height + RESIZE_AMOUNT
-                         : overview->height;
-    int new_width = ((dir == RIGHT) || (dir == LEFT))
-                        ? overview->width + RESIZE_AMOUNT
-                        : overview->width;
+    int new_height =
+        ((dir == UP) || (dir == DOWN)) ? overview->height + RESIZE_AMOUNT : overview->height;
+    int new_width =
+        ((dir == RIGHT) || (dir == LEFT)) ? overview->width + RESIZE_AMOUNT : overview->width;
 
     int* new_area = (int*) calloc(new_height, new_width * sizeof(int));
     if (new_area != NULL)
@@ -419,8 +412,8 @@ static Position* find_scaff_intersections(const Overview* const overview,
             char bottom = (char) overview->area[bottom_index];
             char right  = (char) overview->area[right_index];
 
-            if ((last_value == '#') && (top == '#') && (center == '#') &&
-                (bottom == '#') && (right == '#'))
+            if ((last_value == '#') && (top == '#') && (center == '#') && (bottom == '#') &&
+                (right == '#'))
             {
                 /*Create position*/
                 if (count == 0)
@@ -429,14 +422,13 @@ static Position* find_scaff_intersections(const Overview* const overview,
                 }
                 else
                 {
-                    positions = (Position*) realloc(
-                        positions, sizeof(Position) * (count + 1));
+                    positions = (Position*) realloc(positions, sizeof(Position) * (count + 1));
                 }
                 if (positions == NULL)
                 {
                     return NULL;
                 }
-                Position p = {.x = x, .y = y};
+                Position p         = {.x = x, .y = y};
                 positions[count++] = p;
             }
             last_value = center;

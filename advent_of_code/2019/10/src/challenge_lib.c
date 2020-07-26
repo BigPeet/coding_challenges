@@ -121,7 +121,7 @@ int get_max_visible_asteroids(const Map* const map, Point* const pos)
             {
                 if (map->data[(row * map->width) + col] == 1)
                 {
-                    Point p = {.x = col, .y = row};
+                    Point p   = {.x = col, .y = row};
                     int count = count_visible_asteroids(&p, map);
                     if (count > max)
                     {
@@ -163,8 +163,7 @@ int count_visible_asteroids(const Point* const ast_pos, const Map* const map)
         /*printf("Origin: (%d, %d)\n", ast_pos->x, ast_pos->y);*/
         while (ret)
         {
-            ret =
-                check_rectangle(ast_pos, steps, map, counted, blocked, &count);
+            ret = check_rectangle(ast_pos, steps, map, counted, blocked, &count);
             steps++;
         }
         free(counted);
@@ -173,9 +172,7 @@ int count_visible_asteroids(const Point* const ast_pos, const Map* const map)
     return count;
 }
 
-void get_blocked_map(const Map* const map,
-                     const Point* const origin,
-                     int* blocked)
+void get_blocked_map(const Map* const map, const Point* const origin, int* blocked)
 {
     assert(map != NULL);
     assert(origin != NULL);
@@ -214,28 +211,23 @@ void fire_laser(Map* const map, const Point* const laser_pos)
 
     if ((map != NULL) && (laser_pos != NULL))
     {
-        int rotation = 0;
-        Point* corners = (Point*)malloc(sizeof(Point) * 8);
+        int rotation   = 0;
+        Point* corners = (Point*) malloc(sizeof(Point) * 8);
         if (corners == NULL)
         {
             return;
         }
         corners[0] = (Point){.x = laser_pos->x, .y = min(0, laser_pos->y - 1)};
-        corners[1] = (Point){.x = max(map->width - 1, laser_pos->x + 1),
-                             .y = laser_pos->y - 1};
-        corners[2] = (Point){.x = max(map->width - 1, laser_pos->x + 1),
-                             .y = laser_pos->y};
-        corners[3] = (Point){.x = laser_pos->x + 1,
-                             .y = max(map->height - 1, laser_pos->y + 1)};
-        corners[4] = (Point){.x = laser_pos->x,
-                             .y = max(map->height - 1, laser_pos->y + 1)};
-        corners[5] = (Point){.x = min(0, laser_pos->x - 1),
-                             .y = laser_pos->y + 1};
+        corners[1] = (Point){.x = max(map->width - 1, laser_pos->x + 1), .y = laser_pos->y - 1};
+        corners[2] = (Point){.x = max(map->width - 1, laser_pos->x + 1), .y = laser_pos->y};
+        corners[3] = (Point){.x = laser_pos->x + 1, .y = max(map->height - 1, laser_pos->y + 1)};
+        corners[4] = (Point){.x = laser_pos->x, .y = max(map->height - 1, laser_pos->y + 1)};
+        corners[5] = (Point){.x = min(0, laser_pos->x - 1), .y = laser_pos->y + 1};
         corners[6] = (Point){.x = min(0, laser_pos->x - 1), .y = laser_pos->y};
         corners[7] = (Point){.x = laser_pos->x - 1, .y = min(0, laser_pos->y - 1)};
 
         int vaporize_count = 0;
-        int* blocked = (int*) calloc(map->height, map->width * sizeof(int));
+        int* blocked       = (int*) calloc(map->height, map->width * sizeof(int));
         if (blocked == NULL)
         {
             return;
@@ -244,20 +236,18 @@ void fire_laser(Map* const map, const Point* const laser_pos)
         int total_num_asteroids = count_asteroids(map);
         while (total_num_asteroids > 1)
         {
-
             get_blocked_map(map, laser_pos, blocked);
 
             for (int q = 0; q < 4; ++q)
             {
                 Point start = corners[(q * 2)];
                 Point end   = corners[(q * 2) + 1];
-                Point inc = {.x = 1, .y = 1};
+                Point inc   = {.x = 1, .y = 1};
                 rotate_clockwise(&inc, q);
 
                 /*Maximum possible asteroids to be found in this quadrant.*/
-                int astcount = 0;
-                int max_asteroids =
-                    (abs(end.y - start.y + 1) * abs(end.x - start.x + 1));
+                int astcount      = 0;
+                int max_asteroids = (abs(end.y - start.y + 1) * abs(end.x - start.x + 1));
                 Point asteroids[max_asteroids];
 
                 /*Iterate over quadrant, extract visible asteroids.*/
@@ -265,18 +255,16 @@ void fire_laser(Map* const map, const Point* const laser_pos)
                  * order*/
                 /*remove asteroids in that order from map*/
 
-                for (int row = start.y; (row >= 0) && (row < map->height);
-                     row += inc.y)
+                for (int row = start.y; (row >= 0) && (row < map->height); row += inc.y)
                 {
-                    for (int col = start.x; (col >= 0) && (col < map->width);
-                         col += inc.x)
+                    for (int col = start.x; (col >= 0) && (col < map->width); col += inc.x)
                     {
                         Point check = {.x = col, .y = row};
-                        int index = (check.y * map->width) + check.x;
+                        int index   = (check.y * map->width) + check.x;
                         if (!blocked[index] && map->data[index] == 1)
                         {
-                            Point ast = {.x       = (check.x - laser_pos->x),
-                                         .y       = (check.y - laser_pos->y)};
+                            Point ast             = {.x = (check.x - laser_pos->x),
+                                         .y = (check.y - laser_pos->y)};
                             asteroids[astcount++] = ast;
                         }
                         if (col == end.x)
@@ -292,18 +280,17 @@ void fire_laser(Map* const map, const Point* const laser_pos)
                 qsort(asteroids, astcount, sizeof(Point), compare_points);
                 for (int i = 0; i < astcount; ++i)
                 {
-                    Point ast = {.x = (laser_pos->x + asteroids[i].x),
+                    Point ast                               = {.x = (laser_pos->x + asteroids[i].x),
                                  .y = (laser_pos->y + asteroids[i].y)};
                     map->data[(ast.y * map->width) + ast.x] = 0;
                     vaporize_count++;
                     total_num_asteroids--;
                     if (vaporize_count == 200)
                     {
-                        printf(
-                            "The %d. asteroid to be vaporized is at (%d, %d)\n",
-                            vaporize_count,
-                            ast.x,
-                            ast.y);
+                        printf("The %d. asteroid to be vaporized is at (%d, %d)\n",
+                               vaporize_count,
+                               ast.x,
+                               ast.y);
                     }
                 }
             }
@@ -388,8 +375,7 @@ static void block_from(const Point* const origin,
         col_index += col_inc;
         row_index += row_inc;
 
-        while ((col_index >= 0) && (col_index < width) && (row_index >= 0) &&
-               (row_index < height))
+        while ((col_index >= 0) && (col_index < width) && (row_index >= 0) && (row_index < height))
         {
             blocked[(row_index * width) + col_index] = 1;
             col_index += col_inc;
@@ -406,8 +392,7 @@ static void block_from(const Point* const origin,
         reduce(&row_inc, &col_inc);
         col_index += col_inc;
         row_index += row_inc;
-        while ((col_index >= 0) && (col_index < width) && (row_index >= 0) &&
-               (row_index < height))
+        while ((col_index >= 0) && (col_index < width) && (row_index >= 0) && (row_index < height))
         {
             blocked[(row_index * width) + col_index] = 1;
             col_index += col_inc;
@@ -453,12 +438,12 @@ static int check_rectangle(const Point* const origin,
     int bottom     = min(map->height - 1, origin->y + steps);
     int rect_count = 0;
 
-    int fully_expanded = (left == 0) && (right == map->width - 1) &&
-                         (top == 0) && (bottom == map->height - 1);
+    int fully_expanded =
+        (left == 0) && (right == map->width - 1) && (top == 0) && (bottom == map->height - 1);
 
-    Point top_left = {.x = left, .y = top};
-    Point top_right = {.x = right, .y = top};
-    Point bottom_left = {.x = left, .y = bottom};
+    Point top_left     = {.x = left, .y = top};
+    Point top_right    = {.x = right, .y = top};
+    Point bottom_left  = {.x = left, .y = bottom};
     Point bottom_right = {.x = right, .y = bottom};
 
     /*left to right*/
@@ -473,8 +458,7 @@ static int check_rectangle(const Point* const origin,
             {
                 rect_count++;
                 /*Block line of sight*/
-                Point blocking = {.x = (i - origin->x),
-                                  .y = (top_left.y - origin->y)};
+                Point blocking = {.x = (i - origin->x), .y = (top_left.y - origin->y)};
                 block_from(origin, &blocking, map->height, map->width, blocked);
                 counted[top_index] = 1;
             }
@@ -488,8 +472,7 @@ static int check_rectangle(const Point* const origin,
             {
                 rect_count++;
                 /*Block line of sight*/
-                Point blocking = {.x = (i - origin->x),
-                                  .y = (bottom_left.y - origin->y)};
+                Point blocking = {.x = (i - origin->x), .y = (bottom_left.y - origin->y)};
                 block_from(origin, &blocking, map->height, map->width, blocked);
                 counted[bottom_index] = 1;
             }
@@ -508,8 +491,7 @@ static int check_rectangle(const Point* const origin,
             {
                 rect_count++;
                 /*Block line of sight*/
-                Point blocking = {.x = (top_left.x - origin->x),
-                                  .y = (i - origin->y)};
+                Point blocking = {.x = (top_left.x - origin->x), .y = (i - origin->y)};
                 block_from(origin, &blocking, map->height, map->width, blocked);
                 counted[left_index] = 1;
             }
@@ -523,8 +505,7 @@ static int check_rectangle(const Point* const origin,
             {
                 rect_count++;
                 /*Block line of sight*/
-                Point blocking = {.x = (top_right.x - origin->x),
-                                  .y = (i - origin->y)};
+                Point blocking = {.x = (top_right.x - origin->x), .y = (i - origin->y)};
                 block_from(origin, &blocking, map->height, map->width, blocked);
                 counted[right_index] = 1;
             }

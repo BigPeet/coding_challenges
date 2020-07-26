@@ -67,8 +67,8 @@ intcode_t* read_intcode(const char* const file_path)
         size_t num_ints  = 0;
         get_size_info(file_path, &num_chars, &num_ints);
 
-        char* str   = (char*)malloc(sizeof(char) * num_chars);
-        int* memory = (int*)malloc(sizeof(int) * num_ints);
+        char* str   = (char*) malloc(sizeof(char) * num_chars);
+        int* memory = (int*) malloc(sizeof(int) * num_ints);
         FILE* fp    = fopen(file_path, "r");
         if ((fp != NULL) && (str != NULL) && (memory != NULL))
         {
@@ -101,7 +101,7 @@ intcode_t* create_intcode(int* const memory, const size_t memory_size)
     intcode_t* prog = NULL;
     if (memory != NULL)
     {
-        prog = (intcode_t*)malloc(sizeof(intcode_t));
+        prog = (intcode_t*) malloc(sizeof(intcode_t));
         if (prog != NULL)
         {
             prog->memory      = memory;
@@ -206,7 +206,7 @@ intcode_t* copy_intcode(const intcode_t* const prog)
     {
         if ((prog->memory != NULL) && (prog->memory_size > 0))
         {
-            int* memory_copy = (int*)malloc(sizeof(int) * prog->memory_size);
+            int* memory_copy = (int*) malloc(sizeof(int) * prog->memory_size);
             if (memory_copy != NULL)
             {
                 for (size_t i = 0; i < prog->memory_size; ++i)
@@ -271,10 +271,15 @@ int execute_head_block(intcode_t* const prog, int* const op_code)
                     {
                         store_param = INTCODE_NO_STORE;
                     }
-                    get_parameter_modes(
-                      prog->memory[head], inst_size - 1, store_param, parameter_modes);
-                    if (get_parameter_values(
-                          prog->memory, head, inst_size - 1, parameter_modes, parameters))
+                    get_parameter_modes(prog->memory[head],
+                                        inst_size - 1,
+                                        store_param,
+                                        parameter_modes);
+                    if (get_parameter_values(prog->memory,
+                                             head,
+                                             inst_size - 1,
+                                             parameter_modes,
+                                             parameters))
                     {
                         ret = get_op_func(*op_code)(prog, parameters);
                     }
@@ -472,8 +477,9 @@ int error_op(intcode_t* const prog, const int* const parameters)
     return INT_CODE_ERROR;
 }
 
-static void
-get_size_info(const char* const file_path, size_t* const total_chars, size_t* const amount_integers)
+static void get_size_info(const char* const file_path,
+                          size_t* const total_chars,
+                          size_t* const amount_integers)
 {
     /*Again, inefficient but lazy*/
     if (file_path != NULL)
@@ -655,7 +661,7 @@ static void read_from_io_mem(intcode_io_mem_t* const storage, int* value)
 {
     if ((storage != NULL) && (value != NULL))
     {
-        *value = storage->value;
+        *value            = storage->value;
         storage->consumed = 1;
     }
 }

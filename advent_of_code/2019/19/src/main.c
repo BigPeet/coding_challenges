@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
 
     /*Since the width of the beam increases about every 3rd row,
      * the beam will hit a width of 100 at roughly this offset.
-    * Looking at earlier rows is not really useful.*/
+     * Looking at earlier rows is not really useful.*/
     row = 300;
 
     /*The beam should be between 100-200 fields wide in the area we are looking
@@ -112,11 +112,9 @@ int main(int argc, char* argv[])
                     if (left_x >= 0)
                     {
                         /*check the corner coordinates.*/
-                        int64_t top_left = scan_coordinate(prog, left_x, top_y);
-                        int64_t bottom_left =
-                            scan_coordinate(prog, left_x, bottom_y);
-                        int64_t bottom_right =
-                            scan_coordinate(prog, right_x, bottom_y);
+                        int64_t top_left     = scan_coordinate(prog, left_x, top_y);
+                        int64_t bottom_left  = scan_coordinate(prog, left_x, bottom_y);
+                        int64_t bottom_right = scan_coordinate(prog, right_x, bottom_y);
 
                         if (top_left && bottom_left && bottom_right)
                         {

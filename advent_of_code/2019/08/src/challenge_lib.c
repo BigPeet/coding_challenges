@@ -8,13 +8,9 @@
 #include "challenge/challenge_lib.h"
 #include "stdio.h"
 
-static void layer_init(layer_t* const layer,
-                       const size_t height,
-                       const size_t width);
+static void layer_init(layer_t* const layer, const size_t height, const size_t width);
 
-static uint8_t layer_get_value(const layer_t* const layer,
-                               const size_t col,
-                               const size_t row);
+static uint8_t layer_get_value(const layer_t* const layer, const size_t col, const size_t row);
 static void layer_set_value(layer_t* const layer,
                             const uint8_t value,
                             const size_t col,
@@ -29,9 +25,7 @@ typedef enum
     IMAGE_COLOR_TRANSPARENT = 2,
 } image_color_t;
 
-image_t* parse_image(const char* const file_path,
-                     const size_t height,
-                     const size_t width)
+image_t* parse_image(const char* const file_path, const size_t height, const size_t width)
 {
     image_t* img = NULL;
     if (file_path == NULL)
@@ -56,7 +50,7 @@ image_t* parse_image(const char* const file_path,
 
     size_t layer_index      = 0;
     size_t layer_data_index = 0;
-    size_t counter = 0;
+    size_t counter          = 0;
 
     char c = fgetc(fp);
     while (!feof(fp) && c != '\n')
@@ -206,8 +200,7 @@ image_t* decode_image(const image_t* const img)
                 {
                     for (size_t i = 0; i < img->num_layers; i++)
                     {
-                        uint8_t layer_val =
-                            layer_get_value(img->layers[i], c, r);
+                        uint8_t layer_val = layer_get_value(img->layers[i], c, r);
                         if (layer_val != IMAGE_COLOR_TRANSPARENT)
                         {
                             layer_set_value(decoded_layer, layer_val, c, r);
@@ -260,9 +253,7 @@ size_t layer_count_occurences(const layer_t* const layer, const uint8_t value)
     return count;
 }
 
-static void layer_init(layer_t* const layer,
-                       const size_t height,
-                       const size_t width)
+static void layer_init(layer_t* const layer, const size_t height, const size_t width)
 {
     if (layer != NULL)
     {
@@ -286,9 +277,7 @@ static void layer_init(layer_t* const layer,
     }
 }
 
-static uint8_t layer_get_value(const layer_t* const layer,
-                               const size_t col,
-                               const size_t row)
+static uint8_t layer_get_value(const layer_t* const layer, const size_t col, const size_t row)
 {
     uint8_t value = 0;
     if (layer != NULL)
@@ -331,8 +320,8 @@ static int image_add_layer(image_t* const img)
             }
             else
             {
-                img->layers = (layer_t**) realloc(
-                    img->layers, sizeof(layer_t*) * (img->num_layers + 1));
+                img->layers =
+                    (layer_t**) realloc(img->layers, sizeof(layer_t*) * (img->num_layers + 1));
             }
 
             if (img->layers != NULL)

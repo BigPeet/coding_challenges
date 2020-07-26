@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
         return 0;
     }
 
-    size_t amount_modules  = 0;
+    size_t amount_modules = 0;
     size_t* module_masses = read_modules(argv[1], &amount_modules);
 
     if (module_masses != NULL)

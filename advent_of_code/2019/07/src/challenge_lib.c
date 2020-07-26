@@ -9,7 +9,7 @@
 #include "stdio.h"
 
 static void fill_block(
-  size_t* used, size_t num_used, size_t k, size_t col, size_t rows, size_t offset, int** perms);
+    size_t* used, size_t num_used, size_t k, size_t col, size_t rows, size_t offset, int** perms);
 static int get_smallest_unused_value(const size_t* const used, const size_t length, size_t* val);
 static int find_max(const size_t* const numbers, const size_t amount);
 static void init_with_zeroes(int* const numbers, const size_t amount);
@@ -26,12 +26,12 @@ int** create_permutations(const size_t k, size_t* const num_perms)
         }
 
         /*Allocate memory*/
-        perms = (int**)malloc(sizeof(int*) * num);
+        perms = (int**) malloc(sizeof(int*) * num);
         if (perms != NULL)
         {
             for (size_t i = 0; i < num; i++)
             {
-                perms[i] = (int*)malloc(sizeof(int) * k);
+                perms[i] = (int*) malloc(sizeof(int) * k);
                 if (perms[i] == NULL)
                 {
                     return NULL;
@@ -112,12 +112,12 @@ static int get_smallest_unused_value(const size_t* const used, const size_t leng
 }
 
 static void fill_block(
-  size_t* used, size_t num_used, size_t k, size_t col, size_t rows, size_t offset, int** perms)
+    size_t* used, size_t num_used, size_t k, size_t col, size_t rows, size_t offset, int** perms)
 {
     if (num_used < k)
     {
         /*Assuming used is allocated for k numbers*/
-        size_t* used_in_rows = (size_t*)malloc(sizeof(size_t) * k);
+        size_t* used_in_rows = (size_t*) malloc(sizeof(size_t) * k);
         if (used_in_rows != NULL)
         {
             size_t num_unused_cpy = num_used;

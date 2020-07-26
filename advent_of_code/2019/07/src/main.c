@@ -65,8 +65,7 @@ int main(int argc, char* argv[])
     }
 
     size_t num_perms = 0;
-    int** perms =
-        create_permutations_with_offset(num_amplifiers, offset, &num_perms);
+    int** perms      = create_permutations_with_offset(num_amplifiers, offset, &num_perms);
 
     if (perms == NULL)
     {
@@ -80,15 +79,13 @@ int main(int argc, char* argv[])
     {
         int* phases = perms[j];
 
-        intcode_t** amplifier_progs =
-            (intcode_t**) malloc(sizeof(intcode_t*) * num_amplifiers);
-        intcode_io_mem_t** amp_io_mems = (intcode_io_mem_t**) malloc(
-            sizeof(intcode_io_mem_t*) * num_amplifiers);
+        intcode_t** amplifier_progs = (intcode_t**) malloc(sizeof(intcode_t*) * num_amplifiers);
+        intcode_io_mem_t** amp_io_mems =
+            (intcode_io_mem_t**) malloc(sizeof(intcode_io_mem_t*) * num_amplifiers);
 
         for (size_t i = 0; i < num_amplifiers; i++)
         {
-            amp_io_mems[i] =
-                (intcode_io_mem_t*) malloc(sizeof(intcode_io_mem_t));
+            amp_io_mems[i] = (intcode_io_mem_t*) malloc(sizeof(intcode_io_mem_t));
             pthread_mutex_init(&amp_io_mems[i]->mut, NULL);
             pthread_cond_init(&amp_io_mems[i]->cond, NULL);
         }
@@ -128,8 +125,7 @@ int main(int argc, char* argv[])
         pthread_t compute_threads[num_amplifiers];
         for (size_t i = 0; i < num_amplifiers; i++)
         {
-            pthread_create(
-                &compute_threads[i], NULL, compute_thread, amplifier_progs[i]);
+            pthread_create(&compute_threads[i], NULL, compute_thread, amplifier_progs[i]);
         }
 
         pthread_join(init_thread, NULL);

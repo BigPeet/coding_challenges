@@ -8,9 +8,9 @@
 #ifndef INCLUDE_INTCODE_H
 #define INCLUDE_INTCODE_H
 
-#include "stdlib.h"
-#include "stdio.h"
 #include "pthread.h"
+#include "stdio.h"
+#include "stdlib.h"
 
 typedef enum
 {

@@ -42,8 +42,8 @@ int main(int argc, char* argv[])
     }
 
     /*Setup area, overview and robot with intial size and values.*/
-    int* hull    = (int*) calloc(INITIAL_HEIGHT, INITIAL_WIDTH * sizeof(int));
-    Robot* robot = (Robot*) malloc(sizeof(Robot));
+    int* hull          = (int*) calloc(INITIAL_HEIGHT, INITIAL_WIDTH * sizeof(int));
+    Robot* robot       = (Robot*) malloc(sizeof(Robot));
     Overview* overview = (Overview*) malloc(sizeof(Overview));
     if ((hull == NULL) || (robot == NULL) || (overview == NULL))
     {
@@ -52,10 +52,10 @@ int main(int argc, char* argv[])
     }
 
     Position starting_pos = {.x = INITIAL_WIDTH / 2, .y = INITIAL_HEIGHT / 2};
-    robot->direction = UP;
-    robot->finished  = 0;
-    robot->brain     = prog;
-    robot->pos       = starting_pos;
+    robot->direction      = UP;
+    robot->finished       = 0;
+    robot->brain          = prog;
+    robot->pos            = starting_pos;
 
     /*Make starting position white (for Part 2)*/
     hull[(starting_pos.y * INITIAL_WIDTH) + starting_pos.x] = 1;

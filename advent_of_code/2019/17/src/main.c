@@ -42,12 +42,11 @@ int main(int argc, char* argv[])
     }
 
     /*Setup area, overview and robot with intial size and values.*/
-    int* area     = (int*) calloc(INITIAL_HEIGHT, INITIAL_WIDTH * sizeof(int));
-    Robot* robot  = (Robot*) malloc(sizeof(Robot));
-    ASCII* system = (ASCII*) malloc(sizeof(ASCII));
+    int* area          = (int*) calloc(INITIAL_HEIGHT, INITIAL_WIDTH * sizeof(int));
+    Robot* robot       = (Robot*) malloc(sizeof(Robot));
+    ASCII* system      = (ASCII*) malloc(sizeof(ASCII));
     Overview* overview = (Overview*) malloc(sizeof(Overview));
-    if ((area == NULL) || (robot == NULL) || (overview == NULL) ||
-        (system == NULL))
+    if ((area == NULL) || (robot == NULL) || (overview == NULL) || (system == NULL))
     {
         printf("Error allocating memory for area, overview or robot.\n");
         return 0;
@@ -58,12 +57,12 @@ int main(int argc, char* argv[])
     system->brain    = prog;
     system->finished = 0;
 
-    overview->height     = INITIAL_HEIGHT;
-    overview->width      = INITIAL_WIDTH;
-    overview->area       = area;
-    overview->system     = system;
-    overview->robot      = robot;
-    overview->output_pos = (Position){.x = 0, .y = 0};
+    overview->height      = INITIAL_HEIGHT;
+    overview->width       = INITIAL_WIDTH;
+    overview->area        = area;
+    overview->system      = system;
+    overview->robot       = robot;
+    overview->output_pos  = (Position){.x = 0, .y = 0};
     overview->initialized = 0;
 
     /*Start robot and control threads*/

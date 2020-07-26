@@ -24,9 +24,7 @@ Moon** copy_system(Moon** moons, const int num_moons);
 void destroy_system(Moon** const moons, const int num_moons);
 void destroy_moon(Moon* const moon);
 void print_moon(const Moon* const moon);
-void simulate_iterations(Moon** const moons,
-                         const int num_moons,
-                         const int num_iterations);
+void simulate_iterations(Moon** const moons, const int num_moons, const int num_iterations);
 int steps_for_cycle(Moon** moons, const int num_moons, const int dim);
 
 int64_t least_common_multiple(const int* const cycle_lengths, const int amount);

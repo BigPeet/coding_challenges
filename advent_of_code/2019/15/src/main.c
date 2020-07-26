@@ -42,8 +42,8 @@ int main(int argc, char* argv[])
     }
 
     /*Setup area, overview and robot with intial size and values.*/
-    int* area    = (int*) calloc(INITIAL_HEIGHT, INITIAL_WIDTH * sizeof(int));
-    Robot* robot = (Robot*) malloc(sizeof(Robot));
+    int* area          = (int*) calloc(INITIAL_HEIGHT, INITIAL_WIDTH * sizeof(int));
+    Robot* robot       = (Robot*) malloc(sizeof(Robot));
     Overview* overview = (Overview*) malloc(sizeof(Overview));
     if ((area == NULL) || (robot == NULL) || (overview == NULL))
     {
@@ -52,16 +52,16 @@ int main(int argc, char* argv[])
     }
 
     Position starting_pos = {.x = INITIAL_WIDTH / 2, .y = INITIAL_HEIGHT / 2};
-    robot->direction = UP;
-    robot->finished  = 0;
-    robot->brain     = prog;
-    robot->pos       = starting_pos;
+    robot->direction      = UP;
+    robot->finished       = 0;
+    robot->brain          = prog;
+    robot->pos            = starting_pos;
 
-    overview->height = INITIAL_HEIGHT;
-    overview->width  = INITIAL_WIDTH;
-    overview->area   = area;
-    overview->robot  = robot;
-    overview->robot_start = starting_pos;
+    overview->height       = INITIAL_HEIGHT;
+    overview->width        = INITIAL_WIDTH;
+    overview->area         = area;
+    overview->robot        = robot;
+    overview->robot_start  = starting_pos;
     overview->oxygen_found = 0;
 
     /*Start robot and control threads*/
@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
     printf("Oxygen found: %d, Robot finished: %d\n",
            overview->oxygen_found,
            overview->robot->finished);
-    starting_pos = overview->robot_start;
+    starting_pos        = overview->robot_start;
     Position oxygen_pos = overview->oxygen_pos;
     printf("Robot started at position: (%d, %d)\n", starting_pos.x, starting_pos.y);
     printf("Robot is at position: (%d, %d)\n", overview->robot->pos.x, overview->robot->pos.y);

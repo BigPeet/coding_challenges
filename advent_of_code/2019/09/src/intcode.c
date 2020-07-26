@@ -44,8 +44,9 @@ static int get_opcode(const int64_t number);
 static int is_valid_opcode(const int op_code);
 
 static intcode_op_f get_op_func(const int op_code);
-static void
-get_parameter_modes(const int64_t number, const size_t num_parameters, int* const parameter_modes);
+static void get_parameter_modes(const int64_t number,
+                                const size_t num_parameters,
+                                int* const parameter_modes);
 
 static int get_parameter_values(const intcode_t* const prog,
                                 const size_t num_parameters,
@@ -68,8 +69,8 @@ intcode_t* read_intcode(const char* const file_path)
         size_t num_ints  = 0;
         get_size_info(file_path, &num_chars, &num_ints);
 
-        char* str       = (char*)malloc(sizeof(char) * num_chars);
-        int64_t* memory = (int64_t*)malloc(sizeof(int64_t) * num_ints);
+        char* str       = (char*) malloc(sizeof(char) * num_chars);
+        int64_t* memory = (int64_t*) malloc(sizeof(int64_t) * num_ints);
         FILE* fp        = fopen(file_path, "r");
         if ((fp != NULL) && (str != NULL) && (memory != NULL))
         {
@@ -103,7 +104,7 @@ intcode_t* create_intcode(int64_t* const memory, const size_t memory_size)
     intcode_t* prog = NULL;
     if (memory != NULL)
     {
-        prog = (intcode_t*)malloc(sizeof(intcode_t));
+        prog = (intcode_t*) malloc(sizeof(intcode_t));
         if (prog != NULL)
         {
             prog->memory        = memory;
@@ -258,7 +259,7 @@ intcode_t* copy_intcode(const intcode_t* const prog)
     {
         if ((prog->memory != NULL) && (prog->memory_size > 0))
         {
-            int64_t* memory_copy = (int64_t*)malloc(sizeof(int64_t) * prog->memory_size);
+            int64_t* memory_copy = (int64_t*) malloc(sizeof(int64_t) * prog->memory_size);
             if (memory_copy != NULL)
             {
                 for (size_t i = 0; i < prog->memory_size; ++i)
@@ -302,8 +303,8 @@ int execute_head_block(intcode_t* const prog, int* const op_code)
     int ret = INT_CODE_ERROR;
     if (prog != NULL)
     {
-        size_t head      = prog->head;
-        *op_code         = get_opcode(get_mem_value(prog, prog->head));
+        size_t head = prog->head;
+        *op_code    = get_opcode(get_mem_value(prog, prog->head));
 #ifdef DEBUG
         printf("Op Code: %d\n", *op_code);
 #endif
@@ -334,10 +335,10 @@ int execute_head_block(intcode_t* const prog, int* const op_code)
             if (get_parameter_values(prog, inst_size - 1, store_param, parameter_modes, parameters))
             {
 #ifdef DEBUG
-            for (int i = 0; i < inst_size - 1; i++)
-            {
-                printf("%d\t%ld\n", parameter_modes[i], parameters[i]);
-            }
+                for (int i = 0; i < inst_size - 1; i++)
+                {
+                    printf("%d\t%ld\n", parameter_modes[i], parameters[i]);
+                }
 #endif
                 ret = get_op_func(*op_code)(prog, parameters);
             }
@@ -557,8 +558,9 @@ int error_op(intcode_t* const prog, const int64_t* const parameters)
     return INT_CODE_ERROR;
 }
 
-static void
-get_size_info(const char* const file_path, size_t* const total_chars, size_t* const amount_integers)
+static void get_size_info(const char* const file_path,
+                          size_t* const total_chars,
+                          size_t* const amount_integers)
 {
     /*Again, inefficient but lazy*/
     if (file_path != NULL)
@@ -625,8 +627,9 @@ static int is_valid_opcode(const int op_code)
     return (op_code >= 1 && op_code <= 9) || (op_code == OP_CODE_HALT);
 }
 
-static void
-get_parameter_modes(const int64_t number, const size_t num_parameters, int* const parameter_modes)
+static void get_parameter_modes(const int64_t number,
+                                const size_t num_parameters,
+                                int* const parameter_modes)
 {
     if (NULL != parameter_modes)
     {

@@ -47,33 +47,33 @@ void* control_func(void* args)
     while (!overview->robot->finished)
     {
         Position current_pos = overview->robot->pos;
-        if ((current_pos.x < 0) || (current_pos.x >= overview->width) ||
-            (current_pos.y < 0) || (current_pos.y >= overview->height))
+        if ((current_pos.x < 0) || (current_pos.x >= overview->width) || (current_pos.y < 0) ||
+            (current_pos.y >= overview->height))
         {
             /*Robot left the field, increase hull in the correct direction.*/
             Direction dir;
             if (current_pos.x < 0)
             {
-              dir = LEFT;
+                dir = LEFT;
             }
             else if (current_pos.x >= overview->width)
             {
-              dir = RIGHT;
+                dir = RIGHT;
             }
             else if (current_pos.y < 0)
             {
-              dir = UP;
+                dir = UP;
             }
             else if (current_pos.y >= overview->height)
             {
-              dir = DOWN;
+                dir = DOWN;
             }
             resize_overview(overview, dir);
         }
 
         Direction current_dir = overview->robot->direction;
-        int pos_index = (current_pos.y * overview->width) + current_pos.x;
-        int color     = overview->hull[pos_index] & COLOR_MASK;
+        int pos_index         = (current_pos.y * overview->width) + current_pos.x;
+        int color             = overview->hull[pos_index] & COLOR_MASK;
 
         /*Provide color as input*/
         provide_input(overview->robot, color);
@@ -130,10 +130,8 @@ void move(Robot* const robot)
 
 void resize_overview(Overview* const overview, const Direction dir)
 {
-    int new_height = ((dir == UP) || (dir == DOWN)) ? overview->height + 10
-                                                    : overview->height;
-    int new_width = ((dir == RIGHT) || (dir == LEFT)) ? overview->width + 10
-                                                      : overview->width;
+    int new_height = ((dir == UP) || (dir == DOWN)) ? overview->height + 10 : overview->height;
+    int new_width  = ((dir == RIGHT) || (dir == LEFT)) ? overview->width + 10 : overview->width;
 
     int* new_hull = (int*) calloc(new_height, new_width * sizeof(int));
     if (new_hull != NULL)
@@ -152,9 +150,9 @@ void resize_overview(Overview* const overview, const Direction dir)
         overview->robot->pos.x += start_x;
         overview->robot->pos.y += start_y;
         free(overview->hull);
-        overview->hull = new_hull;
+        overview->hull   = new_hull;
         overview->height = new_height;
-        overview->width = new_width;
+        overview->width  = new_width;
     }
 }
 
@@ -180,7 +178,6 @@ int count_painted_fields(const Overview* const overview)
 }
 
 
-
 void print_overview(const Overview* const overview)
 {
     if ((overview != NULL) && (overview->hull != NULL))
@@ -189,8 +186,7 @@ void print_overview(const Overview* const overview)
         {
             for (int j = 0; j < overview->width; ++j)
             {
-                int color =
-                    overview->hull[(i * overview->width) + j] & COLOR_MASK;
+                int color = overview->hull[(i * overview->width) + j] & COLOR_MASK;
                 if (color != 0)
                 {
                     printf("%d ", color);

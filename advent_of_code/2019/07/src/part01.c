@@ -98,8 +98,7 @@ int main(int argc, char* argv[])
             }
             else
             {
-                printf("Programm did not halt as expected. Err code: %d\n",
-                       ret);
+                printf("Programm did not halt as expected. Err code: %d\n", ret);
                 break;
             }
         }

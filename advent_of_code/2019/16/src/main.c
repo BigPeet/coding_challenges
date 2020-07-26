@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
     printf("Message offset: %d\n", offset_value);
 
 
-    Sequence* repeated  = repeat_sequence(seq, 10000);
+    Sequence* repeated = repeat_sequence(seq, 10000);
 
     /*Since only the second half of the output is relevant,*/
     /*I can skip the expensive calulations of the first half.*/

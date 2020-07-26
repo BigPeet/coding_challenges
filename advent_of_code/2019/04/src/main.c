@@ -33,8 +33,8 @@ int main(int argc, char* argv[])
 
     if (amount_of_numbers == 2)
     {
-        int lower     = numbers[0];
-        int upper     = numbers[1];
+        int lower = numbers[0];
+        int upper = numbers[1];
 
         int solutions = num_of_solutions(lower, upper, fits_first_set_criteria);
         printf("Part 1: Between %d and %d there are %d solutions.\n", numbers[0], upper, solutions);

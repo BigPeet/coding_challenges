@@ -32,7 +32,7 @@ wire_t** read_wires(const char* const file_path, size_t* const num_wires)
         {
             if (*num_wires > 0)
             {
-                wires = (wire_t**)malloc(sizeof(wire_t*) * *num_wires);
+                wires = (wire_t**) malloc(sizeof(wire_t*) * *num_wires);
                 if (wires != NULL)
                 {
                     FILE* fp = fopen(file_path, "r");
@@ -222,7 +222,7 @@ static wire_t* parse_wire(char* const str)
 {
     wire_t* wire   = NULL;
     line_t** lines = NULL;
-    point_t* start = (point_t*)malloc(sizeof(point_t));
+    point_t* start = (point_t*) malloc(sizeof(point_t));
     if (start != NULL)
     {
         start->x = 0;
@@ -231,8 +231,8 @@ static wire_t* parse_wire(char* const str)
     size_t num_points = count_points(str);
     if (num_points > 0)
     {
-        wire  = (wire_t*)malloc(sizeof(wire_t));
-        lines = (line_t**)malloc(sizeof(line_t*) * num_points);
+        wire  = (wire_t*) malloc(sizeof(wire_t));
+        lines = (line_t**) malloc(sizeof(line_t*) * num_points);
     }
     if ((lines != NULL) && (wire != NULL) && (start != NULL))
     {
@@ -244,7 +244,7 @@ static wire_t* parse_wire(char* const str)
             point_t* end = parse_point(token, start);
             if (end != NULL)
             {
-                line_t* line = (line_t*)malloc(sizeof(line_t));
+                line_t* line = (line_t*) malloc(sizeof(line_t));
                 if (line != NULL)
                 {
                     line->a        = start;
@@ -268,7 +268,7 @@ static point_t* parse_point(const char* const str, const point_t* const origin)
     {
         char direction = str[0];
         int value      = atoi(str + 1);
-        parsed         = (point_t*)malloc(sizeof(point_t));
+        parsed         = (point_t*) malloc(sizeof(point_t));
         parsed->x      = origin->x;
         parsed->y      = origin->y;
         switch (direction)
@@ -339,7 +339,7 @@ static size_t* get_size_info(const char* const file_path, size_t* const amount_l
     size_t* amount_chars = NULL;
     /*Again, inefficient but lazy*/
     *amount_lines = count_lines(file_path);
-    amount_chars  = (size_t*)malloc(sizeof(size_t) * *amount_lines);
+    amount_chars  = (size_t*) malloc(sizeof(size_t) * *amount_lines);
     if (amount_chars != NULL)
     {
         FILE* fp = fopen(file_path, "r");

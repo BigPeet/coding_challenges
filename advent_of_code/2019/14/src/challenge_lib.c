@@ -25,8 +25,12 @@ static Material** copy_inputs(const Reaction* const reaction);
 static Reaction* get_reaction(const char* const name, const ReactionList* const list);
 static Reaction* create_reaction();
 static Material* create_material();
-static void reduce_with_stash(Material* const needed, Material* const* const stash, const int stash_size);
-static void add_to_stash(Material* const needed, Material* const* const stash, const int stash_size);
+static void reduce_with_stash(Material* const needed,
+                              Material* const* const stash,
+                              const int stash_size);
+static void add_to_stash(Material* const needed,
+                         Material* const* const stash,
+                         const int stash_size);
 static void clear_stash(Material** stash, const int stash_size);
 
 Reaction** parse_input(const char* const file_path, int* const num_reactions)
@@ -36,7 +40,7 @@ Reaction** parse_input(const char* const file_path, int* const num_reactions)
     {
         int num_lines = count_lines(file_path);
 
-        reactions = (Reaction**)malloc(sizeof(Reaction*) * num_lines);
+        reactions = (Reaction**) malloc(sizeof(Reaction*) * num_lines);
         if (reactions == NULL)
         {
             return NULL;
@@ -48,7 +52,7 @@ Reaction** parse_input(const char* const file_path, int* const num_reactions)
             return NULL;
         }
 
-        char* line       = (char*)malloc(sizeof(char) * BUFFER_LENGTH);
+        char* line       = (char*) malloc(sizeof(char) * BUFFER_LENGTH);
         int num_attempts = 0;
         int line_index   = 0;
         int offset       = 0;
@@ -66,13 +70,13 @@ Reaction** parse_input(const char* const file_path, int* const num_reactions)
                 reactions[line_index++] = reaction;
 
                 free(line);
-                line = (char*)malloc(sizeof(char) * BUFFER_LENGTH);
+                line = (char*) malloc(sizeof(char) * BUFFER_LENGTH);
             }
             else
             {
                 num_attempts++;
                 offset = strlen(line);
-                line   = (char*)realloc(line, sizeof(char) * BUFFER_LENGTH * (num_attempts + 1));
+                line   = (char*) realloc(line, sizeof(char) * BUFFER_LENGTH * (num_attempts + 1));
             }
         }
         if (line != NULL)
@@ -90,7 +94,7 @@ Material** initialize_stash(const ReactionList* const list)
     Material** stash = NULL;
     if ((list != NULL) && (list->reactions != NULL))
     {
-        stash = (Material**)malloc(sizeof(Material*) * list->size);
+        stash = (Material**) malloc(sizeof(Material*) * list->size);
         for (int i = 0; i < list->size; ++i)
         {
             Reaction* r = list->reactions[i];
@@ -141,8 +145,9 @@ void print_material(const Material* const mat)
     printf("%ld %s\n", mat->amount, mat->name);
 }
 
-static void
-reduce_with_stash(Material* const needed, Material* const* const stash, const int stash_size)
+static void reduce_with_stash(Material* const needed,
+                              Material* const* const stash,
+                              const int stash_size)
 {
     assert(needed != NULL);
     assert(stash != NULL);
@@ -234,7 +239,7 @@ int64_t reduce_to(const Material* const from,
                 return 0;
             }
             int64_t r_amount     = r->output->amount;
-            int64_t applications = ceil((double)reduced_amount / (double)r_amount);
+            int64_t applications = ceil((double) reduced_amount / (double) r_amount);
             r_amount *= applications;
             int64_t extra = r_amount - reduced_amount;
 
@@ -289,7 +294,7 @@ int64_t produce(const char* const target,
     int64_t total_amount = -1;
     if ((target != NULL) && (list != NULL))
     {
-        char* name = (char*)malloc(sizeof(char) * strlen(target) + 1);
+        char* name = (char*) malloc(sizeof(char) * strlen(target) + 1);
         strcpy(name, target);
 
         /*Binary search*/
@@ -302,7 +307,7 @@ int64_t produce(const char* const target,
         {
             clear_stash(stash, list->size);
             int64_t middle = (lower_bound + upper_bound) / 2;
-            product.amount         = middle;
+            product.amount = middle;
 
             int64_t ore_for_middle = reduce_to(&product, "ORE", list, stash);
 
@@ -405,7 +410,7 @@ static void parse_line(char* const line, Reaction* const output)
     {
         /*parse left side of reaction*/
         int num_of_inputs = count_inputs(left_token);
-        Material** inputs = (Material**)malloc(sizeof(Material*) * num_of_inputs);
+        Material** inputs = (Material**) malloc(sizeof(Material*) * num_of_inputs);
         if (inputs == NULL)
         {
             return;
@@ -463,7 +468,7 @@ static void parse_token(char* token, Material* const output)
     }
     token[trimmed] = '\0';
 
-    char* id = (char*)malloc(strlen(token) - 2 + 1);
+    char* id = (char*) malloc(strlen(token) - 2 + 1);
     if (id != NULL)
     {
         int amount = 0;
@@ -476,7 +481,7 @@ static void parse_token(char* token, Material* const output)
 
 static Material* create_material()
 {
-    Material* mat = (Material*)malloc(sizeof(Material));
+    Material* mat = (Material*) malloc(sizeof(Material));
     if (mat != NULL)
     {
         mat->amount = 0;
@@ -487,7 +492,7 @@ static Material* create_material()
 
 static Reaction* create_reaction()
 {
-    Reaction* reaction = (Reaction*)malloc(sizeof(Reaction));
+    Reaction* reaction = (Reaction*) malloc(sizeof(Reaction));
     if (reaction != NULL)
     {
         reaction->input_size = 0;
@@ -556,7 +561,7 @@ static Material* copy_material(const Material* const mat)
     if (copy != NULL)
     {
         copy->amount = mat->amount;
-        copy->name   = (char*)malloc(sizeof(char) * strlen(mat->name) + 1);
+        copy->name   = (char*) malloc(sizeof(char) * strlen(mat->name) + 1);
         if (copy->name != NULL)
         {
             strcpy(copy->name, mat->name);
@@ -569,7 +574,7 @@ static Material** copy_inputs(const Reaction* const reaction)
 {
     assert(reaction != NULL);
     assert(reaction->inputs != NULL);
-    Material** inputs = (Material**)malloc(sizeof(Material*) * reaction->input_size);
+    Material** inputs = (Material**) malloc(sizeof(Material*) * reaction->input_size);
     if (inputs != NULL)
     {
         for (int i = 0; i < reaction->input_size; ++i)

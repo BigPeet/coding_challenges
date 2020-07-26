@@ -27,13 +27,15 @@
 struct Planner;
 typedef Direction (*plan_func)(struct Planner* const planner);
 
-typedef enum {
+typedef enum
+{
     HIT_WALL = 0,
     MOVED    = 1,
     FOUND    = 2,
 } Response;
 
-typedef enum {
+typedef enum
+{
     UNKNOWN = 0,
     EMPTY   = 1,
     WALL    = 2,
@@ -52,13 +54,9 @@ typedef struct Planner
 
 static void provide_input(const Robot* const robot, const int value);
 static int read_output(const Robot* const robot);
-static void update(Overview* const overview,
-                   const Direction dir,
-                   const int value);
+static void update(Overview* const overview, const Direction dir, const int value);
 static Response step(Overview* const overview, const Direction dir);
-static Position move_pos(Overview* const overview,
-                         const Position pos,
-                         const Direction dir);
+static Position move_pos(Overview* const overview, const Position pos, const Direction dir);
 static void resize_overview(Overview* const overview, const Direction dir);
 static char tile_to_char(const Tile tile);
 static void display_overview(const Overview* const overview);
@@ -68,25 +66,17 @@ static Direction random_direction(Planner* const planner);
 static Direction seek_unknown(Planner* const planner);
 static Direction reverse_direction(const Direction dir);
 
-static int distance_from_to(Overview* const overview,
-                            const Position from,
-                            const Position to);
+static int distance_from_to(Overview* const overview, const Position from, const Position to);
 static int get_max_distance_from(Overview* const overview, const Position from);
 static void build_distance_map(Overview* const overview,
                                const int distance,
                                const int incoming_from);
 
-static void set_distance(Overview* const overview,
-                         const Position pos,
-                         int16_t distance);
+static void set_distance(Overview* const overview, const Position pos, int16_t distance);
 static int16_t get_distance(Overview* const overview, const Position pos);
-static void set_visited(Overview* const overview,
-                        const Position pos,
-                        int16_t distance);
+static void set_visited(Overview* const overview, const Position pos, int16_t distance);
 static int16_t get_visited(Overview* const overview, const Position pos);
-static void set_tile(Overview* const overview,
-                     const Position pos,
-                     const Tile tile);
+static void set_tile(Overview* const overview, const Position pos, const Tile tile);
 static Tile get_tile(Overview* const overview, const Position pos);
 
 void* robot_func(void* args)
@@ -188,9 +178,7 @@ void print_overview(const Overview* const overview)
     }
 }
 
-static Position move_pos(Overview* const overview,
-                         const Position pos,
-                         const Direction dir)
+static Position move_pos(Overview* const overview, const Position pos, const Direction dir)
 {
     assert(overview != NULL);
 
@@ -243,9 +231,7 @@ static Response step(Overview* const overview, const Direction dir)
     return resp;
 }
 
-static void update(Overview* const overview,
-                   const Direction dir,
-                   const int value)
+static void update(Overview* const overview, const Direction dir, const int value)
 {
     assert(overview != NULL);
     assert(overview->robot != NULL);
@@ -280,12 +266,10 @@ static void update(Overview* const overview,
 
 static void resize_overview(Overview* const overview, const Direction dir)
 {
-    int new_height = ((dir == UP) || (dir == DOWN))
-                         ? overview->height + RESIZE_AMOUNT
-                         : overview->height;
-    int new_width = ((dir == RIGHT) || (dir == LEFT))
-                        ? overview->width + RESIZE_AMOUNT
-                        : overview->width;
+    int new_height =
+        ((dir == UP) || (dir == DOWN)) ? overview->height + RESIZE_AMOUNT : overview->height;
+    int new_width =
+        ((dir == RIGHT) || (dir == LEFT)) ? overview->width + RESIZE_AMOUNT : overview->width;
 
     int* new_area = (int*) calloc(new_height, new_width * sizeof(int));
     if (new_area != NULL)
@@ -335,9 +319,8 @@ static Direction seek_unknown(Planner* const planner)
     /*Is there an unknown tile?*/
     for (int d = 0; d < NUM_OF_DIRECTIONS; ++d)
     {
-        Position p =
-            move_pos(planner->overview, planner->overview->robot->pos, d);
-        Tile t = get_tile(planner->overview, p);
+        Position p = move_pos(planner->overview, planner->overview->robot->pos, d);
+        Tile t     = get_tile(planner->overview, p);
         if (t == UNKNOWN)
         {
             return d;
@@ -349,9 +332,8 @@ static Direction seek_unknown(Planner* const planner)
     int visited   = __INT_MAX__;
     for (int d = 0; d < NUM_OF_DIRECTIONS; ++d)
     {
-        Position p =
-            move_pos(planner->overview, planner->overview->robot->pos, d);
-        Tile t = get_tile(planner->overview, p);
+        Position p = move_pos(planner->overview, planner->overview->robot->pos, d);
+        Tile t     = get_tile(planner->overview, p);
         if (t == EMPTY)
         {
             int visited_t = get_visited(planner->overview, p);
@@ -366,9 +348,7 @@ static Direction seek_unknown(Planner* const planner)
     return ret;
 }
 
-static int distance_from_to(Overview* const overview,
-                            const Position from,
-                            const Position to)
+static int distance_from_to(Overview* const overview, const Position from, const Position to)
 {
     assert(overview != NULL);
     assert(overview->robot != NULL);
@@ -618,9 +598,7 @@ static Direction reverse_direction(const Direction dir)
     }
 }
 
-static void set_distance(Overview* const overview,
-                         const Position pos,
-                         int16_t distance)
+static void set_distance(Overview* const overview, const Position pos, int16_t distance)
 {
     assert(overview != NULL);
     assert(overview->area != NULL);
@@ -629,9 +607,9 @@ static void set_distance(Overview* const overview,
     assert(pos.y >= 0);
     assert(pos.x < overview->height);
 
-    int index             = (pos.y * overview->width) + pos.x;
-    overview->area[index] = (overview->area[index] & ~DISTANCE_MASK) |
-                            (distance << DISTANCE_OFFSET);
+    int index = (pos.y * overview->width) + pos.x;
+    overview->area[index] =
+        (overview->area[index] & ~DISTANCE_MASK) | (distance << DISTANCE_OFFSET);
 }
 
 static int16_t get_distance(Overview* const overview, const Position pos)
@@ -644,13 +622,10 @@ static int16_t get_distance(Overview* const overview, const Position pos)
     assert(pos.x < overview->height);
 
     int index = (pos.y * overview->width) + pos.x;
-    return (int16_t)((overview->area[index] & DISTANCE_MASK) >>
-                     DISTANCE_OFFSET);
+    return (int16_t)((overview->area[index] & DISTANCE_MASK) >> DISTANCE_OFFSET);
 }
 
-static void set_tile(Overview* const overview,
-                     const Position pos,
-                     const Tile tile)
+static void set_tile(Overview* const overview, const Position pos, const Tile tile)
 {
     assert(overview != NULL);
     assert(overview->area != NULL);
@@ -660,8 +635,7 @@ static void set_tile(Overview* const overview,
     assert(pos.x < overview->height);
     int index = (pos.y * overview->width) + pos.x;
 
-    overview->area[index] =
-        (overview->area[index] & ~TILE_MASK) | (tile << TILE_OFFSET);
+    overview->area[index] = (overview->area[index] & ~TILE_MASK) | (tile << TILE_OFFSET);
 }
 
 static Tile get_tile(Overview* const overview, const Position pos)
@@ -677,9 +651,7 @@ static Tile get_tile(Overview* const overview, const Position pos)
     return (overview->area[index] & TILE_MASK) >> TILE_OFFSET;
 }
 
-static void set_visited(Overview* const overview,
-                        const Position pos,
-                        int16_t visited)
+static void set_visited(Overview* const overview, const Position pos, int16_t visited)
 {
     assert(overview != NULL);
     assert(overview->area != NULL);
@@ -694,9 +666,8 @@ static void set_visited(Overview* const overview,
         visited = visited_max;
     }
 
-    int index = (pos.y * overview->width) + pos.x;
-    overview->area[index] =
-        (overview->area[index] & ~VISITED_MASK) | (visited << VISITED_OFFSET);
+    int index             = (pos.y * overview->width) + pos.x;
+    overview->area[index] = (overview->area[index] & ~VISITED_MASK) | (visited << VISITED_OFFSET);
 }
 
 static int16_t get_visited(Overview* const overview, const Position pos)

@@ -27,7 +27,7 @@ size_t* read_modules(const char* const file_path, size_t* const amount_modules)
         {
             size_t index = 0;
             size_t mass  = 0;
-            modules      = (size_t*)malloc(sizeof(size_t) * *amount_modules);
+            modules      = (size_t*) malloc(sizeof(size_t) * *amount_modules);
 
             while (fscanf(fp, "%zd", &mass) != EOF)
             {

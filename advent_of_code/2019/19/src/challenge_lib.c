@@ -51,9 +51,7 @@ static int64_t read_output(const intcode_t* const prog)
     return read_value;
 }
 
-static int64_t provide_coordinate(const intcode_t* const prog,
-                                  const int x,
-                                  const int y)
+static int64_t provide_coordinate(const intcode_t* const prog, const int x, const int y)
 {
     int64_t resp = -1;
     while (!waiting_for_input(prog))
@@ -77,7 +75,7 @@ void* system_func(void* args)
         return NULL;
     }
     intcode_t* prog = (intcode_t*) args;
-    int ret       = execute(prog);
+    int ret         = execute(prog);
     if (ret != INT_CODE_HALT)
     {
         printf("Programm did not halt as expected. Err code: %d\n", ret);
