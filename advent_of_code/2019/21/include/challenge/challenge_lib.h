@@ -10,46 +10,11 @@
 
 #include "challenge/intcode.h"
 
-typedef enum
-{
-    UP    = 0,
-    DOWN  = 1,
-    RIGHT = 2,
-    LEFT  = 3,
-} Direction;
-#define NUM_OF_DIRECTIONS 4
-
-typedef struct
-{
-    int x;
-    int y;
-} Position;
-
-typedef struct
-{
-    Position pos;
-    Direction direction;
-} Robot;
-
 typedef struct
 {
     intcode_t* brain;
     int finished;
 } ASCII;
-
-typedef struct
-{
-    ASCII* system;
-    Robot* robot;
-    int* area;
-    int initialized;
-    Position output_pos;
-    int height;
-    int width;
-} Overview;
-
-
-void print_overview(const Overview* const overview);
 
 /*Thread functions*/
 void* system_func(void* args);
