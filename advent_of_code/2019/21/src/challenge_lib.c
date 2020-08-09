@@ -39,7 +39,7 @@ void* system_func(void* args)
     return NULL;
 }
 
-void* control_func(void* args)
+void* control_part01(void* args)
 {
     if (args == NULL)
     {
@@ -61,6 +61,36 @@ void* control_func(void* args)
     provide_line(system, "OR T J\n");
     provide_line(system, "AND D J\n");
     provide_line(system, "WALK\n");
+
+    read_prompt(system);
+    return NULL;
+}
+
+void* control_part02(void* args)
+{
+    if (args == NULL)
+    {
+        return NULL;
+    }
+    ASCII* system    = (ASCII*) args;
+
+    /*Give robot some time to setup.*/
+    usleep(3000);
+
+    read_prompt(system);
+
+    /*Robot is expecting input instructions.*/
+    /*Part 02: See if we should jump early (by checking B and C).
+     *         If yes, check if we can jump early safely (by checking D and H).
+     *         Then add a definitve jump if A is a hole.*/
+    provide_line(system, "NOT B J\n");
+    provide_line(system, "NOT C T\n");
+    provide_line(system, "OR T J\n");
+    provide_line(system, "AND D J\n");
+    provide_line(system, "AND H J\n");
+    provide_line(system, "NOT A T\n");
+    provide_line(system, "OR T J\n");
+    provide_line(system, "RUN\n");
 
     read_prompt(system);
     return NULL;
@@ -119,13 +149,15 @@ static void read_prompt(const ASCII* const system)
     {
         /*Read Response*/
         int64_t resp = read_output(system);
-        if (resp < 150)
+        if (resp < 127) // is ASCII and not large integer output
         {
           printf("%c", (char)resp);
         }
         else
         {
+          /*Received final output*/
           printf("%ld\n", resp);
+          break;
         }
     }
 }

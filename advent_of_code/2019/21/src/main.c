@@ -52,7 +52,9 @@ int main(int argc, char* argv[])
     pthread_create(&system_thread, NULL, system_func, system);
 
     pthread_t control_thread = 0;
-    pthread_create(&control_thread, NULL, control_func, system);
+    /*Use this for part 1*/
+    /*pthread_create(&control_thread, NULL, control_part01, system);*/
+    pthread_create(&control_thread, NULL, control_part02, system);
 
 
     /*Wait for threads to finish.*/

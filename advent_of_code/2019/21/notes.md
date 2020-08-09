@@ -10,3 +10,12 @@ A few first thoughts on part 1:
 This first naive solution worked for Part 1.
 
 Solution: 19349939
+
+For Part 2 we need to expand the solution to also check the tiles farther out.
+Apply the same conditions as before and in addition don't jump, if that leads you into a position where you can't avoid a hole anymore, e.g.:
+* If E has a hole, then we would need to immediately jump again. But if H has a hole too, then we fall into it. So, if possible we need to delay our jump.
+To fit this in as few instructions as possible:
+First make the check if we should jump early (check B and C), then if we can safely (by checking D and H).
+Then OR this with a definitive jump, if A has a hole.
+
+Solution: 1142412777

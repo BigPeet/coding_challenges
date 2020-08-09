@@ -18,6 +18,7 @@ typedef struct
 
 /*Thread functions*/
 void* system_func(void* args);
-void* control_func(void* args);
+void* control_part01(void* args);
+void* control_part02(void* args);
 
 #endif /* ifndef INCLUDE_CHALLENGE_LIB_H */
