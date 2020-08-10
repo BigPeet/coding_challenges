@@ -29,7 +29,16 @@ add_executable(
   src/main.c
 )
 
+add_executable(
+  ${PROJECT_NAME}_2
+  src/main2.c
+)
+
 target_link_libraries(${PROJECT_NAME}
+  ${PROJECT_NAME}_lib
+)
+
+target_link_libraries(${PROJECT_NAME}_2
   ${PROJECT_NAME}_lib
 )
 
@@ -42,6 +51,22 @@ target_include_directories(
 
 target_compile_options(
   ${PROJECT_NAME}
+  PRIVATE
+  -Wall
+  #-Wextra
+  #-Werror
+  #-Wpedantic
+  )
+
+target_include_directories(
+  ${PROJECT_NAME}_2
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+  )
+
+target_compile_options(
+  ${PROJECT_NAME}_2
   PRIVATE
   -Wall
   #-Wextra

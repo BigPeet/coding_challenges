@@ -15,6 +15,7 @@
 #define MAX_LINE_LENGTH 255u
 #define DECK_SIZE 10007u
 
+
 static const char* kCutCmd           = "cut ";
 static const char* kNewStackCmd      = "deal into new stack";
 static const char* kWithIncrementCmd = "deal with increment ";
@@ -23,7 +24,7 @@ int main(int argc, char* argv[])
 {
     if (argc != 2)
     {
-        printf("This executabel takes exactly one argument.\n");
+        printf("This executable takes exactly one argument.\n");
         printf("Usage: aoc2019_22 FILE_PATH.\n");
         return 0;
     }
