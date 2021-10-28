@@ -30,3 +30,33 @@ A quick and dirty test indicates that this is probably not the way to go.
 
 And now I read the task correctly and see that it asks what cards ends up at 2020...
 I imagine I need to find a way to express the shuffle algorithm as an reversible function where the number of applications is simply an input parameter.
+
+Update:
+Since it's been a while and I simply want to finish this: I'm taking [this implementation](https://github.com/vilya/AdventOfCode-2019/blob/master/day22/day22b.cpp) as a base for my own :-/
+
+The core idea was to break down one full application into a function which moves the card positions around.
+A pretty good explanation can be found [here](https://github.com/Aidiakapi/advent_of_code_2019/blob/master/src/day22.rs):
+
+Quote:
+```
+    // Explanation:
+    // m = multiplier
+    // a = addition
+    // f(0) = p + 0
+    // f(1) = (p) * m + a = pm + a
+    // f(2) = (pm + a) * m + a = pm^2 + am + a
+    // f(3) = (pm^2 + am + a) * m + a = pm^3 + am^2 + am + a
+    // f(4) = (pm^3 + am^2 + am + a) * m + a = pm^4 + am^3 + am^2 + am + a
+    //
+    // It can also be rewritten as:
+    // f(x) = pm^x + g(x)
+    // g(0) = 0
+    // g(x) = mg(x - 1) + a
+    // Where g is a linear non-homogenous recurrence, which can be rewritten as:
+    // g(x) = (am^x - a) / (m - 1)
+    //
+    // Consequently, calculating all repetitions can be done using:
+    // f(x) = pm^x + (am^x - a) / (m - 1)
+```
+
+Second Solution: 71345377301237
