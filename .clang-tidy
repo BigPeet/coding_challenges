@@ -1,6 +1,6 @@
 ---
 # enable all checks except the named ones (they are subtracted):
-Checks: '*,-android-*,-fuchsia-*,-google-*,-zircon-*,-abseil-*,-llvm-*,-objc-*,-modernize-use-trailing-return-type'
+Checks: '*,-android-*,-fuchsia-*,-google-*,-zircon-*,-abseil-*,-llvm*,-objc-*,-modernize-use-trailing-return-type'
 
 # no warning as errors
 WarningsAsErrors: ''
