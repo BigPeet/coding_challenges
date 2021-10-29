@@ -14,9 +14,16 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   add_definitions(-DDEBUG)
 endif()
 
-include_directories(SYSTEM
+include_directories(
   include
-  )
+)
+
+add_compile_options(
+  -Wall
+  #-Wextra
+  #-Werror
+  #-Wpedantic
+)
 
 add_library(
   ${PROJECT_NAME}_lib
@@ -32,22 +39,6 @@ add_executable(
 target_link_libraries(${PROJECT_NAME}
   ${PROJECT_NAME}_lib
 )
-
-target_include_directories(
-  ${PROJECT_NAME}
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
-  )
-
-target_compile_options(
-  ${PROJECT_NAME}
-  PRIVATE
-  -Wall
-  #-Wextra
-  #-Werror
-  #-Wpedantic
-  )
 
 # Testing
 
