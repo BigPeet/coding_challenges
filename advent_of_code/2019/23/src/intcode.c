@@ -65,34 +65,13 @@ intcode_t* read_intcode(const char* const file_path)
         size_t num_chars = 0;
         size_t num_ints  = 0;
         get_size_info(file_path, &num_chars, &num_ints);
+        int64_t* memory = parse_file(file_path, num_ints, num_chars);
 
-        char* str       = (char*) malloc(sizeof(char) * num_chars);
-        int64_t* memory = (int64_t*) malloc(sizeof(int64_t) * num_ints);
-        FILE* fp        = fopen(file_path, "r");
-        if ((fp != NULL) && (str != NULL) && (memory != NULL))
+        if (memory)
         {
-            /*We only read the first line.*/
-            if (fscanf(fp, "%s", str) == EOF)
-            {
-                printf("No lines in file.\n");
-            }
-            fclose(fp);
-
-            /*Tokenize string*/
-            size_t index = 0;
-            char* token  = strtok(str, INTCODE_DELIM);
-            while (token != NULL)
-            {
-                /*TODO might need changing to correctly parse int64_t*/
-                memory[index++] = strtoll(token, NULL, 10);
-                token           = strtok(NULL, INTCODE_DELIM);
-            }
-            free(str);
-
             prog = create_intcode(memory, num_ints);
         }
     }
-
     return prog;
 }
 
@@ -312,7 +291,7 @@ int execute(intcode_t* const prog)
         while (ret == INT_CODE_CONTINUE)
         {
             int op_code = 0;
-            ret = execute_head_block(prog, &op_code);
+            ret         = execute_head_block(prog, &op_code);
         }
     }
     return ret;
@@ -617,6 +596,42 @@ static void get_size_info(const char* const file_path,
         }
     }
 }
+
+static int64_t* parse_file(const char* const file_path, size_t num_ints, size_t num_chars)
+{
+    int64_t* memory = NULL;
+    if (file_path != NULL)
+    {
+        char* str = (char*) malloc(sizeof(char) * num_chars);
+        memory    = (int64_t*) malloc(sizeof(int64_t) * num_ints);
+        FILE* fp  = fopen(file_path, "r");
+        if ((fp != NULL) && (str != NULL) && (memory != NULL))
+        {
+            /*We only read the first line.*/
+            if (fscanf(fp, "%s", str) == EOF)
+            {
+                printf("No lines in file.\n");
+            }
+            fclose(fp);
+
+            /*Tokenize string*/
+            size_t index = 0;
+            char* token  = strtok(str, INTCODE_DELIM);
+            while (token != NULL)
+            {
+                /*TODO might need changing to correctly parse int64_t*/
+                memory[index++] = strtoll(token, NULL, 10);
+                token           = strtok(NULL, INTCODE_DELIM);
+            }
+        }
+        if (str)
+        {
+            free(str);
+        }
+    }
+    return memory;
+}
+
 
 static size_t get_instruction_size(const int op_code)
 {
