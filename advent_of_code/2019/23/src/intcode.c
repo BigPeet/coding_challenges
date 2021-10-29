@@ -102,6 +102,8 @@ void destroy_intcode(intcode_t* const prog)
 {
     if (prog != NULL)
     {
+        destroy_io_mem(prog->mem_io_in);
+        destroy_io_mem(prog->mem_io_out);
         if (prog->memory != NULL)
         {
             free(prog->memory);

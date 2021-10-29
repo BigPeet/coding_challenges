@@ -4,6 +4,8 @@ project(aoc2019_23 VERSION 0.0.1)
 # for correct library locations across platforms
 include(GNUInstallDirs)
 
+find_package(Threads REQUIRED)
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE "RelWithDebInfo")
 
@@ -39,6 +41,7 @@ add_executable(
 
 target_link_libraries(${PROJECT_NAME}
   ${PROJECT_NAME}_lib
+  ${CMAKE_THREAD_LIBS_INIT}
 )
 
 
