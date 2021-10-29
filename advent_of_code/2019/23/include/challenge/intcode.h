@@ -48,7 +48,7 @@ typedef struct
 } intcode_t;
 
 intcode_t* read_intcode(const char* file_path);
-intcode_t* create_intcode(int64_t* memory, size_t content_size);
+intcode_t* create_intcode(int64_t* memory, size_t memory_size);
 void destroy_intcode(intcode_t* prog);
 void print_intcode(const intcode_t* prog);
 int set_mem_value(intcode_t* prog, size_t address, int64_t value);

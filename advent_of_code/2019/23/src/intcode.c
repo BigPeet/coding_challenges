@@ -9,7 +9,7 @@
 #include "string.h"
 
 #define INTCODE_DELIM ","
-#define INTCODE_NO_STORE -1
+#define INTCODE_NO_STORE (-1)
 /*#define DEBUG 1*/
 
 typedef enum
@@ -35,29 +35,26 @@ typedef enum
 
 typedef int (*intcode_op_f)(intcode_t* const, const int64_t* const);
 
-static void get_size_info(const char* const file_path,
-                          size_t* const total_chars,
-                          size_t* const amount_integers);
+static void get_size_info(const char* file_path, size_t* total_chars, size_t* amount_integers);
 
-static size_t get_instruction_size(const int op_code);
-static int get_opcode(const int64_t number);
-static int is_valid_opcode(const int op_code);
+static size_t get_instruction_size(int op_code);
+static int get_opcode(int64_t number);
+static int is_valid_opcode(int op_code);
 
-static intcode_op_f get_op_func(const int op_code);
-static void get_parameter_modes(const int64_t number,
-                                const size_t num_parameters,
-                                int* const parameter_modes);
+static intcode_op_f get_op_func(int op_code);
+static void get_parameter_modes(int64_t number, size_t num_parameters, int* parameter_modes);
 
-static int get_parameter_values(const intcode_t* const prog,
-                                const size_t num_parameters,
-                                const int store_param,
-                                const int* const parameter_modes,
-                                int64_t* const parameters);
+static int get_parameter_values(const intcode_t* prog,
+                                size_t num_parameters,
+                                int store_param,
+                                const int* parameter_modes,
+                                int64_t* parameters);
 
-static void write_to_io_std(FILE* const stream, const int64_t value);
-static int read_from_io_std(FILE* const stream, int64_t* value);
-static void write_to_io_mem(intcode_io_mem_t* const storage, const int64_t value);
-static void read_from_io_mem(intcode_io_mem_t* const storage, int64_t* value);
+static void write_to_io_std(FILE* stream, int64_t value);
+static int read_from_io_std(FILE* stream, int64_t* value);
+static void write_to_io_mem(intcode_io_mem_t* storage, int64_t value);
+static void read_from_io_mem(intcode_io_mem_t* storage, int64_t* value);
+static int64_t* parse_file(const char* file_path, size_t num_ints, size_t num_chars);
 
 
 intcode_t* read_intcode(const char* const file_path)
@@ -314,7 +311,7 @@ int execute(intcode_t* const prog)
         ret = INT_CODE_CONTINUE;
         while (ret == INT_CODE_CONTINUE)
         {
-            int op_code;
+            int op_code = 0;
             ret = execute_head_block(prog, &op_code);
         }
     }
@@ -425,7 +422,7 @@ int input_op(intcode_t* const prog, const int64_t* const parameters)
     int op_ret = INT_CODE_ERROR;
     if ((prog != NULL) && (parameters != NULL))
     {
-        int64_t val;
+        int64_t val             = 0;
         prog->waiting_for_input = 1;
         if (prog->io_mode == INT_CODE_STD_IO)
         {
