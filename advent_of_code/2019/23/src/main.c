@@ -4,10 +4,10 @@
  *
  */
 
+#include "pthread.h"
 #include "stdbool.h"
 #include "stdio.h"
 #include "stdlib.h"
-#include "pthread.h"
 
 #include "challenge/challenge_lib.h"
 #include "challenge/intcode.h"
@@ -51,6 +51,11 @@ int main(int argc, char* argv[])
         set_mem_io_out(nics[i].brain, io_out);
     }
 
+    ControllerParams params = {nics, NUMBER_OF_NICS};
+
+    pthread_t controller = 0;
+    pthread_create(&controller, NULL, control_part01, &params);
+
     // Start NIC threads
     pthread_t nic_threads[NUMBER_OF_NICS];
     for (int i = 0; i < NUMBER_OF_NICS; ++i)
@@ -64,6 +69,7 @@ int main(int argc, char* argv[])
     {
         pthread_join(nic_threads[i], NULL);
     }
+    pthread_join(controller, NULL);
 
 
     /*Clean Up*/

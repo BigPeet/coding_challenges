@@ -15,6 +15,12 @@ typedef struct
     int finished;
 } ASCII;
 
+typedef struct
+{
+    ASCII* nics;
+    int num_of_nics;
+} ControllerParams;
+
 /*Thread functions*/
 void* nic_func(void* args);
 void* control_part01(void* args);

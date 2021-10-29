@@ -32,6 +32,7 @@ add_library(
   SHARED
   src/challenge_lib.c
   src/intcode.c
+  src/queue.c
 )
 
 add_executable(

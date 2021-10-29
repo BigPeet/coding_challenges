@@ -61,6 +61,7 @@ void set_std_io_out(intcode_t* prog, FILE* output_stream);
 intcode_t* copy_intcode(const intcode_t* prog);
 int output_intcode(const intcode_t* prog);
 int waiting_for_input(const intcode_t* prog);
+int providing_ouput(const intcode_t* prog);
 
 intcode_io_mem_t* create_io_mem();
 void destroy_io_mem(intcode_io_mem_t* store);

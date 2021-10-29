@@ -15,3 +15,7 @@ The naive first approach would be:
 
 * The current intcode implementation would require to start a new thread for each instance. It might be problematic to run 50 different threads. An alternative would be to add an alternative to the "execute()" function which performs steps until an IO operation is hit. Then the controller could use that function to let the instances work sequentially, not in parallel.
 * Another issue might be the memory requirement. I forgot how much memory every ASCII instances requires (it's been a while since I've looked at the code), so I'm not sure if 50 instances would cause issues. And there might be more in part two.
+
+The naive solution worked fine for the first part. I implemented a simple queue, setup the communication controller and it worked fine.
+
+The first solution was 17740.

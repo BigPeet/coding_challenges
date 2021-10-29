@@ -5,48 +5,15 @@
  */
 
 #include "assert.h"
-#include "unistd.h"
+#include "challenge/intcode.h"
 #include "stdio.h"
+#include "unistd.h"
 
 #include "challenge/challenge_lib.h"
+#include "challenge/packet.h"
+#include "challenge/queue.h"
 
-void* nic_func(void* args)
-{
-    printf("Entered nic func\n");
-    if (args == NULL)
-    {
-        return NULL;
-    }
-    ASCII* system = (ASCII*) args;
-    int ret       = execute(system->brain);
-    if (ret != INT_CODE_HALT)
-    {
-        printf("Programm did not halt as expected. Err code: %d\n", ret);
-    }
-    else
-    {
-        /*Only writing access*/
-        usleep(1000);
-        system->finished = 1;
-    }
-    return NULL;
-}
-
-void* control_part01(void* args)
-{
-    if (args == NULL)
-    {
-        return NULL;
-    }
-    ASCII* system    = (ASCII*) args;
-
-    /*Give robot some time to setup.*/
-    usleep(3000);
-
-    return NULL;
-}
-
-static void provide_input(const ASCII* const system, const int value)
+static void provide_input(const ASCII* const system, const int64_t value)
 {
     assert(system != NULL);
     assert(system->brain != NULL);
@@ -90,4 +57,120 @@ static int64_t read_output(const ASCII* const system)
 
 
     return read_value;
+}
+
+static void assign_address(ASCII* nic, const int address)
+{
+    assert(system != NULL);
+    assert(system->brain != NULL);
+    while (!waiting_for_input(nic->brain))
+    {
+        usleep(10);
+    }
+    provide_input(nic, address);
+}
+
+static void start_up(ControllerParams* params)
+{
+    for (int i = 0; i < params->num_of_nics; ++i)
+    {
+        assign_address(&params->nics[i], i);
+    }
+}
+
+static Packet read_packet(const ASCII* const nic_system)
+{
+    int64_t read_x = read_output(nic_system);
+    int64_t read_y = read_output(nic_system);
+    Packet ret     = {.x = read_x, .y = read_y};
+    return ret;
+}
+
+static void send_packet(const ASCII* const nic_system, Packet p)
+{
+    provide_input(nic_system, p.x);
+    provide_input(nic_system, p.y);
+}
+
+static void send_receive_phase(ControllerParams* params, PacketQueue* queues)
+{
+    for (;;)
+    {
+        for (int i = 0; i < params->num_of_nics; ++i)
+        {
+            if (providing_ouput(params->nics[i].brain))
+            {
+                // Read address and packet, then add packet to queue for receiver
+                int64_t address = read_output(&params->nics[i]);
+                Packet packet   = read_packet(&params->nics[i]);
+                if (address == 255)
+                {
+                    printf("Packet for address 255: (X=%ld, Y=%ld).\n", packet.x, packet.y);
+                    return;
+                }
+                assert(address < params->num_of_nics);
+                queue_push(&queues[address], packet);
+            }
+            if (waiting_for_input(params->nics[i].brain))
+            {
+                if (queue_is_empty(&queues[i]))
+                {
+                    provide_input(&params->nics[i], -1);
+                }
+                else
+                {
+                    Packet p = queue_pop(&queues[i]);
+                    send_packet(&params->nics[i], p);
+                }
+            }
+        }
+    }
+}
+
+void* nic_func(void* args)
+{
+    if (args == NULL)
+    {
+        return NULL;
+    }
+    ASCII* system = (ASCII*) args;
+    int ret       = execute(system->brain);
+    if (ret != INT_CODE_HALT)
+    {
+        printf("Programm did not halt as expected. Err code: %d\n", ret);
+    }
+    else
+    {
+        /*Only writing access*/
+        usleep(1000);
+        system->finished = 1;
+    }
+    return NULL;
+}
+
+void* control_part01(void* args)
+{
+    if (args == NULL)
+    {
+        return NULL;
+    }
+    ControllerParams* params = (ControllerParams*) args;
+    /*Give robot some time to setup.*/
+    usleep(3000);
+
+    /*Setup packet queues*/
+    PacketQueue queues[params->num_of_nics];
+    for (int i = 0; i < params->num_of_nics; i++)
+    {
+        queues[i] = queue_create();
+    }
+
+    /*Assign addresses*/
+    start_up(params);
+
+    /*Send and receive packages*/
+    send_receive_phase(params, queues);
+
+
+    return NULL;
 }

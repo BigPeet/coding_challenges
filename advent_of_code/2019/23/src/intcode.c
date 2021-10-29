@@ -358,6 +358,16 @@ int waiting_for_input(const intcode_t* const prog)
     return waiting;
 }
 
+int providing_ouput(const intcode_t* const prog)
+{
+    int providing = 0;
+    if (prog != NULL)
+    {
+        providing = !prog->mem_io_out->consumed;
+    }
+    return providing;
+}
+
 int add_op(intcode_t* const prog, const int64_t* const parameters)
 {
     int op_ret = INT_CODE_ERROR;
@@ -420,6 +430,7 @@ int input_op(intcode_t* const prog, const int64_t* const parameters)
         }
         else if (prog->io_mode == INT_CODE_MEM_IO)
         {
+            /*printf("I want to receive input\n");*/
             pthread_mutex_lock(&prog->mem_io_in->mut);
             while (prog->mem_io_in->consumed)
             {
@@ -429,6 +440,7 @@ int input_op(intcode_t* const prog, const int64_t* const parameters)
             pthread_cond_signal(&prog->mem_io_in->cond);
             pthread_mutex_unlock(&prog->mem_io_in->mut);
 
+            /*printf("I received a value: %ld\n", val);*/
             int ret = set_mem_value(prog, parameters[0], val);
             if (ret != 0)
             {
@@ -453,6 +465,7 @@ int output_op(intcode_t* const prog, const int64_t* const parameters)
         }
         else if (prog->io_mode == INT_CODE_MEM_IO)
         {
+            /*printf("I want to provide output: %ld\n", parameters[0]);*/
             pthread_mutex_lock(&prog->mem_io_out->mut);
             while (!prog->mem_io_out->consumed)
             {
