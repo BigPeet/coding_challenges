@@ -29,6 +29,7 @@ add_library(
   ${PROJECT_NAME}_lib
   SHARED
   src/challenge_lib.c
+  src/intcode.c
 )
 
 add_executable(
