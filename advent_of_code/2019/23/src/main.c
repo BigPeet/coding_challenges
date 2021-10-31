@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
     ControllerParams params = {nics, NUMBER_OF_NICS};
 
     pthread_t controller = 0;
-    pthread_create(&controller, NULL, control_part01, &params);
+    pthread_create(&controller, NULL, nat_control, &params);
 
     // Start NIC threads
     pthread_t nic_threads[NUMBER_OF_NICS];

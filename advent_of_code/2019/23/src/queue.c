@@ -98,6 +98,5 @@ void queue_destroy(PacketQueue* q)
                 destroy_node(current);
             }
         }
-        free(q);
     }
 }

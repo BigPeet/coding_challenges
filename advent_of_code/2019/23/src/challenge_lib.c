@@ -148,7 +148,7 @@ void* nic_func(void* args)
     return NULL;
 }
 
-void* control_part01(void* args)
+void* nat_control(void* args)
 {
     if (args == NULL)
     {
@@ -171,6 +171,11 @@ void* control_part01(void* args)
     /*Send and receive packages*/
     send_receive_phase(params, queues);
 
+    /*Clean up*/
+    for (int i = 0; i < params->num_of_nics; i++)
+    {
+        queue_destroy(&queues[i]);
+    }
 
     return NULL;
 }
