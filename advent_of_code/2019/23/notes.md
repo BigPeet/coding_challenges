@@ -19,3 +19,7 @@ The naive first approach would be:
 The naive solution worked fine for the first part. I implemented a simple queue, setup the communication controller and it worked fine.
 
 The first solution was 17740.
+
+Adding the NAT logic for part two was relatively easy as well.
+
+The second solution was 12567.

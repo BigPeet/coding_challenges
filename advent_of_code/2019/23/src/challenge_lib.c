@@ -13,6 +13,9 @@
 #include "challenge/packet.h"
 #include "challenge/queue.h"
 
+#define NAT_ADDRESS (255)
+#define IDLE_ROUNDS (5)
+
 static void provide_input(const ASCII* const system, const int64_t value)
 {
     assert(system != NULL);
@@ -94,22 +97,39 @@ static void send_packet(const ASCII* const nic_system, Packet p)
 
 static void send_receive_phase(ControllerParams* params, PacketQueue* queues)
 {
-    for (;;)
+    Packet nat_packet        = {0, 0};
+    int64_t last_nat_value   = 0;
+    int all_systems_finished = 0;
+    int idle_count           = 0;
+    while (!all_systems_finished)
     {
+        all_systems_finished    = 1;
+        int no_output_available = 1;
+        int all_queues_empty    = 1;
         for (int i = 0; i < params->num_of_nics; ++i)
         {
+            all_systems_finished = all_systems_finished && params->nics[i].finished;
+            all_queues_empty     = all_queues_empty && queue_is_empty(&queues[i]);
             if (providing_ouput(params->nics[i].brain))
             {
-                // Read address and packet, then add packet to queue for receiver
+                no_output_available = 0;
+                /*Read address and packet, then add packet to queue for receiver*/
                 int64_t address = read_output(&params->nics[i]);
                 Packet packet   = read_packet(&params->nics[i]);
-                if (address == 255)
+                if (address == NAT_ADDRESS)
                 {
-                    printf("Packet for address 255: (X=%ld, Y=%ld).\n", packet.x, packet.y);
-                    return;
+                    /*Received packet for NAT*/
+                    nat_packet = packet;
+
+                    /*Enable for part 1*/
+                    /*printf("Packet for address 255: (X=%ld, Y=%ld).\n", packet.x, packet.y);*/
+                    /*return;*/
                 }
-                assert(address < params->num_of_nics);
-                queue_push(&queues[address], packet);
+                else
+                {
+                    assert(address < params->num_of_nics);
+                    queue_push(&queues[address], packet);
+                }
             }
             if (waiting_for_input(params->nics[i].brain))
             {
@@ -123,6 +143,31 @@ static void send_receive_phase(ControllerParams* params, PacketQueue* queues)
                     send_packet(&params->nics[i], p);
                 }
             }
+        }
+
+        if (no_output_available && all_queues_empty)
+        {
+            idle_count++;
+            if (idle_count == IDLE_ROUNDS)
+            {
+                // Send NAT packet to 0
+                printf("Send NAT Package (X=%ld, Y=%ld) to address 0.\n",
+                       nat_packet.x,
+                       nat_packet.y);
+                send_packet(&params->nics[0], nat_packet);
+                idle_count = 0;
+
+                /*Part 2 output*/
+                if (nat_packet.y == last_nat_value)
+                {
+                    printf("The following value was sent twice in a row: %ld\n", last_nat_value);
+                }
+                last_nat_value = nat_packet.y;
+            }
+        }
+        else
+        {
+            idle_count = 0;
         }
     }
 }
@@ -141,7 +186,6 @@ void* nic_func(void* args)
     }
     else
     {
-        /*Only writing access*/
         usleep(1000);
         system->finished = 1;
     }
@@ -167,6 +211,9 @@ void* nat_control(void* args)
 
     /*Assign addresses*/
     start_up(params);
+
+    /*Give robot some time to setup.*/
+    usleep(3000);
 
     /*Send and receive packages*/
     send_receive_phase(params, queues);
