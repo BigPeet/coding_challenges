@@ -14,9 +14,11 @@
 #define EMPTY '.'
 #define BUG '#'
 
-typedef struct
+typedef struct Scan
 {
     uint32_t data[AREA_HEIGHT][AREA_WIDTH];
+    struct Scan* upper;
+    struct Scan* lower;
 } Scan;
 
 typedef struct ScanListNode
@@ -30,15 +32,27 @@ typedef struct
     ScanListNode* head;
 } ScanList;
 
+typedef enum
+{
+    LEVEL_UP,
+    LEVEL_DOWN,
+    LEVEL_BOTH
+} LevelDirection;
+
 // IO
 int read_scan_input(char const* file_path, char* out);
 void parse_scan(char const* text, Scan* out);
 
+// Scan stuff
 void print_scan(Scan const* s);
-void apply_step(Scan const* old, Scan* out);
-
+void apply_step_01(Scan const* old, Scan* out);
+void apply_step_02(Scan* scan, LevelDirection dir);
 int cmp_scans(Scan const* a, Scan const* b);
 uint32_t scan_biodiversity(Scan const* scan);
+Scan* scan_create_empty();
+void scan_destroy_levels(Scan* scan);
+void scan_add_level(Scan* scan, LevelDirection dir);
+uint32_t scan_count_bugs(Scan const* scan, LevelDirection dir);
 
 // List stuff
 ScanList* list_create();

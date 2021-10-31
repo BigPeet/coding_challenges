@@ -62,7 +62,7 @@ TEST_F(challenge_test, apply_step_01)
         expected_01.data[3][4] = 1;
         expected_01.data[4][1] = 1;
         expected_01.data[4][2] = 1;
-        apply_step(&s, &next_s);
+        apply_step_01(&s, &next_s);
         ASSERT_EQ(cmp_scans(&expected_01, &next_s), 1);
         s = next_s;
     }
@@ -80,7 +80,7 @@ TEST_F(challenge_test, apply_step_01)
         expected_02.data[4][2] = 1;
         expected_02.data[4][3] = 1;
         expected_02.data[4][4] = 1;
-        apply_step(&s, &next_s);
+        apply_step_01(&s, &next_s);
         ASSERT_EQ(cmp_scans(&expected_02, &next_s), 1);
         s = next_s;
     }
@@ -99,7 +99,7 @@ TEST_F(challenge_test, apply_step_01)
         expected_03.data[4][1] = 1;
         expected_03.data[4][2] = 1;
         expected_03.data[4][4] = 1;
-        apply_step(&s, &next_s);
+        apply_step_01(&s, &next_s);
         ASSERT_EQ(cmp_scans(&expected_03, &next_s), 1);
         s = next_s;
     }
@@ -115,7 +115,7 @@ TEST_F(challenge_test, apply_step_01)
         expected_04.data[2][4] = 1;
         expected_04.data[4][0] = 1;
         expected_04.data[4][1] = 1;
-        apply_step(&s, &next_s);
+        apply_step_01(&s, &next_s);
         ASSERT_EQ(cmp_scans(&expected_04, &next_s), 1);
     }
 }
