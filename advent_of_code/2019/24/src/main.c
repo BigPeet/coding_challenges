@@ -48,7 +48,7 @@ static void part02(Scan s, int minutes)
     {
         apply_step_02(&s, LEVEL_BOTH);
     }
-    printf("Amoung of bugs after %d minutes: %d\n", minutes, scan_count_bugs(&s, LEVEL_BOTH));
+    printf("Amount of bugs after %d minutes: %d\n", minutes, scan_count_bugs(&s, LEVEL_BOTH));
 
     // Clean up
     scan_destroy_levels(&s);
