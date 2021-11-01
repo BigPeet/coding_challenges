@@ -77,10 +77,50 @@ static void provide_line(const ASCII* const system, const char* const line)
     assert(system != NULL);
     assert(system->brain != NULL);
     assert(line != NULL);
-
     for (int i = 0; i < strlen(line); ++i)
     {
         provide_input(system, (int64_t) line[i]);
+    }
+}
+
+static void run_interactive_program(const ASCII* const system)
+{
+    /*Prompt and Command loop*/
+    char cmd_buffer[MAX_COMMAND_LENGTH];
+    while (!system->finished)
+    {
+        if (providing_ouput(system->brain))
+        {
+            read_prompt(system);
+        }
+        else if (waiting_for_input(system->brain))
+        {
+            fgets(cmd_buffer, MAX_COMMAND_LENGTH, stdin);
+            provide_line(system, cmd_buffer);
+        }
+    }
+}
+
+static void run_hardcoded_commands(const ASCII* const system, char const* command_file)
+{
+    FILE* fp = fopen(command_file, "r");
+    if (fp)
+    {
+        /*Prompt and Command loop*/
+        char cmd_buffer[MAX_COMMAND_LENGTH];
+        while (!system->finished)
+        {
+            if (providing_ouput(system->brain))
+            {
+                read_prompt(system);
+            }
+            else if (waiting_for_input(system->brain))
+            {
+                fgets(cmd_buffer, MAX_COMMAND_LENGTH, fp);
+                provide_line(system, cmd_buffer);
+            }
+        }
+        fclose(fp);
     }
 }
 
@@ -112,25 +152,18 @@ void* control_func(void* args)
     {
         return NULL;
     }
-    ASCII* system = (ASCII*) args;
+    ControlParams* control_params = (ControlParams*) args;
 
     /*Give robot some time to setup.*/
     usleep(3000);
 
-    /*Prompt and Command loop*/
-    char cmd_buffer[MAX_COMMAND_LENGTH];
-    while (!system->finished)
+    if (control_params->interactive)
     {
-        if (providing_ouput(system->brain))
-        {
-            read_prompt(system);
-        }
-        else if (waiting_for_input(system->brain))
-        {
-            fgets(cmd_buffer, MAX_COMMAND_LENGTH, stdin);
-            provide_line(system, cmd_buffer);
-        }
+        run_interactive_program(control_params->drone);
     }
-
+    else
+    {
+        run_hardcoded_commands(control_params->drone, control_params->command_file);
+    }
     return NULL;
 }

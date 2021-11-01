@@ -1,0 +1,28 @@
+north
+west
+take planetoid
+west
+take spool of cat6
+east
+east
+south
+west
+north
+take dark matter
+south
+east
+east
+north
+take sand
+west
+take coin
+west
+south
+take wreath
+west
+take fuel cell
+east
+north
+north
+west
+inv

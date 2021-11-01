@@ -12,21 +12,19 @@
 #include "challenge/challenge_lib.h"
 #include "challenge/intcode.h"
 
-#define DEFAULT_INTERACTIVE (1)
-
 int main(int argc, char* argv[])
 {
     if (argc < 2)
     {
         printf("This executabel takes at least one argument.\n");
-        printf("Usage: aoc2019_21 FILE_PATH [INTERACTIVE_INDICATOR].\n");
+        printf("Usage: aoc2019_21 FILE_PATH [COMMANDS].\n");
         return 0;
     }
 
-    int interactive = DEFAULT_INTERACTIVE;
+    char* command_file = NULL;
     if (argc >= 3)
     {
-        interactive = (int) strtoll(argv[2], NULL, 10);
+        command_file = argv[2];
     }
 
     /*Initialize the program with IO memory.*/
@@ -43,13 +41,16 @@ int main(int argc, char* argv[])
     set_mem_io_in(prog, io_in);
     set_mem_io_out(prog, io_out);
 
-    /*Setup threads etc.*/
-    ASCII drone = {.brain = prog, .finished = 0};
+    ASCII drone           = {.brain = prog, .finished = 0};
+    ControlParams control = {.drone        = &drone,
+                             .interactive  = (command_file) ? 0 : 1,
+                             .command_file = command_file};
 
+    /*Setup threads etc.*/
     pthread_t drone_thread   = 0;
     pthread_t control_thread = 0;
     pthread_create(&drone_thread, NULL, drone_func, &drone);
-    pthread_create(&control_thread, NULL, control_func, &drone);
+    pthread_create(&control_thread, NULL, control_func, &control);
 
     /*Wait for threads to finish.*/
     pthread_join(drone_thread, NULL);

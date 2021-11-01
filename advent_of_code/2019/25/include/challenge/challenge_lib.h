@@ -15,6 +15,12 @@ typedef struct
     int finished;
 } ASCII;
 
+typedef struct {
+  ASCII* drone;
+  int interactive;
+  char* command_file;
+} ControlParams;
+
 void* drone_func(void* args);
 void* control_func(void* args);
 
