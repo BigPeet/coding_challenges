@@ -10,11 +10,11 @@ Maybe AFTER having a better understanding of the map and robot's output, either 
 
                                                 Security Checkpoint ------ Engineering
            Warp Drive Maint. - Sick Bay - Stables         |                     |
-                                            |    Pressure-Sensitive Floor       |
-                                            |                                   |
+                                            |    Pressure-Sensitive Floor       |                 Storage
+                                            |                                   |                    |
                            Hallway          |                           Gift Wrapping Center - Crew Quarters - Observatory - Holodeck
                               |             |                                   |                                   |
-                          Navigation  - Hull Breach ---------------------------------------------------------- Science Lab - Passages
+                          Navigation  - Hull Breach (Start) -------------------------------------------------- Science Lab - Passages
                               |                                                 |             
                            Arcade - Corridor        Hot Chocolate Fountain - Kitchen
 
@@ -31,6 +31,7 @@ Maybe AFTER having a better understanding of the map and robot's output, either 
 * molten lava         - Engineering
 * wreath              - Kitchen
 * fuel cell           - Hot Chocolate Fountain
+* jam                 - Storage
 
 **Notes**
 * Taking the photons will get you eaten!
@@ -40,5 +41,6 @@ Maybe AFTER having a better understanding of the map and robot's output, either 
 * Taking the molten lava will melt you.
 * The Pressure-Sensitive Floor behind the Security Checkpoint wants the drone to be slightly heavier than empty.
     * All (7) harmless items is too much weight.
-    * The coin alone is too much, but everything BUT the coin is too heavy...something seems off.
+    * The coin alone is too much, but everything BUT the coin is too light...something seems off.
     * Either I'm missing an item or the combinations don't make any sense and I just have to find one that fits.
+    * Update: I finally found the storage, which contains the jam! For some reason I kept missing that door.
