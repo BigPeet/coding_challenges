@@ -12,6 +12,10 @@
 #include "challenge/challenge_lib.h"
 #include "challenge/intcode.h"
 
+#ifndef VERBOSE
+#define VERBOSE (0)
+#endif
+
 int main(int argc, char* argv[])
 {
     if (argc < 2)
@@ -22,6 +26,7 @@ int main(int argc, char* argv[])
     }
 
     char* command_file = NULL;
+    int bruteforce     = (argc >= 4);
     if (argc >= 3)
     {
         command_file = argv[2];
@@ -44,7 +49,9 @@ int main(int argc, char* argv[])
     ASCII drone           = {.brain = prog, .finished = 0};
     ControlParams control = {.drone        = &drone,
                              .interactive  = (command_file) ? 0 : 1,
-                             .command_file = command_file};
+                             .command_file = command_file,
+                             .bruteforce   = bruteforce,
+                             .verbose      = VERBOSE};
 
     /*Setup threads etc.*/
     pthread_t drone_thread   = 0;

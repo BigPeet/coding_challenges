@@ -44,3 +44,13 @@ Maybe AFTER having a better understanding of the map and robot's output, either 
     * The coin alone is too much, but everything BUT the coin is too light...something seems off.
     * Either I'm missing an item or the combinations don't make any sense and I just have to find one that fits.
     * Update: I finally found the storage, which contains the jam! For some reason I kept missing that door.
+
+So for part 1 I implemented a "hybrid" solution:
+* You can either play fully interactively.
+* Or you can provide a list of commands.
+    * The commands either include ALL actions you need to finish (i.e. taking the correct items you need for the pressure sensitive floor).
+    * OR the commands should lead you to the Security Checkpoint with all 8 harmless items and then it will bruteforce the item combinations.
+        * This is indicated by another commandline parameter.
+        * The last command in the command list then should be the one required to pass into the room.
+
+Solution: 8401920

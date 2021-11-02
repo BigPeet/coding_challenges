@@ -17,8 +17,10 @@ typedef struct
 
 typedef struct {
   ASCII* drone;
-  int interactive;
   char* command_file;
+  int interactive;
+  int bruteforce;
+  int verbose;
 } ControlParams;
 
 void* drone_func(void* args);
