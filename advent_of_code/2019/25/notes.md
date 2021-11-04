@@ -15,7 +15,7 @@ Maybe AFTER having a better understanding of the map and robot's output, either 
                            Hallway          |                           Gift Wrapping Center - Crew Quarters - Observatory - Holodeck
                               |             |                                   |                                   |
                           Navigation  - Hull Breach (Start) -------------------------------------------------- Science Lab - Passages
-                              |                                                 |             
+                              |                                                 |
                            Arcade - Corridor        Hot Chocolate Fountain - Kitchen
 
 **Items**
@@ -54,3 +54,6 @@ So for part 1 I implemented a "hybrid" solution:
         * The last command in the command list then should be the one required to pass into the room.
 
 Solution: 8401920
+
+The next step would be to implement a general solution, e.g. using a BFS to gather all the items and discover the path to the Pressure-Sensitive Floor.
+But I will likely not implement this and move on to the 2020 challenges instead.
