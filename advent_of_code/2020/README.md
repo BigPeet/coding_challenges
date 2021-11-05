@@ -5,3 +5,6 @@ While I implemented 2019's advent mostly in C, I will use 2020's advent to get s
 I will start by creating a workspace, adding a separate package per "day".
 If this does not really suit the challenges, I might change the setup.
 E.g. to using a single package and only creating a binary crate for each "day".
+
+While solving the tasks I will try to learn and understand how to do certain things in Rust.
+If I'm not satisfied with some piece of code, but it works at least, I might add a FIXME comment to revisit this later.
