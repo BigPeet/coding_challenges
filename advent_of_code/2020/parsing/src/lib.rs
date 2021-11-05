@@ -2,12 +2,15 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
 use std::num::ParseIntError;
+use std::char::ParseCharError;
 
 #[derive(Debug)]
 pub enum InputError {
     WrongNumberOfArgs,
     IO(std::io::Error),
-    Parse(ParseIntError),
+    ParseInt(ParseIntError),
+    ParseChar(ParseCharError),
+    ParseGeneral,
 }
 
 impl From<std::io::Error> for InputError {
@@ -18,7 +21,13 @@ impl From<std::io::Error> for InputError {
 
 impl From<ParseIntError> for InputError {
     fn from(e: ParseIntError) -> InputError {
-        InputError::Parse(e)
+        InputError::ParseInt(e)
+    }
+}
+
+impl From<ParseCharError> for InputError {
+    fn from(e: ParseCharError) -> InputError {
+        InputError::ParseChar(e)
     }
 }
 
