@@ -2,7 +2,6 @@ use parsing::InputError;
 use std::cmp::Ordering;
 use std::str::FromStr;
 
-#[derive(Debug)]
 struct PolicyData {
     first: usize,
     second: usize,
@@ -70,13 +69,13 @@ impl ValidatePassword for NewPolicy {
 }
 
 pub fn count_valid_passwords<Policy: ValidatePassword + FromStr>(lines: &[String]) -> usize {
-    // FIXME: report errors when parsing policy
-    let valid: Vec<bool> = lines
+    // FIXME: report errors when parsing policy instead of just filtering them out
+    lines
         .iter()
         .filter_map(|line| {
             line.split_once(":")
                 .and_then(|(l, r)| l.parse::<Policy>().map(|pol| pol.validate(r)).ok())
         })
-        .collect();
-    valid.iter().filter(|v| **v).count()
+        .filter(|v| *v)
+        .count()
 }
