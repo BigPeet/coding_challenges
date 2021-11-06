@@ -16,7 +16,7 @@ Sources for coding challenges:
 
 The actual focus for most challenges is coming up with a working algorithm.
 So a high-level language like Python would be well-suited and sufficient.
-But I also want to use these challenges to get more practice in languages like C.
+But I also want to use these challenges to get more practice in languages like C, C++ or Rust.
 That's why the used language from challenge to challenge might vary.
 
 ## Method
