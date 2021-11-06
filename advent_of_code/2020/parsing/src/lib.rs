@@ -1,8 +1,8 @@
+use std::char::ParseCharError;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
 use std::num::ParseIntError;
-use std::char::ParseCharError;
 
 #[derive(Debug)]
 pub enum InputError {
@@ -45,6 +45,14 @@ pub fn get_lines(path: String) -> Result<Vec<String>, InputError> {
         .into_iter()
         .map(|l| l.map_err(InputError::IO))
         .collect()
+}
+
+pub fn read(path: String) -> Result<String, InputError> {
+    let f = File::open(path)?;
+    let mut f = BufReader::new(f);
+    let mut buf = String::new();
+    f.read_to_string(&mut buf)?;
+    Ok(buf)
 }
 
 pub fn list_of_numbers(lines: Vec<String>) -> Result<Vec<i32>, InputError> {
