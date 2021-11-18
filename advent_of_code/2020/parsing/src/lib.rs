@@ -47,6 +47,22 @@ pub fn get_lines(path: String) -> Result<Vec<String>, InputError> {
         .collect()
 }
 
+pub fn get_line_groups(lines: Vec<String>) -> Result<Vec<Vec<String>>, InputError> {
+    let mut groups = Vec::new();
+    if !lines.is_empty() {
+        groups.push(Vec::new())
+    }
+    for line in lines.into_iter() {
+        if line.is_empty() {
+            // new group
+            groups.push(Vec::new())
+        } else {
+            groups.last_mut().unwrap().push(line);
+        }
+    }
+    Ok(groups)
+}
+
 pub fn read(path: String) -> Result<String, InputError> {
     let f = File::open(path)?;
     let mut f = BufReader::new(f);
