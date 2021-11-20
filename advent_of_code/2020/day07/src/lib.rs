@@ -1,7 +1,8 @@
 use parsing::InputError;
+use std::fmt::Display;
 use std::str::FromStr;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Bag {
     adj: String,
     color: String,
@@ -13,6 +14,12 @@ impl Bag {
             adj: adj.to_string(),
             color: color.to_string(),
         }
+    }
+}
+
+impl Display for Bag {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "'{} {} bag'", self.adj, self.color)
     }
 }
 
@@ -31,7 +38,10 @@ impl FromStr for Bag {
 }
 
 #[derive(Debug)]
-struct Content(usize, Bag);
+pub struct Content {
+    pub amount: usize,
+    pub bag: Bag,
+}
 
 impl FromStr for Content {
     type Err = InputError;
@@ -48,7 +58,10 @@ impl FromStr for Content {
             + 1;
         let contained = s[amount_end + 1..contained_end].parse::<Bag>()?;
 
-        Ok(Content(amount, contained))
+        Ok(Content {
+            amount,
+            bag: contained,
+        })
     }
 }
 
@@ -60,11 +73,15 @@ pub struct Rule {
 
 impl Rule {
     pub fn allows(&self, bag: &Bag) -> bool {
-        self.contents.iter().any(|c| c.1 == *bag)
+        self.contents.iter().any(|c| c.bag == *bag)
     }
 
-    pub fn container(self) -> Bag {
-        self.container
+    pub fn container(&self) -> &Bag {
+        &self.container
+    }
+
+    pub fn contents(&self) -> &[Content] {
+        &self.contents
     }
 }
 

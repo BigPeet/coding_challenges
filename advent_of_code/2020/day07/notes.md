@@ -9,3 +9,9 @@ Add those to the "search queue" and remove their rules (to avoid duplicate count
 Then search for bags which can contain those in the queue directly, and so on.
 
 The solution for the first part is 197.
+
+Part two is similar:
+Search the list of rules for the rule about the current "containing" bag.
+Count the "contained" bags and add those bags to the search queue together with their multiplier, e.g. if the "parent" bag is contained 2 times and contains 11 of this currently search bag, then the amounts need to be multiplied by 22.
+
+The solution for the second part is 85324.
