@@ -8,3 +8,10 @@ E.g. to using a single package and only creating a binary crate for each "day".
 
 While solving the tasks I will try to learn and understand how to do certain things in Rust.
 If I'm not satisfied with some piece of code, but it works at least, I might add a FIXME comment to revisit this later.
+
+In general, to build and run the solution for dayXY use the following commands:
+
+```bash
+cargo build -p dayXY
+cargo run --bin dayXY dayXY/input.txt [OPTIONS]
+```

@@ -3,6 +3,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
 use std::num::ParseIntError;
+use std::str::FromStr;
 
 #[derive(Debug)]
 pub enum InputError {
@@ -32,7 +33,7 @@ impl From<ParseCharError> for InputError {
 }
 
 pub fn filepath_from_args(mut args: Vec<String>) -> Result<String, InputError> {
-    if args.len() != 2 {
+    if args.len() < 2 {
         return Err(InputError::WrongNumberOfArgs);
     }
     Ok(args.swap_remove(1))
@@ -71,11 +72,15 @@ pub fn read(path: String) -> Result<String, InputError> {
     Ok(buf)
 }
 
-pub fn list_of_numbers(lines: Vec<String>) -> Result<Vec<i32>, InputError> {
+pub fn list_of_values<T>(lines: Vec<String>) -> Result<Vec<T>, InputError>
+where
+    T: FromStr,
+    InputError: From<<T as FromStr>::Err>,
+{
     let numbers = lines
         .into_iter()
-        .map(|l| l.parse::<i32>())
-        .collect::<Result<Vec<i32>, ParseIntError>>()?;
+        .map(|l| l.parse::<T>())
+        .collect::<Result<Vec<T>, <T as FromStr>::Err>>()?;
     Ok(numbers)
 }
 
@@ -105,7 +110,7 @@ mod tests {
             .into_iter()
             .map(String::from)
             .collect();
-        let out = list_of_numbers(v);
+        let out = list_of_values(v);
         assert!(out.is_ok());
         assert_eq!(vec![23, 9, 19], out.unwrap());
     }
@@ -116,13 +121,13 @@ mod tests {
             .into_iter()
             .map(String::from)
             .collect();
-        assert!(list_of_numbers(v).is_err());
+        assert!(list_of_values(v).is_err());
     }
 
     #[test]
     fn list_of_numbers_test_empty() {
         let v: Vec<String> = vec![];
-        let out = list_of_numbers(v);
+        let out = list_of_values(v);
         assert!(out.is_ok());
         assert!(out.unwrap().is_empty());
     }

@@ -4,7 +4,7 @@ use std::env;
 fn main() -> Result<(), InputError> {
     let mut numbers = parsing::filepath_from_args(env::args().collect())
         .and_then(parsing::get_lines)
-        .and_then(parsing::list_of_numbers)?;
+        .and_then(parsing::list_of_values)?;
 
     numbers.sort_unstable();
     let numbers = numbers;
