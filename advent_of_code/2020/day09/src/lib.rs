@@ -35,3 +35,18 @@ pub fn find_invalid_number(numbers: &[usize], preamble_length: usize) -> Option<
     }
     None
 }
+
+pub fn find_sum_range(numbers: &[usize], target: usize) -> Option<(usize, usize)> {
+    for (index_start, start) in numbers.iter().enumerate() {
+        let mut sum = *start;
+        for (index_end, num) in numbers[index_start + 1..].iter().enumerate() {
+            sum += *num;
+            match sum.cmp(&target) {
+                Ordering::Equal => return Some((index_start, index_end + index_start + 1)),
+                Ordering::Greater => break,
+                _ => (),
+            };
+        }
+    }
+    None
+}
