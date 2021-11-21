@@ -7,3 +7,5 @@ Part two seems more difficult. If there are trillions of options, it would be un
 My first idea is to use the differences of 3 as hard separators.
 These connections HAVE to be selected and separate the whole chain into smaller chunks.
 For each chunk the possible valid combinations can be calculated, then multiply the results of all chunks to get the number of all possibile combinations.
+
+The solution for the second part is 226775649501184.
