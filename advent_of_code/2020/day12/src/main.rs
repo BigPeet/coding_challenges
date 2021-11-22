@@ -7,13 +7,23 @@ fn main() -> Result<(), InputError> {
         .and_then(parsing::get_lines)
         .and_then(parsing::list_of_values)?;
 
+    // Part 1
     let mut ferry = Ferry::new();
     for inst in instructions.iter() {
         ferry.apply(inst);
     }
-
     println!(
         "Part 1: The manhattan distance of the ferry is {}.",
+        ferry.position().manhattan_distance()
+    );
+
+    // Part 2
+    let mut ferry = Ferry::with_waypoint();
+    for inst in instructions.iter() {
+        ferry.apply(inst);
+    }
+    println!(
+        "Part 2: The manhattan distance of the ferry with waypoint is {}.",
         ferry.position().manhattan_distance()
     );
 

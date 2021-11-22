@@ -1,4 +1,5 @@
 use parsing::InputError;
+use std::mem;
 use std::str::FromStr;
 
 #[derive(Debug, Clone)]
@@ -62,7 +63,7 @@ impl FromStr for Instruction {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if s.len() > 1 {
-            let c = s.chars().nth(0).unwrap();
+            let c = s.chars().next().unwrap();
             let value = s[1..].parse::<i32>()?;
             match c {
                 'N' => Ok(Instruction::Move(Direction::North, value)),
@@ -90,12 +91,42 @@ impl Position {
     pub fn manhattan_distance(&self) -> usize {
         (self.x.abs() + self.y.abs()) as usize
     }
+
+    pub fn translate(&mut self, direction: &Direction, value: i32) {
+        match direction {
+            Direction::North => self.y += value,
+            Direction::South => self.y -= value,
+            Direction::East => self.x += value,
+            Direction::West => self.x -= value,
+            _ => (),
+        }
+    }
+
+    fn rotate_right(&mut self) {
+        mem::swap(&mut self.x, &mut self.y);
+        self.y *= -1;
+    }
+
+    pub fn rotate(&mut self, direction: &RotationDirection, degree: i32) {
+        let mut steps: u8 = (degree / 90 % 4) as u8;
+        if matches!(direction, RotationDirection::Left) {
+            // treat everything as a rotation the right
+            if steps & 0b01 == 0b01 {
+                // steps is either 1 or 3 => flip the 2nd bit
+                steps ^= 0b10;
+            }
+        }
+        for _ in 0..steps {
+            self.rotate_right()
+        }
+    }
 }
 
 #[derive(Debug)]
 pub struct Ferry {
     pos: Position,
     facing: Direction,
+    waypoint: Option<Position>,
 }
 
 impl Ferry {
@@ -103,6 +134,15 @@ impl Ferry {
         Self {
             pos: Position { x: 0, y: 0 },
             facing: Direction::East,
+            waypoint: None,
+        }
+    }
+
+    pub fn with_waypoint() -> Self {
+        Self {
+            pos: Position { x: 0, y: 0 },
+            facing: Direction::East,
+            waypoint: Some(Position { x: 10, y: 1 }),
         }
     }
 
@@ -111,21 +151,34 @@ impl Ferry {
     }
 
     fn movement(&mut self, direction: &Direction, value: i32) {
-        match direction {
-            Direction::North => self.pos.y += value,
-            Direction::South => self.pos.y -= value,
-            Direction::East => self.pos.x += value,
-            Direction::West => self.pos.x -= value,
-            Direction::Forward => self.movement(&self.facing.clone(), value),
+        if self.waypoint.is_none() {
+            match direction {
+                Direction::Forward => self.pos.translate(&self.facing, value),
+                _ => self.pos.translate(direction, value),
+            }
+        } else {
+            let wp = self.waypoint.as_mut().unwrap();
+            match direction {
+                Direction::Forward => {
+                    self.pos.x += value * wp.x;
+                    self.pos.y += value * wp.y;
+                }
+                _ => wp.translate(direction, value),
+            }
         }
     }
 
     fn rotate(&mut self, direction: &RotationDirection, degree: i32) {
-        let steps = (degree / 90 - 1) as usize;
-        self.facing = match direction {
-            RotationDirection::Left => self.facing.iter().rev().nth(steps).unwrap(),
-            RotationDirection::Right => self.facing.iter().nth(steps).unwrap(),
-        };
+        if self.waypoint.is_none() {
+            let steps = (degree / 90) as usize;
+            self.facing = match direction {
+                RotationDirection::Left => self.facing.iter().rev().nth(steps - 1).unwrap(),
+                RotationDirection::Right => self.facing.iter().nth(steps - 1).unwrap(),
+            };
+        } else {
+            let wp = self.waypoint.as_mut().unwrap();
+            wp.rotate(direction, degree);
+        }
     }
 
     pub fn apply(&mut self, inst: &Instruction) {
@@ -133,5 +186,11 @@ impl Ferry {
             Instruction::Move(dir, value) => self.movement(dir, *value),
             Instruction::Rotate(dir, degree) => self.rotate(dir, *degree),
         }
+    }
+}
+
+impl Default for Ferry {
+    fn default() -> Self {
+        Self::new()
     }
 }
