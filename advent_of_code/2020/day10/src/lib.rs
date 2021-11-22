@@ -10,22 +10,25 @@ pub fn separation_points(numbers: &[usize]) -> Vec<usize> {
 }
 
 pub fn calculate_combinations(numbers: &[usize]) -> usize {
-    if numbers.len() < 2 {
+    if numbers.len() < 3 {
         1
     } else {
-        // start and end are fixed.
-        // for every other point, there are two options: use it or not use it
-        let base: usize = 2;
-        let mut combinations = base.pow((numbers.len() - 2) as u32);
+        // see notes.md for explanation
+        let k: u32 = (numbers.len() - 2) as u32;
+        let base: u32 = 2;
+        let total_combinations = base.pow(k);
+        let mut invalid_combinations = 0;
 
-        // If the difference between start and end is > 3, then some points are required and
-        // can not be left out.
-        // Remove these invalid combinations.
-        // FIXME: not sure if this works for ALL inputs...
-        let range_delta = numbers[numbers.len() - 1] - numbers[0];
-        if range_delta > 3 {
-            combinations -= range_delta / 3;
+        if k > 2 {
+            // there are invalid combinations to handle
+            if k == 3 {
+                invalid_combinations = 1;
+            } else {
+                let m: u32 = k - 2;
+                invalid_combinations = m * base.pow(m - 1) - (m - 1) * base.pow(m - 2);
+            }
         }
-        combinations
+
+        (total_combinations - invalid_combinations) as usize
     }
 }
