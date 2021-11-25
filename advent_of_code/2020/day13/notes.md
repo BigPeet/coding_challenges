@@ -24,6 +24,7 @@ Therefore, I think the solution must be calculable.
 A google search brings up the [Chinese remainder theorem](https://en.wikipedia.org/wiki/Chinese_remainder_theorem), which could be used to find the solution to this system of congruences.
 All the bus lines (and therefore modulo divisors) are prime.
 What could help here is either the "direct construction" (a nice writeup how to apply it can be found [here](https://brilliant.org/wiki/chinese-remainder-theorem/)) or searching by sieve.
-The former would require an implementation of the modular multiplactive inverse, e.g. by using the extended euclidean algorithm or Fermat's little theorem.
-For the latter the search would starting with a "small" step size which increases by multiplying the different "divisors" [see here](https://en.wikipedia.org/wiki/Chinese_remainder_theorem#Search_by_sieving).
+The former would require an implementation of the modular multiplactive inverse, e.g. by using the extended euclidean algorithm or Fermat's little theorem ([see here](https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm#Computing_multiplicative_inverses_in_modular_structures) or [here](https://www.geeksforgeeks.org/multiplicative-inverse-under-modulo-m/)).
+
+For the latter the search would starting with a "small" step size which increases by multiplying the different "divisors" ([see here](https://en.wikipedia.org/wiki/Chinese_remainder_theorem#Search_by_sieving)).
 This might increase the step size enough to be feasible.
