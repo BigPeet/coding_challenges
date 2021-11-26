@@ -14,6 +14,8 @@ pub enum InputError {
     ParseGeneral,
 }
 
+pub type ParsingResult = Result<(), InputError>;
+
 impl From<std::io::Error> for InputError {
     fn from(e: std::io::Error) -> InputError {
         InputError::IO(e)
