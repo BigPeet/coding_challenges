@@ -2,7 +2,7 @@ use parsing::InputError;
 use std::mem;
 use std::str::FromStr;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub enum Direction {
     North,
     South,
@@ -23,7 +23,7 @@ impl<'a> Iterator for DirectionIterator<'a> {
             Direction::West => self.0 = &Direction::North,
             Direction::Forward => (),
         };
-        Some(self.0.clone())
+        Some(*self.0)
     }
 }
 
@@ -36,7 +36,7 @@ impl<'a> DoubleEndedIterator for DirectionIterator<'a> {
             Direction::West => self.0 = &Direction::South,
             Direction::Forward => (),
         };
-        Some(self.0.clone())
+        Some(*self.0)
     }
 }
 
@@ -46,13 +46,13 @@ impl Direction {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum RotationDirection {
     Left,
     Right,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum Instruction {
     Move(Direction, i32),
     Rotate(RotationDirection, i32),
@@ -81,7 +81,7 @@ impl FromStr for Instruction {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct Position {
     x: i32,
     y: i32,
@@ -122,11 +122,24 @@ impl Position {
     }
 }
 
+pub trait Navigable {
+    fn apply(&mut self, inst: &Instruction) {
+        match inst {
+            Instruction::Move(dir, value) => self.movement(dir, *value),
+            Instruction::Rotate(dir, degree) => self.rotate(dir, *degree),
+        }
+    }
+
+    fn movement(&mut self, direction: &Direction, value: i32);
+    fn rotate(&mut self, direction: &RotationDirection, degree: i32);
+
+    fn position(&self) -> Position;
+}
+
 #[derive(Debug)]
 pub struct Ferry {
     pos: Position,
     facing: Direction,
-    waypoint: Option<Position>,
 }
 
 impl Ferry {
@@ -134,63 +147,74 @@ impl Ferry {
         Self {
             pos: Position { x: 0, y: 0 },
             facing: Direction::East,
-            waypoint: None,
         }
     }
+}
 
-    pub fn with_waypoint() -> Self {
-        Self {
-            pos: Position { x: 0, y: 0 },
-            facing: Direction::East,
-            waypoint: Some(Position { x: 10, y: 1 }),
-        }
-    }
-
-    pub fn position(&self) -> &Position {
-        &self.pos
-    }
-
+impl Navigable for Ferry {
     fn movement(&mut self, direction: &Direction, value: i32) {
-        if self.waypoint.is_none() {
-            match direction {
-                Direction::Forward => self.pos.translate(&self.facing, value),
-                _ => self.pos.translate(direction, value),
-            }
-        } else {
-            let wp = self.waypoint.as_mut().unwrap();
-            match direction {
-                Direction::Forward => {
-                    self.pos.x += value * wp.x;
-                    self.pos.y += value * wp.y;
-                }
-                _ => wp.translate(direction, value),
-            }
+        match direction {
+            Direction::Forward => self.pos.translate(&self.facing, value),
+            _ => self.pos.translate(direction, value),
         }
     }
 
     fn rotate(&mut self, direction: &RotationDirection, degree: i32) {
-        if self.waypoint.is_none() {
-            let steps = (degree / 90) as usize;
-            self.facing = match direction {
-                RotationDirection::Left => self.facing.iter().rev().nth(steps - 1).unwrap(),
-                RotationDirection::Right => self.facing.iter().nth(steps - 1).unwrap(),
-            };
-        } else {
-            let wp = self.waypoint.as_mut().unwrap();
-            wp.rotate(direction, degree);
-        }
+        let steps = (degree / 90) as usize;
+        self.facing = match direction {
+            RotationDirection::Left => self.facing.iter().rev().nth(steps - 1).unwrap(),
+            RotationDirection::Right => self.facing.iter().nth(steps - 1).unwrap(),
+        };
     }
 
-    pub fn apply(&mut self, inst: &Instruction) {
-        match inst {
-            Instruction::Move(dir, value) => self.movement(dir, *value),
-            Instruction::Rotate(dir, degree) => self.rotate(dir, *degree),
-        }
+    fn position(&self) -> Position {
+        self.pos
     }
 }
 
 impl Default for Ferry {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[derive(Debug)]
+pub struct WaypointFerry {
+    pos: Position,
+    waypoint: Position,
+}
+
+impl WaypointFerry {
+    pub fn new() -> Self {
+        Self {
+            pos: Position { x: 0, y: 0 },
+            waypoint: Position { x: 10, y: 1 },
+        }
+    }
+}
+
+impl Default for WaypointFerry {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl Navigable for WaypointFerry {
+    fn movement(&mut self, direction: &Direction, value: i32) {
+        match direction {
+            Direction::Forward => {
+                self.pos.x += value * self.waypoint.x;
+                self.pos.y += value * self.waypoint.y;
+            }
+            _ => self.waypoint.translate(direction, value),
+        }
+    }
+
+    fn rotate(&mut self, direction: &RotationDirection, degree: i32) {
+        self.waypoint.rotate(direction, degree);
+    }
+
+    fn position(&self) -> Position {
+        self.pos
     }
 }

@@ -1,6 +1,13 @@
-use day12::{Ferry, Instruction};
+use day12::{Ferry, Instruction, Navigable, Position, WaypointFerry};
 use parsing::InputError;
 use std::env;
+
+fn find_target<T: Navigable>(mut ship: T, instructions: &[Instruction]) -> Position {
+    for inst in instructions.iter() {
+        ship.apply(inst);
+    }
+    ship.position()
+}
 
 fn main() -> Result<(), InputError> {
     let instructions: Vec<Instruction> = parsing::filepath_from_args(env::args().collect())
@@ -8,23 +15,15 @@ fn main() -> Result<(), InputError> {
         .and_then(parsing::list_of_values)?;
 
     // Part 1
-    let mut ferry = Ferry::new();
-    for inst in instructions.iter() {
-        ferry.apply(inst);
-    }
     println!(
         "Part 1: The manhattan distance of the ferry is {}.",
-        ferry.position().manhattan_distance()
+        find_target(Ferry::new(), &instructions).manhattan_distance()
     );
 
     // Part 2
-    let mut ferry = Ferry::with_waypoint();
-    for inst in instructions.iter() {
-        ferry.apply(inst);
-    }
     println!(
         "Part 2: The manhattan distance of the ferry with waypoint is {}.",
-        ferry.position().manhattan_distance()
+        find_target(WaypointFerry::new(), &instructions).manhattan_distance()
     );
 
     Ok(())
