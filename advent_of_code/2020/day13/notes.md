@@ -28,3 +28,5 @@ The former would require an implementation of the modular multiplactive inverse,
 
 For the latter the search would starting with a "small" step size which increases by multiplying the different "divisors" ([see here](https://en.wikipedia.org/wiki/Chinese_remainder_theorem#Search_by_sieving)).
 This might increase the step size enough to be feasible.
+
+The solution for the second part is 500033211739354.
