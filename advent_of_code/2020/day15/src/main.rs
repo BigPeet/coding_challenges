@@ -36,5 +36,12 @@ fn main() -> ParsingResult {
     }
     println!("Part 1: The 2020th number spoken is {}.", last_number);
 
+    // Part 2
+    // Continue playing until 30000000 rounds have been played.
+    for round in (2020 + 1)..=30000000 {
+        take_turn(&mut last_number, &mut history, round);
+    }
+    println!("Part 2: The 30,000,000th number spoken is {}.", last_number);
+
     Ok(())
 }
