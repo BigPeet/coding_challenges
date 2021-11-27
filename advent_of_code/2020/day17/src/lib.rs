@@ -1,36 +1,44 @@
 use parsing::InputError;
 use std::collections::HashMap;
 use std::convert::TryFrom;
+use std::hash::Hash;
+
+pub trait Coordinate: Clone + Copy + Eq + Hash {
+    type NeighbourIter: Iterator + Iterator<Item = Self>;
+    fn neighbours(&self) -> Self::NeighbourIter;
+    fn new(x: usize, y: usize) -> Self;
+    fn add(&self, other: &Self) -> Self;
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Coordinate {
+pub struct Coordinate3d {
     pub x: i32,
     pub y: i32,
     pub z: i32,
 }
 
-struct CoordinateNeighbourIter {
-    center: Coordinate,
+pub struct Neighbour3dIterator {
+    center: Coordinate3d,
     index: usize,
-    deltas: [Coordinate; 26],
+    deltas: [Coordinate3d; 26],
 }
 
-impl CoordinateNeighbourIter {
-    pub fn new(center: Coordinate) -> CoordinateNeighbourIter {
-        CoordinateNeighbourIter {
+impl Neighbour3dIterator {
+    pub fn new(center: Coordinate3d) -> Neighbour3dIterator {
+        Neighbour3dIterator {
             center,
             index: 0,
-            deltas: CoordinateNeighbourIter::deltas(),
+            deltas: Neighbour3dIterator::deltas(),
         }
     }
-    fn deltas() -> [Coordinate; 26] {
-        let mut d: [Coordinate; 26] = [Coordinate { x: 0, y: 0, z: 0 }; 26];
+    fn deltas() -> [Coordinate3d; 26] {
+        let mut d: [Coordinate3d; 26] = [Coordinate3d { x: 0, y: 0, z: 0 }; 26];
         let mut idx = 0;
         for x in -1..=1 {
             for y in -1..=1 {
                 for z in -1..=1 {
                     if x != 0 || y != 0 || z != 0 {
-                        d[idx] = Coordinate { x, y, z };
+                        d[idx] = Coordinate3d { x, y, z };
                         idx += 1;
                     }
                 }
@@ -40,8 +48,8 @@ impl CoordinateNeighbourIter {
     }
 }
 
-impl Iterator for CoordinateNeighbourIter {
-    type Item = Coordinate;
+impl Iterator for Neighbour3dIterator {
+    type Item = Coordinate3d;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.index < self.deltas.len() {
@@ -54,19 +62,116 @@ impl Iterator for CoordinateNeighbourIter {
     }
 }
 
-impl Coordinate {
-    fn neighbours(&self) -> CoordinateNeighbourIter {
-        CoordinateNeighbourIter::new(*self)
+impl Coordinate for Coordinate3d {
+    type NeighbourIter = Neighbour3dIterator;
+
+    fn neighbours(&self) -> Self::NeighbourIter {
+        Neighbour3dIterator::new(*self)
     }
 
-    fn add(&self, other: &Coordinate) -> Coordinate {
-        Coordinate {
+    fn new(x: usize, y: usize) -> Self {
+        Coordinate3d {
+            x: x as i32,
+            y: y as i32,
+            z: 0,
+        }
+    }
+
+    fn add(&self, other: &Coordinate3d) -> Coordinate3d {
+        Coordinate3d {
             x: self.x + other.x,
             y: self.y + other.y,
             z: self.z + other.z,
         }
     }
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct Coordinate4d {
+    pub x: i32,
+    pub y: i32,
+    pub z: i32,
+    pub w: i32,
+}
+
+pub struct Neighbour4dIterator {
+    center: Coordinate4d,
+    index: usize,
+    deltas: [Coordinate4d; 80],
+}
+
+impl Neighbour4dIterator {
+    pub fn new(center: Coordinate4d) -> Neighbour4dIterator {
+        Neighbour4dIterator {
+            center,
+            index: 0,
+            deltas: Neighbour4dIterator::deltas(),
+        }
+    }
+    fn deltas() -> [Coordinate4d; 80] {
+        let mut d: [Coordinate4d; 80] = [Coordinate4d {
+            x: 0,
+            y: 0,
+            z: 0,
+            w: 0,
+        }; 80];
+        let mut idx = 0;
+        for x in -1..=1 {
+            for y in -1..=1 {
+                for z in -1..=1 {
+                    for w in -1..=1 {
+                        if x != 0 || y != 0 || z != 0 || w != 0 {
+                            d[idx] = Coordinate4d { x, y, z, w };
+                            idx += 1;
+                        }
+                    }
+                }
+            }
+        }
+        d
+    }
+}
+
+impl Iterator for Neighbour4dIterator {
+    type Item = Coordinate4d;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index < self.deltas.len() {
+            let d = &self.deltas[self.index];
+            self.index += 1;
+            Some(self.center.add(d))
+        } else {
+            None
+        }
+    }
+}
+
+impl Coordinate for Coordinate4d {
+    type NeighbourIter = Neighbour4dIterator;
+
+    fn neighbours(&self) -> Self::NeighbourIter {
+        Neighbour4dIterator::new(*self)
+    }
+
+    fn new(x: usize, y: usize) -> Self {
+        Coordinate4d {
+            x: x as i32,
+            y: y as i32,
+            z: 0,
+            w: 0,
+        }
+    }
+
+    fn add(&self, other: &Coordinate4d) -> Coordinate4d {
+        Coordinate4d {
+            x: self.x + other.x,
+            y: self.y + other.y,
+            z: self.z + other.z,
+            w: self.w + other.w,
+        }
+    }
+}
+
 
 #[derive(Debug, Clone, Copy)]
 pub enum CellStatus {
@@ -86,11 +191,11 @@ impl TryFrom<char> for CellStatus {
 }
 
 #[derive(Debug)]
-pub struct CubeMap {
-    hmap: HashMap<Coordinate, CellStatus>,
+pub struct CubeMap<Coord: Coordinate> {
+    hmap: HashMap<Coord, CellStatus>,
 }
 
-impl CubeMap {
+impl<Coord: Coordinate> CubeMap<Coord> {
     pub fn new(lines: &[String]) -> Result<Self, InputError> {
         let mut cmap = CubeMap {
             hmap: HashMap::new(),
@@ -98,18 +203,14 @@ impl CubeMap {
         for (row, line) in lines.iter().enumerate() {
             for (col, c) in line.trim().chars().enumerate() {
                 let status = CellStatus::try_from(c)?;
-                let coord = Coordinate {
-                    x: col as i32,
-                    y: row as i32,
-                    z: 0,
-                };
+                let coord = Coord::new(col, row);
                 cmap.insert(coord, status);
             }
         }
         Ok(cmap)
     }
 
-    pub fn insert(&mut self, coord: Coordinate, status: CellStatus) {
+    pub fn insert(&mut self, coord: Coord, status: CellStatus) {
         self.hmap.insert(coord, status);
         if matches!(status, CellStatus::Active) {
             for ncoord in coord.neighbours() {
