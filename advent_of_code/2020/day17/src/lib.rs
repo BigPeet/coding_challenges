@@ -14,7 +14,7 @@ pub trait Add {
 }
 
 pub trait SetDimension {
-    type ValueType: Copy;
+    type ValueType;
     fn set(&mut self, dim: u32, val: Self::ValueType);
 }
 
@@ -127,10 +127,10 @@ impl Default for Coordinate4d {
 
 pub struct NeighbourIterator<Coord> {
     center: Coord,
-    index: u32,
-    dimension: u32,
-    max: u32,
-    pivot: u32,
+    index: usize,
+    max: usize,
+    pivot: usize,
+    deltas: Vec<Coord>,
 }
 
 impl<Coord> NeighbourIterator<Coord>
@@ -138,24 +138,31 @@ where
     Coord: Default + SetDimension + SetDimension<ValueType = i32>,
 {
     pub fn new(center: Coord, dimension: u32) -> NeighbourIterator<Coord> {
-        let max = 3u32.pow(dimension);
-        let pivot = (0..dimension).into_iter().map(|d| 3u32.pow(d)).sum();
+        let max = 3u32.pow(dimension) as usize;
+        let pivot: u32 = (0..dimension).into_iter().map(|d| 3u32.pow(d)).sum();
+
+        let mut deltas: Vec<Coord> = Vec::with_capacity(max as usize);
+        deltas.resize_with(max as usize, Default::default);
+        for d in 0..dimension {
+            let offset = 3u32.pow(d + 1) as usize;
+            let repeat = 3u32.pow(d) as usize;
+            for (i, value) in (-1..=1).enumerate() {
+                let start = i * repeat;
+                for pos in (start..max).step_by(offset) {
+                    for repeat_offset in 0..repeat {
+                        deltas[pos + repeat_offset].set(d, value);
+                    }
+                }
+            }
+        }
+
         NeighbourIterator {
             center,
             index: 0,
-            dimension,
             max,
-            pivot,
+            pivot: pivot as usize,
+            deltas,
         }
-    }
-
-    fn delta(&self, index: u32) -> Coord {
-        let mut coord = Coord::default();
-        for d in 0..self.dimension {
-            let val = ((index / 3u32.pow(d)) % 3) as i32 - 1;
-            coord.set(d, val);
-        }
-        coord
     }
 }
 
@@ -170,9 +177,9 @@ where
             self.index += 1;
         }
         if self.index < self.max {
-            let d = self.delta(self.index);
+            let d = &self.deltas[self.index];
             self.index += 1;
-            Some(self.center.add(&d))
+            Some(self.center.add(d))
         } else {
             None
         }

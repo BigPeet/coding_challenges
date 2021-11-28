@@ -26,3 +26,6 @@ I might look into consolidating that as well.
 I ended up creating a single "neighbour" iterator which can work for 3 and 4 dimensions.
 Overall the code is a little bit slower though.
 I suspect the additional division and modulo operations are to blame.
+
+Update: Removed the division and modulo operations by creating all "deltas" ahead of time instead.
+With that change, the solution is as fast as before while still using a single implementation for the neighbour iterator.
