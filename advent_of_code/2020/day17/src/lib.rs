@@ -7,7 +7,15 @@ pub trait Coordinate: Clone + Copy + Eq + Hash {
     type NeighbourIter: Iterator + Iterator<Item = Self>;
     fn neighbours(&self) -> Self::NeighbourIter;
     fn new(x: usize, y: usize) -> Self;
+}
+
+pub trait Add {
     fn add(&self, other: &Self) -> Self;
+}
+
+pub trait SetDimension {
+    type ValueType: Copy;
+    fn set(&mut self, dim: u32, val: Self::ValueType);
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -17,56 +25,11 @@ pub struct Coordinate3d {
     pub z: i32,
 }
 
-pub struct Neighbour3dIterator {
-    center: Coordinate3d,
-    index: usize,
-    deltas: [Coordinate3d; 26],
-}
-
-impl Neighbour3dIterator {
-    pub fn new(center: Coordinate3d) -> Neighbour3dIterator {
-        Neighbour3dIterator {
-            center,
-            index: 0,
-            deltas: Neighbour3dIterator::deltas(),
-        }
-    }
-    fn deltas() -> [Coordinate3d; 26] {
-        let mut d: [Coordinate3d; 26] = [Coordinate3d { x: 0, y: 0, z: 0 }; 26];
-        let mut idx = 0;
-        for x in -1..=1 {
-            for y in -1..=1 {
-                for z in -1..=1 {
-                    if x != 0 || y != 0 || z != 0 {
-                        d[idx] = Coordinate3d { x, y, z };
-                        idx += 1;
-                    }
-                }
-            }
-        }
-        d
-    }
-}
-
-impl Iterator for Neighbour3dIterator {
-    type Item = Coordinate3d;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.index < self.deltas.len() {
-            let d = &self.deltas[self.index];
-            self.index += 1;
-            Some(self.center.add(d))
-        } else {
-            None
-        }
-    }
-}
-
 impl Coordinate for Coordinate3d {
-    type NeighbourIter = Neighbour3dIterator;
+    type NeighbourIter = NeighbourIterator<Self>;
 
     fn neighbours(&self) -> Self::NeighbourIter {
-        Neighbour3dIterator::new(*self)
+        NeighbourIterator::new(*self, 3)
     }
 
     fn new(x: usize, y: usize) -> Self {
@@ -76,7 +39,27 @@ impl Coordinate for Coordinate3d {
             z: 0,
         }
     }
+}
 
+impl SetDimension for Coordinate3d {
+    type ValueType = i32;
+    fn set(&mut self, dim: u32, val: Self::ValueType) {
+        match dim {
+            0 => self.x = val,
+            1 => self.y = val,
+            2 => self.z = val,
+            _ => (),
+        }
+    }
+}
+
+impl Default for Coordinate3d {
+    fn default() -> Self {
+        Coordinate3d::new(0, 0)
+    }
+}
+
+impl Add for Coordinate3d {
     fn add(&self, other: &Coordinate3d) -> Coordinate3d {
         Coordinate3d {
             x: self.x + other.x,
@@ -94,63 +77,11 @@ pub struct Coordinate4d {
     pub w: i32,
 }
 
-pub struct Neighbour4dIterator {
-    center: Coordinate4d,
-    index: usize,
-    deltas: [Coordinate4d; 80],
-}
-
-impl Neighbour4dIterator {
-    pub fn new(center: Coordinate4d) -> Neighbour4dIterator {
-        Neighbour4dIterator {
-            center,
-            index: 0,
-            deltas: Neighbour4dIterator::deltas(),
-        }
-    }
-    fn deltas() -> [Coordinate4d; 80] {
-        let mut d: [Coordinate4d; 80] = [Coordinate4d {
-            x: 0,
-            y: 0,
-            z: 0,
-            w: 0,
-        }; 80];
-        let mut idx = 0;
-        for x in -1..=1 {
-            for y in -1..=1 {
-                for z in -1..=1 {
-                    for w in -1..=1 {
-                        if x != 0 || y != 0 || z != 0 || w != 0 {
-                            d[idx] = Coordinate4d { x, y, z, w };
-                            idx += 1;
-                        }
-                    }
-                }
-            }
-        }
-        d
-    }
-}
-
-impl Iterator for Neighbour4dIterator {
-    type Item = Coordinate4d;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.index < self.deltas.len() {
-            let d = &self.deltas[self.index];
-            self.index += 1;
-            Some(self.center.add(d))
-        } else {
-            None
-        }
-    }
-}
-
 impl Coordinate for Coordinate4d {
-    type NeighbourIter = Neighbour4dIterator;
+    type NeighbourIter = NeighbourIterator<Self>;
 
     fn neighbours(&self) -> Self::NeighbourIter {
-        Neighbour4dIterator::new(*self)
+        NeighbourIterator::new(*self, 4)
     }
 
     fn new(x: usize, y: usize) -> Self {
@@ -161,7 +92,23 @@ impl Coordinate for Coordinate4d {
             w: 0,
         }
     }
+}
 
+impl SetDimension for Coordinate4d {
+    type ValueType = i32;
+
+    fn set(&mut self, dim: u32, val: Self::ValueType) {
+        match dim {
+            0 => self.x = val,
+            1 => self.y = val,
+            2 => self.z = val,
+            3 => self.w = val,
+            _ => (),
+        }
+    }
+}
+
+impl Add for Coordinate4d {
     fn add(&self, other: &Coordinate4d) -> Coordinate4d {
         Coordinate4d {
             x: self.x + other.x,
@@ -172,6 +119,65 @@ impl Coordinate for Coordinate4d {
     }
 }
 
+impl Default for Coordinate4d {
+    fn default() -> Self {
+        Coordinate4d::new(0, 0)
+    }
+}
+
+pub struct NeighbourIterator<Coord> {
+    center: Coord,
+    index: u32,
+    dimension: u32,
+    max: u32,
+    pivot: u32,
+}
+
+impl<Coord> NeighbourIterator<Coord>
+where
+    Coord: Default + SetDimension + SetDimension<ValueType = i32>,
+{
+    pub fn new(center: Coord, dimension: u32) -> NeighbourIterator<Coord> {
+        let max = 3u32.pow(dimension);
+        let pivot = (0..dimension).into_iter().map(|d| 3u32.pow(d)).sum();
+        NeighbourIterator {
+            center,
+            index: 0,
+            dimension,
+            max,
+            pivot,
+        }
+    }
+
+    fn delta(&self, index: u32) -> Coord {
+        let mut coord = Coord::default();
+        for d in 0..self.dimension {
+            let val = ((index / 3u32.pow(d)) % 3) as i32 - 1;
+            coord.set(d, val);
+        }
+        coord
+    }
+}
+
+impl<Coord> Iterator for NeighbourIterator<Coord>
+where
+    Coord: Default + SetDimension + SetDimension<ValueType = i32> + Add,
+{
+    type Item = Coord;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index == self.pivot {
+            self.index += 1;
+        }
+        if self.index < self.max {
+            let d = self.delta(self.index);
+            self.index += 1;
+            Some(self.center.add(&d))
+        } else {
+            None
+        }
+    }
+}
 
 #[derive(Debug, Clone, Copy)]
 pub enum CellStatus {
@@ -191,7 +197,7 @@ impl TryFrom<char> for CellStatus {
 }
 
 #[derive(Debug)]
-pub struct CubeMap<Coord: Coordinate> {
+pub struct CubeMap<Coord> {
     hmap: HashMap<Coord, CellStatus>,
 }
 
