@@ -1,6 +1,5 @@
 use parsing::InputError;
 use std::fmt::Display;
-use std::str::FromStr;
 
 pub enum Expression {
     Value(u64),
@@ -19,7 +18,6 @@ impl Display for Expression {
         }
     }
 }
-
 
 impl Expression {
     pub fn evaluate(&self) -> u64 {
@@ -43,35 +41,40 @@ impl Expression {
         }
         None
     }
+}
 
-    fn parse_parens(tokens: &[&str]) -> Result<Self, InputError> {
-        return Ok(Expression::Parens(Box::new(Expression::parse_expression(
-            &tokens[1..tokens.len() - 1],
-        )?)));
+pub enum SearchModus {
+    AddPrio,
+    MulPrio,
+    AllEqual,
+}
+
+pub trait ExpressionParser {
+    fn search_modus() -> SearchModus;
+
+    fn parse_line(line: &str) -> Result<Expression, InputError> {
+        // parsing right-to-left, because an expression like
+        // 1 + 2 + 3 + 4 is implicitly ((1 + 2) + 3) + 4
+        let modified = line.replace('(', " ( ").replace(')', " ) ");
+        let tokens: Vec<&str> = modified.split_whitespace().collect();
+        Self::parse_expression(&tokens)
     }
 
-    pub fn parse_expression(tokens: &[&str]) -> Result<Self, InputError> {
+    fn parse_value(s: &str) -> Result<Expression, InputError> {
+        Ok(Expression::Value(s.parse::<u64>()?))
+    }
+
+    fn parse_parens(tokens: &[&str]) -> Result<Expression, InputError> {
+        Ok(Expression::Parens(Box::new(Self::parse_expression(
+            &tokens[1..tokens.len() - 1],
+        )?)))
+    }
+
+    fn parse_operation(tokens: &[&str], modus: SearchModus) -> Result<Expression, InputError> {
         let token_length = tokens.len();
-        // Has the expression the form (...) where the outer parens belong together? => parse inner
-        if tokens[0] == "("
-            && tokens[token_length - 1] == ")"
-            && Expression::find_closing_paren(tokens, 1).unwrap_or(0) == token_length - 1
-        {
-            return Expression::parse_parens(tokens);
-        }
-
-        if !tokens.contains(&"+") && !tokens.contains(&"*") {
-            // no operation => should only be a value
-            // remove any ()
-            let filtered: Vec<&&str> = tokens
-                .iter()
-                .filter(|tok| **tok != "(" && **tok != ")")
-                .collect();
-            return Ok(Expression::parse_value(&filtered[0])?);
-        }
-
         let mut parens_level = 0;
         let mut idx = token_length;
+        let mut to_parse: Option<(usize, &str)> = None;
 
         for tok in tokens.iter().rev() {
             match *tok {
@@ -85,43 +88,72 @@ impl Expression {
                     return Err(InputError::ParseGeneral)
                 }
                 "+" if parens_level == 0 => {
-                    let lhs = Self::parse_expression(&tokens[..idx - 1])?;
-                    let rhs = Self::parse_expression(&tokens[idx..])?;
-                    return Ok(Self::Addition(Box::new(lhs), Box::new(rhs)));
+                    if !matches!(modus, SearchModus::MulPrio) {
+                        to_parse = Some((idx, *tok));
+                        break;
+                    } else if to_parse.is_none() {
+                        to_parse = Some((idx, *tok));
+                    }
                 }
                 "*" if parens_level == 0 => {
-                    let lhs = Self::parse_expression(&tokens[..idx - 1])?;
-                    let rhs = Self::parse_expression(&tokens[idx..])?;
-                    return Ok(Self::Multiplication(Box::new(lhs), Box::new(rhs)));
+                    if !matches!(modus, SearchModus::AddPrio) {
+                        to_parse = Some((idx, *tok));
+                        break;
+                    } else if to_parse.is_none() {
+                        to_parse = Some((idx, *tok));
+                    }
                 }
                 _ => (),
             }
             idx -= 1;
         }
-        Err(InputError::ParseGeneral)
+        if let Some((idx, tok)) = to_parse {
+            let lhs = Self::parse_expression(&tokens[..idx - 1])?;
+            let rhs = Self::parse_expression(&tokens[idx..])?;
+            match tok {
+                "*" => Ok(Expression::Multiplication(Box::new(lhs), Box::new(rhs))),
+                "+" => Ok(Expression::Addition(Box::new(lhs), Box::new(rhs))),
+                _ => Err(InputError::ParseGeneral),
+            }
+        } else {
+            Err(InputError::ParseGeneral)
+        }
     }
 
-    pub fn parse_value(s: &str) -> Result<Self, InputError> {
-        Ok(Self::Value(s.parse::<u64>()?))
+    fn parse_expression(tokens: &[&str]) -> Result<Expression, InputError> {
+        let token_length = tokens.len();
+        // Has the expression the form (...) where the outer parens belong together? => parse inner
+        if tokens[0] == "("
+            && tokens[token_length - 1] == ")"
+            && Expression::find_closing_paren(tokens, 1).unwrap_or(0) == token_length - 1
+        {
+            return Self::parse_parens(tokens);
+        }
+
+        if !tokens.contains(&"+") && !tokens.contains(&"*") {
+            // no operation => should only be a value
+            // remove any ()
+            let filtered: Vec<&&str> = tokens
+                .iter()
+                .filter(|tok| **tok != "(" && **tok != ")")
+                .collect();
+            return Self::parse_value(filtered[0]);
+        }
+
+        Self::parse_operation(tokens, Self::search_modus())
     }
 }
 
-impl FromStr for Expression {
-    type Err = InputError;
+pub struct NormalParser;
+impl ExpressionParser for NormalParser {
+    fn search_modus() -> SearchModus {
+        SearchModus::AllEqual
+    }
+}
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        // parsing right-to-left, because an expression like
-        // 1 + 2 * 3 + 4 is implicitly ((1 + 2) * 3) + 4
-
-        if s.contains(|c| c == '+' || c == '*') {
-            let modified = s.replace('(', " ( ").replace(')', " ) ");
-            let tokens: Vec<&str> = modified.split_whitespace().collect();
-            Expression::parse_expression(&tokens)
-        } else {
-            // no operation => should only be a value
-            // remove any ()
-            let modified = s.replace(|c| c == '(' || c == ')', "");
-            Expression::parse_value(&modified)
-        }
+pub struct AdvancedParser;
+impl ExpressionParser for AdvancedParser {
+    fn search_modus() -> SearchModus {
+        SearchModus::MulPrio
     }
 }
