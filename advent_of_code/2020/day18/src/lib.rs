@@ -50,7 +50,7 @@ pub enum SearchModus {
 }
 
 pub trait ExpressionParser {
-    fn search_modus() -> SearchModus;
+    const MODE: SearchModus;
 
     fn parse_line(line: &str) -> Result<Expression, InputError> {
         // parsing right-to-left, because an expression like
@@ -140,20 +140,16 @@ pub trait ExpressionParser {
             return Self::parse_value(filtered[0]);
         }
 
-        Self::parse_operation(tokens, Self::search_modus())
+        Self::parse_operation(tokens, Self::MODE)
     }
 }
 
 pub struct NormalParser;
 impl ExpressionParser for NormalParser {
-    fn search_modus() -> SearchModus {
-        SearchModus::AllEqual
-    }
+    const MODE: SearchModus = SearchModus::AllEqual;
 }
 
 pub struct AdvancedParser;
 impl ExpressionParser for AdvancedParser {
-    fn search_modus() -> SearchModus {
-        SearchModus::MulPrio
-    }
+    const MODE: SearchModus = SearchModus::MulPrio;
 }
