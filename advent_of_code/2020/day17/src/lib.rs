@@ -3,146 +3,75 @@ use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::hash::Hash;
 
-pub trait Coordinate: Clone + Copy + Eq + Hash {
-    type NeighbourIter: Iterator + Iterator<Item = Self>;
-    fn neighbours(&self) -> Self::NeighbourIter;
-    fn new(x: usize, y: usize) -> Self;
+#[derive(Debug, Clone, Copy, Eq)]
+pub struct Coordinate<const DIMENSION: usize> {
+    data: [i32; DIMENSION],
 }
 
-pub trait Add {
-    fn add(&self, other: &Self) -> Self;
-}
-
-pub trait SetDimension {
-    type ValueType;
-    fn set(&mut self, dim: u32, val: Self::ValueType);
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Coordinate3d {
-    pub x: i32,
-    pub y: i32,
-    pub z: i32,
-}
-
-impl Coordinate for Coordinate3d {
-    type NeighbourIter = NeighbourIterator<Self>;
-
-    fn neighbours(&self) -> Self::NeighbourIter {
-        NeighbourIterator::new(*self, 3)
-    }
-
-    fn new(x: usize, y: usize) -> Self {
-        Coordinate3d {
-            x: x as i32,
-            y: y as i32,
-            z: 0,
-        }
+impl<const DIMENSION: usize> PartialEq for Coordinate<DIMENSION> {
+    fn eq(&self, other: &Self) -> bool {
+        self.data == other.data
     }
 }
 
-impl SetDimension for Coordinate3d {
-    type ValueType = i32;
-    fn set(&mut self, dim: u32, val: Self::ValueType) {
-        match dim {
-            0 => self.x = val,
-            1 => self.y = val,
-            2 => self.z = val,
-            _ => (),
-        }
+impl<const DIMENSION: usize> Hash for Coordinate<DIMENSION> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.data.hash(state)
     }
 }
 
-impl Default for Coordinate3d {
+impl<const DIMENSION: usize> Default for Coordinate<DIMENSION> {
     fn default() -> Self {
-        Coordinate3d::new(0, 0)
-    }
-}
-
-impl Add for Coordinate3d {
-    fn add(&self, other: &Coordinate3d) -> Coordinate3d {
-        Coordinate3d {
-            x: self.x + other.x,
-            y: self.y + other.y,
-            z: self.z + other.z,
+        Coordinate {
+            data: [0; DIMENSION],
         }
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Coordinate4d {
-    pub x: i32,
-    pub y: i32,
-    pub z: i32,
-    pub w: i32,
-}
-
-impl Coordinate for Coordinate4d {
-    type NeighbourIter = NeighbourIterator<Self>;
-
-    fn neighbours(&self) -> Self::NeighbourIter {
-        NeighbourIterator::new(*self, 4)
+impl<const DIMENSION: usize> Coordinate<DIMENSION> {
+    fn neighbours(&self) -> NeighbourIterator<DIMENSION> {
+        NeighbourIterator::new(self)
     }
 
-    fn new(x: usize, y: usize) -> Self {
-        Coordinate4d {
-            x: x as i32,
-            y: y as i32,
-            z: 0,
-            w: 0,
+    fn new(x: i32, y: i32) -> Self {
+        let mut data = [0i32; DIMENSION];
+        if DIMENSION > 0 {
+            data[0] = x;
         }
-    }
-}
-
-impl SetDimension for Coordinate4d {
-    type ValueType = i32;
-
-    fn set(&mut self, dim: u32, val: Self::ValueType) {
-        match dim {
-            0 => self.x = val,
-            1 => self.y = val,
-            2 => self.z = val,
-            3 => self.w = val,
-            _ => (),
+        if DIMENSION > 1 {
+            data[1] = y;
         }
+        Coordinate { data }
     }
-}
 
-impl Add for Coordinate4d {
-    fn add(&self, other: &Coordinate4d) -> Coordinate4d {
-        Coordinate4d {
-            x: self.x + other.x,
-            y: self.y + other.y,
-            z: self.z + other.z,
-            w: self.w + other.w,
+    fn add(&self, other: &Self) -> Self {
+        let mut data = [0; DIMENSION];
+        for (i, val) in data.iter_mut().enumerate().take(DIMENSION) {
+            *val = self.data[i] + other.data[i];
         }
+        Coordinate { data }
+    }
+
+    fn set(&mut self, dim: u32, val: i32) {
+        self.data[dim as usize] = val;
     }
 }
 
-impl Default for Coordinate4d {
-    fn default() -> Self {
-        Coordinate4d::new(0, 0)
-    }
-}
-
-pub struct NeighbourIterator<Coord> {
-    center: Coord,
+pub struct NeighbourIterator<'a, const DIMENSION: usize> {
+    center: &'a Coordinate<DIMENSION>,
     index: usize,
     max: usize,
     pivot: usize,
-    deltas: Vec<Coord>,
+    deltas: Vec<Coordinate<DIMENSION>>, // would love to make this [Coordinate<DIMENSION>; 3u32.pow(DIMENSION)]
 }
 
-impl<Coord> NeighbourIterator<Coord>
-where
-    Coord: Default + SetDimension + SetDimension<ValueType = i32>,
-{
-    pub fn new(center: Coord, dimension: u32) -> NeighbourIterator<Coord> {
-        let max = 3u32.pow(dimension) as usize;
-        let pivot: u32 = (0..dimension).into_iter().map(|d| 3u32.pow(d)).sum();
+impl<'a, const DIMENSION: usize> NeighbourIterator<'a, DIMENSION> {
 
-        let mut deltas: Vec<Coord> = Vec::with_capacity(max as usize);
-        deltas.resize_with(max as usize, Default::default);
+    // would love to make this "static"
+    fn create_neighbours() -> Vec<Coordinate<DIMENSION>> {
+        let dimension: u32 = DIMENSION as u32;
+        let max = 3u32.pow(dimension) as usize;
+        let mut deltas = vec![Coordinate::default(); max];
         for d in 0..dimension {
             let offset = 3u32.pow(d + 1) as usize;
             let repeat = 3u32.pow(d) as usize;
@@ -155,7 +84,14 @@ where
                 }
             }
         }
+        deltas
+    }
 
+    fn new(center: &'a Coordinate<DIMENSION>) -> NeighbourIterator<DIMENSION> {
+        let dimension: u32 = DIMENSION as u32;
+        let max = 3u32.pow(dimension) as usize;
+        let pivot: u32 = (0..dimension).into_iter().map(|d| 3u32.pow(d)).sum();
+        let deltas = Self::create_neighbours();
         NeighbourIterator {
             center,
             index: 0,
@@ -166,11 +102,8 @@ where
     }
 }
 
-impl<Coord> Iterator for NeighbourIterator<Coord>
-where
-    Coord: Default + SetDimension + SetDimension<ValueType = i32> + Add,
-{
-    type Item = Coord;
+impl<'a, const DIMENSION: usize> Iterator for NeighbourIterator<'a, DIMENSION> {
+    type Item = Coordinate<DIMENSION>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.index == self.pivot {
@@ -204,11 +137,11 @@ impl TryFrom<char> for CellStatus {
 }
 
 #[derive(Debug)]
-pub struct CubeMap<Coord> {
-    hmap: HashMap<Coord, CellStatus>,
+pub struct CubeMap<const DIMENSION: usize> {
+    hmap: HashMap<Coordinate<DIMENSION>, CellStatus>,
 }
 
-impl<Coord: Coordinate> CubeMap<Coord> {
+impl<const DIMENSION: usize> CubeMap<DIMENSION> {
     pub fn new(lines: &[String]) -> Result<Self, InputError> {
         let mut cmap = CubeMap {
             hmap: HashMap::new(),
@@ -216,14 +149,14 @@ impl<Coord: Coordinate> CubeMap<Coord> {
         for (row, line) in lines.iter().enumerate() {
             for (col, c) in line.trim().chars().enumerate() {
                 let status = CellStatus::try_from(c)?;
-                let coord = Coord::new(col, row);
+                let coord = Coordinate::new(col as i32, row as i32);
                 cmap.insert(coord, status);
             }
         }
         Ok(cmap)
     }
 
-    pub fn insert(&mut self, coord: Coord, status: CellStatus) {
+    fn insert(&mut self, coord: Coordinate<DIMENSION>, status: CellStatus) {
         self.hmap.insert(coord, status);
         if matches!(status, CellStatus::Active) {
             for ncoord in coord.neighbours() {

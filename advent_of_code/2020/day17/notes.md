@@ -29,3 +29,6 @@ I suspect the additional division and modulo operations are to blame.
 
 Update: Removed the division and modulo operations by creating all "deltas" ahead of time instead.
 With that change, the solution is as fast as before while still using a single implementation for the neighbour iterator.
+
+Update: Apparently there is an equivalent in Rust to C++'s "non-type template parameters": const generics ([see here](https://github.com/rust-lang/rfcs/blob/master/text/2000-const-generics.md)).
+Changed the code to use the dimension as a const parameter to the trait/type.

@@ -1,10 +1,10 @@
-use day17::{Coordinate3d, Coordinate4d, CubeMap};
+use day17::CubeMap;
 use parsing::ParsingResult;
 use std::env;
 
 fn main() -> ParsingResult {
     let lines = parsing::filepath_from_args(env::args().collect()).and_then(parsing::get_lines)?;
-    let mut map = CubeMap::<Coordinate3d>::new(&lines)?;
+    let mut map = CubeMap::<3>::new(&lines)?;
 
     // Part 1
     for _ in 1..=6 {
@@ -16,7 +16,7 @@ fn main() -> ParsingResult {
     );
 
     // Part 2
-    let mut hypermap = CubeMap::<Coordinate4d>::new(&lines)?;
+    let mut hypermap = CubeMap::<4>::new(&lines)?;
     for _ in 1..=6 {
         hypermap.cycle();
     }
