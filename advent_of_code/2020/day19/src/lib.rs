@@ -42,36 +42,41 @@ impl RuleKind {
         }
     }
 
-    pub fn evaluate(&self, rules: &[Rule]) -> Vec<String> {
-        let ret = match self {
-            Self::Value(s) => vec![s.clone()],
-            Self::Forward(fidx) => rules[*fidx].rule.evaluate(rules),
-            Self::And(v) => {
-                let mut all_results: Vec<Vec<String>> = vec![];
-                for rk in v.iter() {
-                    all_results.push(rk.evaluate(rules));
-                }
+    pub fn matches(&self, input: &str, rules: &[Rule]) -> bool {
+        let (matched, remainder) = self.match_str(input, rules);
+        matched && remainder.is_empty()
+    }
 
-                let mut combined = vec!["".to_owned()];
-                let mut helper = vec![];
-                for results in all_results.iter() {
-                    for entry in combined.iter() {
-                        for res in results.iter() {
-                            helper.push(entry.clone() + res.as_str());
-                        }
-                    }
-                    combined = helper;
-                    helper = vec![];
+    fn match_str<'a>(&self, input: &'a str, rules: &[Rule]) -> (bool, &'a str) {
+        match self {
+            Self::Value(s) => {
+                if input.starts_with(s) {
+                    (true, &input[s.len()..])
+                } else {
+                    (false, input)
                 }
-                combined
+            }
+            Self::Forward(fidx) => rules[*fidx].rule.match_str(input, rules),
+            Self::And(v) => {
+                let mut remainder = input;
+                for rk in v.iter() {
+                    let (matched, rest) = rk.match_str(remainder, rules);
+                    if matched {
+                        remainder = rest;
+                    } else {
+                        return (false, input);
+                    }
+                }
+                (true, remainder)
             }
             Self::Or(l, r) => {
-                let mut combined = l.evaluate(rules);
-                combined.extend(r.evaluate(rules));
-                combined
+                let (matched, remainder) = l.match_str(input, rules);
+                if !matched {
+                    return r.match_str(input, rules);
+                }
+                (matched, remainder)
             }
-        };
-        ret
+        }
     }
 }
 

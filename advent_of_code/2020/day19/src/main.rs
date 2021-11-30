@@ -14,11 +14,11 @@ fn main() -> ParsingResult {
     rules.sort_unstable();
 
     // Part 1
-    let valid = rules[0].rule.evaluate(&rules);
     let messages = &groups[1];
+    let rule_zero = &rules[0].rule;
     println!(
         "Part 1: The number of valid messages is {}.",
-        messages.iter().filter(|msg| valid.contains(*msg)).count()
+        messages.iter().filter(|msg| rule_zero.matches(msg, &rules)).count()
     );
 
     Ok(())

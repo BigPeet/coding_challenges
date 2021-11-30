@@ -5,3 +5,5 @@ That is a lot of senseless work and it won't work for part 2.
 
 The better approach would be to "match" the strings against the rule and see if it is valid.
 This would basically allow to traverse the rule "tree" as far as needed and allow for an early abort.
+
+So to start, I've updated my implementation for part 1 to use this improved approach.
