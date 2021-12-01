@@ -1,5 +1,6 @@
-use day20::Tile;
+use day20::{TileImage, Match, Tile, Image};
 use parsing::{InputError, ParsingResult};
+use std::collections::HashMap;
 use std::env;
 
 fn main() -> ParsingResult {
@@ -14,11 +15,16 @@ fn main() -> ParsingResult {
         .map(|g| g.parse::<Tile>())
         .collect::<Result<Vec<Tile>, InputError>>()?;
 
-    let mut corner_ids = vec![];
+    // Part 1
+    let mut match_map: HashMap<usize, Vec<Match>> = HashMap::new();
     for t in tiles.iter() {
-        let match_count = tiles.iter().filter(|ot| *ot != t && ot.matches(t)).count();
-        if match_count == 2 {
-            corner_ids.push(t.id());
+        let matches: Vec<Match> = tiles.iter().filter_map(|ot| t.matches(ot)).collect();
+        match_map.insert(t.id(), matches);
+    }
+    let mut corner_ids = vec![];
+    for (id, matches) in match_map.iter() {
+        if matches.len() == 2 {
+            corner_ids.push(*id);
         }
     }
     println!(
@@ -26,6 +32,19 @@ fn main() -> ParsingResult {
         corner_ids,
         corner_ids.iter().product::<usize>()
     );
+
+    // Part 2
+    let mut tile_map: HashMap<usize, Tile> = HashMap::new();
+    for t in tiles.into_iter() {
+        tile_map.insert(t.id(), t);
+    }
+
+    let tile_image = TileImage::assemble(tile_map, match_map)?;
+    println!("IDs in assemble form:\n{}", tile_image);
+
+    let image = Image::from(tile_image);
+    println!("The image:");
+    println!("{}", image);
 
     Ok(())
 }
