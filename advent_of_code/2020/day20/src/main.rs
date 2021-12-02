@@ -28,7 +28,7 @@ fn main() -> ParsingResult {
         }
     }
     println!(
-        "Part 1: The ids of the corner tiles are {:?}. Product: {}",
+        "Part 1: The IDs of the corner tiles are {:?}. Product: {}",
         corner_ids,
         corner_ids.iter().product::<usize>()
     );
@@ -40,17 +40,11 @@ fn main() -> ParsingResult {
     }
 
     let tile_image = TileImage::assemble(tile_map, match_map)?;
-    println!("IDs in assemble form:\n{}", tile_image);
-
-    let mut image = Image::from(tile_image);
-    println!("The image:");
-    println!("{}", image);
-    println!("The image contains {} sea monsters.", image.hunt_monsters());
-    print!("{}", image);
-
+    let scanned = Image::from(tile_image).scan_for_monsters();
     println!(
-        "Part 2: The habitat's water roughness is {}.",
-        image.water_roughness()
+        "Part 2: There are {} sea monsters in the image and the habitat's water roughness is {}.",
+        scanned.count(),
+        scanned.water_roughness()
     );
 
     Ok(())

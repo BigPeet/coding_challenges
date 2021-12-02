@@ -346,7 +346,12 @@ impl TileImage {
         // FIXME: clear up the "unwraps" => better error handling
 
         // Initialize queue with one of the corners as fix point.
-        if let Some((id, matches)) = match_map.iter().find(|(_, v)| v.len() == 2) {
+        // To make this "deterministic", alway choose the corner with lowest ID.
+        if let Some((id, matches)) = match_map
+            .iter()
+            .filter(|(_, m)| m.len() == 2)
+            .min_by_key(|(id, _)| **id)
+        {
             // Check which corner
             let match_sides: Vec<Direction> = matches.iter().map(|m| m.0).collect();
             let mut coord: (usize, usize) = (0, 0); // top left
@@ -511,13 +516,13 @@ impl Image {
         true
     }
 
-    fn search_monster(&mut self) -> usize {
+    fn search_monsters(&mut self) -> usize {
         let mut count = 0;
         // possible head positions
         for row in 0..self.size - 2 {
             for col in 18..self.size - 1 {
                 if self.is_monster(row, col) {
-                    self.mark_monsters((row, col));
+                    self.mark_monster((row, col));
                     count += 1;
                 }
             }
@@ -525,7 +530,7 @@ impl Image {
         count
     }
 
-    fn mark_monsters(&mut self, position: (usize, usize)) {
+    fn mark_monster(&mut self, position: (usize, usize)) {
         for delta in Self::MONSTER_DELTAS {
             let pos = (position.0 as i32 + delta.0, position.1 as i32 + delta.1);
             let pos = (pos.0 as usize, pos.1 as usize);
@@ -533,37 +538,28 @@ impl Image {
         }
     }
 
-    // FIXME: This should probably transform this Image to another class, which then offers the
-    //        water_roughness method.
-    // Returns the count of the found monsters and highlights them in the image with Os.
-    pub fn hunt_monsters(&mut self) -> usize {
+    // Returns a scanned image, which highlights the monsters with Os and contains the total count
+    // of monsters found.
+    pub fn scan_for_monsters(mut self) -> ScannedImage {
         let mut count = 0;
         // look at all four rotations
         for _ in 0..4 {
-            count += self.search_monster();
+            count += self.search_monsters();
 
             // flip horizontically (and back)
             self.flip_horizontically();
-            count += self.search_monster();
+            count += self.search_monsters();
             self.flip_horizontically();
 
             // flip vertically (and back)
             self.flip_vertically();
-            count += self.search_monster();
+            count += self.search_monsters();
             self.flip_vertically();
 
             // next rotation
             self.rotate();
         }
-        count
-    }
-
-    pub fn water_roughness(&self) -> usize {
-        let mut count = 0;
-        for row in self.data.iter() {
-            count += row.iter().filter(|c| **c == '#').count();
-        }
-        count
+        ScannedImage(self, count)
     }
 }
 
@@ -605,5 +601,27 @@ impl TransformData for Image {
 
     fn data_mut(&mut self) -> &mut Vec<Vec<Self::Value>> {
         &mut self.data
+    }
+}
+
+pub struct ScannedImage(Image, usize);
+
+impl ScannedImage {
+    pub fn water_roughness(&self) -> usize {
+        let mut count = 0;
+        for row in self.0.data.iter() {
+            count += row.iter().filter(|c| **c == '#').count();
+        }
+        count
+    }
+
+    pub fn count(&self) -> usize {
+        self.1
+    }
+}
+
+impl Display for ScannedImage {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
