@@ -16,3 +16,9 @@ I did the "lazy" solution for part 1 to find the corner pieces.
 The solution for the first part is 28057939502729.
 
 But now I have to actually assemble the image.
+
+Ok, I've managed to assemble the image.
+Now to find the "monsters".
+I assume monsters do NOT overlap (for now).
+
+The solution for the second part is 2489.

@@ -13,6 +13,14 @@ pub trait Transform {
         }
     }
 
+    fn reverse(&mut self, transform: Transformation) {
+        match transform {
+            Transformation::Rotation => self.rotate_left(),
+            Transformation::HorizontalFlip => self.flip_horizontically(),
+            Transformation::VerticalFlip => self.flip_vertically(),
+        }
+    }
+
     // 90 degree rotation to the right
     // assuming NxN images (square)
     fn rotate(&mut self);
@@ -458,7 +466,105 @@ impl Display for TileImage {
 }
 
 pub struct Image {
+    size: usize,
     data: Vec<Vec<char>>,
+}
+
+impl Image {
+    const MONSTER_DELTAS: [(i32, i32); 15] = [
+        (0, 0),
+        (1, 0),
+        (1, 1),
+        (1, -1),
+        (1, -6),
+        (1, -7),
+        (1, -12),
+        (1, -13),
+        (1, -18),
+        (2, -2),
+        (2, -5),
+        (2, -8),
+        (2, -11),
+        (2, -14),
+        (2, -17),
+    ];
+    // Takes coordinates for the monster's "head" (see below)
+    //
+    //                   # <--- "head"
+    // #    ##    ##    ###
+    //  #  #  #  #  #  #
+    //
+    // From the head's view there need to be
+    // - 2 rows below the head
+    // - 1 column to its right
+    // - 18 columns to its left
+    // - total width: 20 columns,
+    // - total height: 3 rows
+    fn is_monster(&self, row: usize, col: usize) -> bool {
+        for delta in Self::MONSTER_DELTAS {
+            let pos = (row as i32 + delta.0, col as i32 + delta.1);
+            let pos = (pos.0 as usize, pos.1 as usize);
+            if self.data[pos.0][pos.1] != '#' {
+                return false;
+            }
+        }
+        true
+    }
+
+    fn search_monster(&mut self) -> usize {
+        let mut count = 0;
+        // possible head positions
+        for row in 0..self.size - 2 {
+            for col in 18..self.size - 1 {
+                if self.is_monster(row, col) {
+                    self.mark_monsters((row, col));
+                    count += 1;
+                }
+            }
+        }
+        count
+    }
+
+    fn mark_monsters(&mut self, position: (usize, usize)) {
+        for delta in Self::MONSTER_DELTAS {
+            let pos = (position.0 as i32 + delta.0, position.1 as i32 + delta.1);
+            let pos = (pos.0 as usize, pos.1 as usize);
+            self.data[pos.0][pos.1] = 'O';
+        }
+    }
+
+    // FIXME: This should probably transform this Image to another class, which then offers the
+    //        water_roughness method.
+    // Returns the count of the found monsters and highlights them in the image with Os.
+    pub fn hunt_monsters(&mut self) -> usize {
+        let mut count = 0;
+        // look at all four rotations
+        for _ in 0..4 {
+            count += self.search_monster();
+
+            // flip horizontically (and back)
+            self.flip_horizontically();
+            count += self.search_monster();
+            self.flip_horizontically();
+
+            // flip vertically (and back)
+            self.flip_vertically();
+            count += self.search_monster();
+            self.flip_vertically();
+
+            // next rotation
+            self.rotate();
+        }
+        count
+    }
+
+    pub fn water_roughness(&self) -> usize {
+        let mut count = 0;
+        for row in self.data.iter() {
+            count += row.iter().filter(|c| **c == '#').count();
+        }
+        count
+    }
 }
 
 impl From<TileImage> for Image {
@@ -475,7 +581,10 @@ impl From<TileImage> for Image {
                 }
             }
         }
-        Image { data }
+        Image {
+            size: image_len,
+            data,
+        }
     }
 }
 

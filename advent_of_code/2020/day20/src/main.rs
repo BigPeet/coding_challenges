@@ -1,4 +1,4 @@
-use day20::{TileImage, Match, Tile, Image};
+use day20::{Image, Match, Tile, TileImage};
 use parsing::{InputError, ParsingResult};
 use std::collections::HashMap;
 use std::env;
@@ -42,9 +42,16 @@ fn main() -> ParsingResult {
     let tile_image = TileImage::assemble(tile_map, match_map)?;
     println!("IDs in assemble form:\n{}", tile_image);
 
-    let image = Image::from(tile_image);
+    let mut image = Image::from(tile_image);
     println!("The image:");
     println!("{}", image);
+    println!("The image contains {} sea monsters.", image.hunt_monsters());
+    print!("{}", image);
+
+    println!(
+        "Part 2: The habitat's water roughness is {}.",
+        image.water_roughness()
+    );
 
     Ok(())
 }
