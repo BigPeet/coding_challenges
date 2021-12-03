@@ -4,4 +4,5 @@ members = [
   "parsing",
   "day01",
   "day02",
+  "day03",
 ]
