@@ -2,14 +2,18 @@ use day04::BingoBoard;
 use parsing::ParsingResult;
 use std::num::ParseIntError;
 
-fn play<'a>(drawn_numbers: &[u32], boards: &'a mut [BingoBoard]) -> Option<(&'a BingoBoard, u32)> {
-    let mut winner_idx = None;
+fn play(
+    numbers: &[u32],
+    already_drawn: usize,
+    boards: &mut [BingoBoard],
+) -> Option<(usize, usize)> {
+    let mut winner = None;
     let mut finished = false;
-    for num in drawn_numbers {
-        for (idx, board) in boards.iter_mut().enumerate() {
+    for (num_idx, num) in numbers.iter().enumerate().skip(already_drawn) {
+        for (board_idx, board) in boards.iter_mut().enumerate() {
             board.mark(*num);
             if board.finished() {
-                winner_idx = Some((idx, num));
+                winner = Some((board_idx, num_idx));
                 finished = true;
                 break;
             }
@@ -18,11 +22,7 @@ fn play<'a>(drawn_numbers: &[u32], boards: &'a mut [BingoBoard]) -> Option<(&'a 
             break;
         }
     }
-    if let Some((idx, num)) = winner_idx {
-        Some((&boards[idx], *num))
-    } else {
-        None
-    }
+    winner
 }
 
 fn main() -> ParsingResult {
@@ -43,15 +43,35 @@ fn main() -> ParsingResult {
     }
 
     // Part 1
-    if let Some((board, num)) = play(&drawn, &mut boards) {
-        let unmarked = board.unmarked();
+    let mut start = 0;
+    if let Some((bidx, nidx)) = play(&drawn, start, &mut boards) {
+        let unmarked = boards[bidx].unmarked();
         println!(
-            "Part 1: Board won. Sum of unmarked numbers: {}. Last number: {}. Final Score: {}",
+            "Part 1: Sum of unmarked numbers: {}. Last number: {}. Final Score: {}",
             unmarked,
-            num,
-            num * unmarked
+            drawn[nidx],
+            drawn[nidx] * unmarked
         );
+
+        boards.swap_remove(bidx); // for Part 2
+        start = nidx;
     }
 
+    // Part 2
+    while let Some((bidx, nidx)) = play(&drawn, start, &mut boards) {
+        if boards.len() == 1 {
+            let unmarked = boards[bidx].unmarked();
+            println!(
+                "Part 2: Sum of unmarked numbers: {}. Last number: {}. Final Score: {}",
+                unmarked,
+                drawn[nidx],
+                drawn[nidx] * unmarked
+            );
+            break;
+        } else {
+            start = nidx;
+            boards.swap_remove(bidx);
+        }
+    }
     Ok(())
 }
