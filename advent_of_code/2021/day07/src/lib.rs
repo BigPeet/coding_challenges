@@ -9,7 +9,13 @@ pub fn median(numbers: &mut [u32]) -> u32 {
     median
 }
 
-fn abs_diff(a: u32, b: u32) -> u32 {
+pub fn mean(numbers: &[u32]) -> f64 {
+    let sum = numbers.iter().sum::<u32>();
+    let len = numbers.len();
+    sum as f64 / len as f64
+}
+
+pub fn abs_diff(a: u32, b: u32) -> u32 {
     if a > b {
         a - b
     } else {
@@ -17,8 +23,13 @@ fn abs_diff(a: u32, b: u32) -> u32 {
     }
 }
 
-pub fn fuel_cost(numbers: &[u32], target: u32) -> u32 {
+pub fn crab_diff(a: u32, b: u32) -> u32 {
+    let abs_diff = abs_diff(a, b);
+    (1..=abs_diff).sum()
+}
+
+pub fn fuel_cost(numbers: &[u32], target: u32, diff: fn(u32, u32) -> u32) -> u32 {
     numbers
         .iter()
-        .fold(0, |acc, elem| acc + abs_diff(*elem, target))
+        .fold(0, |acc, elem| acc + diff(*elem, target))
 }
