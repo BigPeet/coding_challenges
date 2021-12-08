@@ -85,9 +85,9 @@ impl FishSchool {
                 let diff_idx = (i as i32 - 2).rem_euclid(Self::NUM_OF_BINS as i32) as usize;
                 bins[i] = old_bins[i] + old_bins[diff_idx];
             }
-            for i in LanternFish::ESTIMATED_RESET..Self::NUM_OF_BINS {
-                bins[i] = old_bins[i - 2];
-            }
+            bins[LanternFish::ESTIMATED_RESET..Self::NUM_OF_BINS].clone_from_slice(
+                &old_bins[(LanternFish::ESTIMATED_RESET - 2)..(Self::NUM_OF_BINS - 2)],
+            );
         }
 
         // Return sum of all bins.
@@ -96,6 +96,10 @@ impl FishSchool {
 
     pub fn len(&self) -> usize {
         self.0.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 }
 

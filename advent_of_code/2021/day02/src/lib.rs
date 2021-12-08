@@ -54,6 +54,12 @@ impl Display for Position {
     }
 }
 
+impl Default for Position {
+    fn default() -> Self {
+        Position::new()
+    }
+}
+
 pub struct AdvancedPosition {
     pub horizontal: i32,
     pub depth: i32,
@@ -84,5 +90,11 @@ impl AdvancedPosition {
 impl Display for AdvancedPosition {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "({}, {})", self.horizontal, self.depth)
+    }
+}
+
+impl Default for AdvancedPosition {
+    fn default() -> Self {
+        AdvancedPosition::new()
     }
 }

@@ -21,7 +21,7 @@ pub struct IterMutBoard<'a> {
 }
 
 impl BingoBoard {
-    pub fn iter<'a>(&'a self) -> IterBoard<'a> {
+    pub fn iter(&self) -> IterBoard {
         IterBoard {
             board: self,
             row: 0,
@@ -29,7 +29,7 @@ impl BingoBoard {
         }
     }
 
-    pub fn iter_mut<'a>(&'a mut self) -> IterMutBoard<'a> {
+    pub fn iter_mut(&mut self) -> IterMutBoard {
         IterMutBoard {
             board: self,
             row: 0,
