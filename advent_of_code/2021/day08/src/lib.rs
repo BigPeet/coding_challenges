@@ -70,7 +70,7 @@ impl SSDisplay {
             return None;
         }
 
-        let mut wiring = [b'z'; 7]; // init with some "invalid" value
+        let mut wiring = [u8::MAX; 7]; // init with some "invalid" value
 
         // Compare 0, 6 and 9 with 1 to determine top-right + bottom-right.
         let mut six_idx = None;
@@ -80,7 +80,7 @@ impl SSDisplay {
                     // found 6
                     six_idx = Some(j);
                     wiring[Self::TOP_RIGHT] = *val;
-                    wiring[Self::BOTTOM_RIGHT] = one.segments[(i + 1).rem_euclid(2)];
+                    wiring[Self::BOTTOM_RIGHT] = one.segments[(1 - i)]; // length known to be 2
                     break;
                 }
             }
@@ -109,7 +109,7 @@ impl SSDisplay {
                 if !digit.segments.contains(val) {
                     // Found 0. Missing piece is middle.
                     wiring[Self::MIDDLE] = *val;
-                    zero_nine_idx = Some((i, (i + 1).rem_euclid(2)));
+                    zero_nine_idx = Some((i, (1 - i))); // length known to be 2
                     break;
                 }
             }
@@ -134,13 +134,17 @@ impl SSDisplay {
         }
 
         // Last unmatched value (0 -> 6) is bottom
-        // FIXME: check for error
         for v in 0..=6 {
             if !wiring.contains(&v) {
                 wiring[Self::BOTTOM] = v;
                 break;
             }
         }
+        if wiring[Self::BOTTOM] == u8::MAX {
+            // didn't set bottom for some reason
+            return None;
+        }
+
         Some(SSDisplay { wiring })
     }
 
