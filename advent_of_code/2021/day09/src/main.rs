@@ -17,5 +17,14 @@ fn main() -> ParsingResult {
         sum
     );
 
+    // Part 2
+    let mut basin_sizes = hmap.basins();
+    basin_sizes.sort_unstable_by(|a, b| b.cmp(a)); // sort by descending order
+    println!(
+        "Part 2: Multiplying the sizes of the three largest basins {:?} results in {}.",
+        &basin_sizes[0..3],
+        &basin_sizes[0..3].iter().product::<u32>()
+    );
+
     Ok(())
 }
