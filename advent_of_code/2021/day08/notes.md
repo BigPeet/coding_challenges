@@ -9,16 +9,16 @@ One algorithm to deduce the remaining digits goes as follows:
 * 1, 4, 7 and 8 are the easy digits and can be identified.
 * 1 will give you two values (a, b in the example) which could be either top-right or bottom-right.
 * Look at all digits with 6 segments (i.e. 0, 6 and 9). Which one of those does is missing one of the values above? That is 6.
-** This clearly identifies top-right and bottom-right. (2 down)
+    * This clearly identifies top-right and bottom-right. (2 down)
 * Look at 7.
-** Its third still unknown value is top value (3 down).
+    * Its third still unknown value is top value (3 down).
 * Look at the remaining digits with 6 segments (i.e. 0 and 9). Which one of those is missing one of the values from 4? That is 0.
-** The missing value is middle (4 down).
+    * The missing value is middle (4 down).
 * Look at 4.
-** With top-right, bottom-right and middle known, the last unknown value of 4 is top-left (5 down).
+    * With top-right, bottom-right and middle known, the last unknown value of 4 is top-left (5 down).
 * Look at 0 and 9. Which value is 9 missing which is present in 0 which is not the known middle?
-** That is the bottom-left (6 down).
-** The last unknown value is automatically bottom (7 down).
+    * That is the bottom-left (6 down).
+    * The last unknown value is automatically bottom (7 down).
 
 My implementation of that algorithm is somewhat messy (it was late :-/).
 

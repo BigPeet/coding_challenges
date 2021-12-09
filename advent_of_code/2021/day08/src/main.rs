@@ -19,8 +19,8 @@ fn main() -> ParsingResult {
     // Part 2
     let mut sum = 0;
     for entry in entries.iter() {
-        let wiring = entry.deduce_wiring().ok_or(InputError::ParseGeneral)?;
-        sum += SSDisplay::flawed(wiring)
+        sum += SSDisplay::deduce_from(entry)
+            .ok_or(InputError::ParseGeneral)?
             .value(entry.outputs())
             .ok_or(InputError::ParseGeneral)?;
     }

@@ -1,14 +1,6 @@
 use parsing::InputError;
 use std::str::FromStr;
 
-const TOP: usize = 0;
-const TOP_LEFT: usize = 1;
-const TOP_RIGHT: usize = 2;
-const MIDDLE: usize = 3;
-const BOTTOM_LEFT: usize = 4;
-const BOTTOM_RIGHT: usize = 5;
-const BOTTOM: usize = 6;
-
 #[derive(Debug)]
 pub struct Digit {
     segments: Vec<u8>,
@@ -57,13 +49,23 @@ impl Entry {
             .filter(|d| d.segments.len() == 6)
             .collect()
     }
+}
 
-    pub fn deduce_wiring(&self) -> Option<[u8; 7]> {
+impl SSDisplay {
+    const TOP: usize = 0;
+    const TOP_LEFT: usize = 1;
+    const TOP_RIGHT: usize = 2;
+    const MIDDLE: usize = 3;
+    const BOTTOM_LEFT: usize = 4;
+    const BOTTOM_RIGHT: usize = 5;
+    const BOTTOM: usize = 6;
+
+    pub fn deduce_from(entry: &Entry) -> Option<SSDisplay> {
         // see notes.md for more clarifications.
 
-        let one = self.get_signal_one()?;
+        let one = entry.get_signal_one()?;
 
-        let mut zero_six_nine = self.get_signal_069();
+        let mut zero_six_nine = entry.get_signal_069();
         if zero_six_nine.len() != 3 {
             return None;
         }
@@ -77,8 +79,8 @@ impl Entry {
                 if !digit.segments.contains(val) {
                     // found 6
                     six_idx = Some(j);
-                    wiring[TOP_RIGHT] = *val;
-                    wiring[BOTTOM_RIGHT] = one.segments[(i + 1).rem_euclid(2)];
+                    wiring[Self::TOP_RIGHT] = *val;
+                    wiring[Self::BOTTOM_RIGHT] = one.segments[(i + 1).rem_euclid(2)];
                     break;
                 }
             }
@@ -93,20 +95,20 @@ impl Entry {
         }
 
         // Look at 7 for top.
-        let seven = self.get_signal_seven()?;
-        wiring[TOP] = *seven
+        let seven = entry.get_signal_seven()?;
+        wiring[Self::TOP] = *seven
             .segments
             .iter()
             .find(|val| !one.segments.contains(val))?;
 
         // Compare 0 and 9 with 4 to determine the middle.
-        let four = self.get_signal_four()?;
+        let four = entry.get_signal_four()?;
         let mut zero_nine_idx = None;
         for (i, digit) in zero_six_nine.iter().enumerate() {
             for val in four.segments.iter() {
                 if !digit.segments.contains(val) {
                     // Found 0. Missing piece is middle.
-                    wiring[MIDDLE] = *val;
+                    wiring[Self::MIDDLE] = *val;
                     zero_nine_idx = Some((i, (i + 1).rem_euclid(2)));
                     break;
                 }
@@ -117,16 +119,16 @@ impl Entry {
         }
 
         // Look at 4 for top-left.
-        wiring[TOP_LEFT] = *four.segments.iter().find(|val| !wiring.contains(val))?;
+        wiring[Self::TOP_LEFT] = *four.segments.iter().find(|val| !wiring.contains(val))?;
 
         // Look at 0 and 9 to find bottom-left.
         if let Some((zidx, nidx)) = zero_nine_idx {
             let zero = zero_six_nine[zidx];
             let nine = zero_six_nine[nidx];
-            wiring[BOTTOM_LEFT] = *zero
+            wiring[Self::BOTTOM_LEFT] = *zero
                 .segments
                 .iter()
-                .find(|val| !nine.segments.contains(val) && **val != wiring[MIDDLE])?;
+                .find(|val| !nine.segments.contains(val) && **val != wiring[Self::MIDDLE])?;
         } else {
             return None;
         }
@@ -135,17 +137,11 @@ impl Entry {
         // FIXME: check for error
         for v in 0..=6 {
             if !wiring.contains(&v) {
-                wiring[BOTTOM] = v;
+                wiring[Self::BOTTOM] = v;
                 break;
             }
         }
-        Some(wiring)
-    }
-}
-
-impl SSDisplay {
-    pub fn flawed(wiring: [u8; 7]) -> SSDisplay {
-        SSDisplay { wiring }
+        Some(SSDisplay { wiring })
     }
 
     fn digit_value(&self, d: &Digit) -> Option<u32> {
@@ -156,9 +152,9 @@ impl SSDisplay {
             7 => Some(8),
             5 => {
                 // 2, 3 or 5
-                if d.segments.contains(&self.wiring[TOP_LEFT]) {
+                if d.segments.contains(&self.wiring[Self::TOP_LEFT]) {
                     Some(5)
-                } else if d.segments.contains(&self.wiring[BOTTOM_LEFT]) {
+                } else if d.segments.contains(&self.wiring[Self::BOTTOM_LEFT]) {
                     Some(2)
                 } else {
                     Some(3)
@@ -166,9 +162,9 @@ impl SSDisplay {
             }
             6 => {
                 // 0, 6 or 9
-                if !d.segments.contains(&self.wiring[MIDDLE]) {
+                if !d.segments.contains(&self.wiring[Self::MIDDLE]) {
                     Some(0)
-                } else if !d.segments.contains(&self.wiring[TOP_RIGHT]) {
+                } else if !d.segments.contains(&self.wiring[Self::TOP_RIGHT]) {
                     Some(6)
                 } else {
                     Some(9)
