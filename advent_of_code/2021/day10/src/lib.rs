@@ -2,6 +2,11 @@ use parsing::InputError;
 use std::fmt::Display;
 use std::str::FromStr;
 
+// FIXME: see below
+// I feel like the symbols could have been cleaner.
+// E.g. a C-like enum just for the type of delimiter (), {}, etc.
+// That enum can be used by a struct which has a field for the enum and a bool for open/close.
+// Then use the enum as index into some arrays for the characters and scores.
 #[derive(Clone, Copy)]
 pub enum Symbol {
     LParen,
