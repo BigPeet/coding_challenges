@@ -1,4 +1,4 @@
-use day10::SymbolLine;
+use day10::{IncompleteLines, SymbolLine};
 use parsing::ParsingResult;
 
 fn main() -> ParsingResult {
@@ -10,10 +10,14 @@ fn main() -> ParsingResult {
     let mut total_score = 0;
     for sl in symbol_lines.iter() {
         if let Some(sym) = sl.find_illegal() {
-            total_score += sym.score();
+            total_score += sym.error_score();
         }
     }
     println!("Part 1: The total syntax error score is {}.", total_score);
+
+    // Part 2
+    let (_, score) = IncompleteLines::from(symbol_lines).complete();
+    println!("Part 2: The middle score of the completion is {}.", score);
 
     Ok(())
 }

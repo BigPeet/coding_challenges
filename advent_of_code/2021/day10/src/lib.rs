@@ -41,12 +41,32 @@ impl Symbol {
         }
     }
 
-    pub fn score(&self) -> u32 {
+    fn get_closing(value: usize) -> Option<Symbol> {
+        match value {
+            0 => Some(Symbol::RParen),
+            1 => Some(Symbol::RBracket),
+            2 => Some(Symbol::RBrace),
+            3 => Some(Symbol::RAngled),
+            _ => None,
+        }
+    }
+
+    pub fn error_score(&self) -> u64 {
         match self {
             Symbol::RParen => 3,
             Symbol::RBracket => 57,
             Symbol::RBrace => 1197,
             Symbol::RAngled => 25137,
+            _ => 0,
+        }
+    }
+
+    pub fn completion_score(&self) -> u64 {
+        match self {
+            Symbol::RParen => 1,
+            Symbol::RBracket => 2,
+            Symbol::RBrace => 3,
+            Symbol::RAngled => 4,
             _ => 0,
         }
     }
@@ -110,6 +130,46 @@ impl SymbolLine {
         }
         None
     }
+
+    fn complete(&mut self) -> u64 {
+        let mut levels = [0i32; Symbol::NUM_OF_DELIMITERS];
+        let mut stack = vec![];
+        for sym in self.0.iter() {
+            let idx = sym.value();
+            if sym.is_open() {
+                // open a new chunk
+                levels[idx] += 1;
+                stack.push(levels);
+            } else {
+                // close a chunk
+                stack.pop();
+                levels[idx] -= 1;
+            }
+        }
+
+        let mut score = 0;
+        // Reverse the remaining stack.
+        while let Some(popped) = stack.pop() {
+            // which symbol was added
+            let prev;
+            if let Some(last) = stack.last() {
+                prev = last;
+            } else {
+                prev = &[0i32; Symbol::NUM_OF_DELIMITERS];
+            }
+            for i in 0..Symbol::NUM_OF_DELIMITERS {
+                if prev[i] < popped[i] {
+                    // this was opened most recently
+                    let closing_sym = Symbol::get_closing(i).unwrap();
+                    self.0.push(closing_sym);
+                    score *= 5;
+                    score += closing_sym.completion_score();
+                    break;
+                }
+            }
+        }
+        score
+    }
 }
 
 impl Display for SymbolLine {
@@ -131,5 +191,30 @@ impl FromStr for SymbolLine {
             symbols.push(symbol);
         }
         Ok(SymbolLine(symbols))
+    }
+}
+
+pub struct IncompleteLines(Vec<SymbolLine>);
+pub struct CompleteLines(Vec<SymbolLine>);
+
+impl From<Vec<SymbolLine>> for IncompleteLines {
+    fn from(lines: Vec<SymbolLine>) -> Self {
+        let only_incomplete = lines
+            .into_iter()
+            .filter(|sl| sl.find_illegal().is_none())
+            .collect();
+        IncompleteLines(only_incomplete)
+    }
+}
+
+impl IncompleteLines {
+    pub fn complete(mut self) -> (CompleteLines, u64) {
+        let mut scores = Vec::with_capacity(self.0.len());
+        for sl in self.0.iter_mut() {
+            scores.push(sl.complete());
+        }
+        scores.sort_unstable();
+        let score = scores[scores.len() / 2]; // guaranteed to be of odd length
+        (CompleteLines(self.0), score)
     }
 }
