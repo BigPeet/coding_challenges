@@ -2,92 +2,73 @@ use parsing::InputError;
 use std::fmt::Display;
 use std::str::FromStr;
 
-// FIXME: see below
-// I feel like the symbols could have been cleaner.
-// E.g. a C-like enum just for the type of delimiter (), {}, etc.
-// That enum can be used by a struct which has a field for the enum and a bool for open/close.
-// Then use the enum as index into some arrays for the characters and scores.
 #[derive(Clone, Copy)]
-pub enum Symbol {
-    LParen,
-    RParen,
-    LBracket,
-    RBracket,
-    LBrace,
-    RBrace,
-    LAngled,
-    RAngled,
+enum Delimiter {
+    Paren,
+    Bracket,
+    Brace,
+    Angled,
+}
+
+#[derive(Clone, Copy)]
+pub struct Symbol {
+    delim: Delimiter,
+    is_left: bool,
 }
 
 impl Symbol {
-    const LPAREN: char = '(';
-    const RPAREN: char = ')';
-    const LBRACKET: char = '[';
-    const RBRACKET: char = ']';
-    const LBRACE: char = '{';
-    const RBRACE: char = '}';
-    const LANGLED: char = '<';
-    const RANGLED: char = '>';
     const NUM_OF_DELIMITERS: usize = 4;
+    const LEFTS: [char; Self::NUM_OF_DELIMITERS] = ['(', '[', '{', '<'];
+    const RIGHTS: [char; Self::NUM_OF_DELIMITERS] = [')', ']', '}', '>'];
 
     fn value(&self) -> usize {
-        match self {
-            Symbol::LParen | Symbol::RParen => 0,
-            Symbol::LBracket | Symbol::RBracket => 1,
-            Symbol::LBrace | Symbol::RBrace => 2,
-            Symbol::LAngled | Symbol::RAngled => 3,
-        }
+        self.delim as usize
     }
 
     fn is_open(&self) -> bool {
-        match self {
-            Symbol::LParen | Symbol::LBracket | Symbol::LBrace | Symbol::LAngled => true,
-            Symbol::RParen | Symbol::RBracket | Symbol::RBrace | Symbol::RAngled => false,
-        }
+        self.is_left
     }
 
-    fn get_closing(value: usize) -> Option<Symbol> {
-        match value {
-            0 => Some(Symbol::RParen),
-            1 => Some(Symbol::RBracket),
-            2 => Some(Symbol::RBrace),
-            3 => Some(Symbol::RAngled),
-            _ => None,
+    fn get_closing(&self) -> Symbol {
+        Symbol {
+            delim: self.delim,
+            is_left: false,
         }
     }
 
     pub fn error_score(&self) -> u64 {
-        match self {
-            Symbol::RParen => 3,
-            Symbol::RBracket => 57,
-            Symbol::RBrace => 1197,
-            Symbol::RAngled => 25137,
-            _ => 0,
+        if !self.is_left {
+            match self.delim {
+                Delimiter::Paren => 3,
+                Delimiter::Bracket => 57,
+                Delimiter::Brace => 1197,
+                Delimiter::Angled => 25137,
+            }
+        } else {
+            0
         }
     }
 
     pub fn completion_score(&self) -> u64 {
-        match self {
-            Symbol::RParen => 1,
-            Symbol::RBracket => 2,
-            Symbol::RBrace => 3,
-            Symbol::RAngled => 4,
-            _ => 0,
+        if !self.is_left {
+            match self.delim {
+                Delimiter::Paren => 1,
+                Delimiter::Bracket => 2,
+                Delimiter::Brace => 3,
+                Delimiter::Angled => 4,
+            }
+        } else {
+            0
         }
     }
 }
 
 impl Display for Symbol {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let c = match self {
-            Symbol::LParen => Symbol::LPAREN,
-            Symbol::RParen => Symbol::RPAREN,
-            Symbol::LBracket => Symbol::LBRACKET,
-            Symbol::RBracket => Symbol::RBRACKET,
-            Symbol::LBrace => Symbol::LBRACE,
-            Symbol::RBrace => Symbol::RBRACE,
-            Symbol::LAngled => Symbol::LANGLED,
-            Symbol::RAngled => Symbol::RANGLED,
+        let c = if self.is_left {
+            Self::LEFTS[self.delim as usize]
+        } else {
+            Self::RIGHTS[self.delim as usize]
         };
         write!(f, "{}", c)
     }
@@ -97,17 +78,26 @@ impl TryFrom<char> for Symbol {
     type Error = InputError;
 
     fn try_from(value: char) -> Result<Self, Self::Error> {
-        match value {
-            Symbol::LPAREN => Ok(Symbol::LParen),
-            Symbol::RPAREN => Ok(Symbol::RParen),
-            Symbol::LBRACKET => Ok(Symbol::LBracket),
-            Symbol::RBRACKET => Ok(Symbol::RBracket),
-            Symbol::LBRACE => Ok(Symbol::LBrace),
-            Symbol::RBRACE => Ok(Symbol::RBrace),
-            Symbol::LANGLED => Ok(Symbol::LAngled),
-            Symbol::RANGLED => Ok(Symbol::RAngled),
-            _ => Err(InputError::ParseGeneral),
+        let symbols;
+        let is_left = Self::LEFTS.contains(&value);
+        if is_left {
+            symbols = Self::LEFTS;
+        } else if Self::RIGHTS.contains(&value) {
+            symbols = Self::RIGHTS;
+        } else {
+            return Err(InputError::ParseGeneral);
         }
+
+        let pos = symbols.iter().position(|c| *c == value);
+        let delim = match pos {
+            Some(0) => Delimiter::Paren,
+            Some(1) => Delimiter::Bracket,
+            Some(2) => Delimiter::Brace,
+            Some(3) => Delimiter::Angled,
+            _ => return Err(InputError::ParseGeneral),
+        };
+
+        Ok(Symbol { delim, is_left })
     }
 }
 
@@ -137,41 +127,25 @@ impl SymbolLine {
     }
 
     fn complete(&mut self) -> u64 {
-        let mut levels = [0i32; Symbol::NUM_OF_DELIMITERS];
         let mut stack = vec![];
         for sym in self.0.iter() {
-            let idx = sym.value();
             if sym.is_open() {
                 // open a new chunk
-                levels[idx] += 1;
-                stack.push(levels);
+                stack.push(*sym);
             } else {
                 // close a chunk
                 stack.pop();
-                levels[idx] -= 1;
             }
         }
 
         let mut score = 0;
         // Reverse the remaining stack.
+        // (should only include unclosed open symbols)
         while let Some(popped) = stack.pop() {
-            // which symbol was added
-            let prev;
-            if let Some(last) = stack.last() {
-                prev = last;
-            } else {
-                prev = &[0i32; Symbol::NUM_OF_DELIMITERS];
-            }
-            for i in 0..Symbol::NUM_OF_DELIMITERS {
-                if prev[i] < popped[i] {
-                    // this was opened most recently
-                    let closing_sym = Symbol::get_closing(i).unwrap();
-                    self.0.push(closing_sym);
-                    score *= 5;
-                    score += closing_sym.completion_score();
-                    break;
-                }
-            }
+            let closing_sym = popped.get_closing();
+            self.0.push(closing_sym);
+            score *= 5;
+            score += closing_sym.completion_score();
         }
         score
     }
