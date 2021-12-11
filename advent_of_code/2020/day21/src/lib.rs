@@ -67,7 +67,7 @@ impl FoodList {
             if candidates.len() == 1 {
                 let translated = TranslatedAllergene {
                     name: allergene.to_string(),
-                    translation: candidates[0].clone(),
+                    foreign_name: candidates[0].clone(),
                 };
                 queue.push_back(translated);
             }
@@ -75,11 +75,11 @@ impl FoodList {
         while let Some(popped) = queue.pop_back() {
             for (k, v) in amap.iter_mut() {
                 if **k != popped.name && v.len() > 1 {
-                    v.retain(|ing| *ing != popped.translation);
+                    v.retain(|ing| *ing != popped.foreign_name);
                     if v.len() == 1 {
                         let translated = TranslatedAllergene {
                             name: (**k).to_string(),
-                            translation: v[0].clone(),
+                            foreign_name: v[0].clone(),
                         };
                         queue.push_back(translated);
                     }
@@ -114,11 +114,15 @@ impl FoodList {
 #[derive(Debug)]
 pub struct TranslatedAllergene {
     name: String,
-    translation: String,
+    foreign_name: String,
 }
 
 impl TranslatedAllergene {
-    pub fn translation(&self) -> &str {
-        &self.translation
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn foreign_name(&self) -> &str {
+        &self.foreign_name
     }
 }
