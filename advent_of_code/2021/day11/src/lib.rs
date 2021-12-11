@@ -103,6 +103,11 @@ impl OctoGrid {
         }
         flashes.len() as u32
     }
+
+    pub const fn size() -> u32 {
+        let val = Self::FIELD_SIZE as u32;
+        val * val
+    }
 }
 
 impl Display for OctoGrid {
