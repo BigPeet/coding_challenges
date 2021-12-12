@@ -10,19 +10,19 @@ fn main() -> ParsingResult {
         .ok_or(InputError::ParseGeneral)
         .and_then(|(l, r)| Ok((l.parse::<Deck>()?, r.parse::<Deck>()?)))?;
 
-    let mut game = CombatGame::new(deck_a.clone(), deck_b.clone());
-    let _ = game.play();
+    let game = CombatGame::new(deck_a.clone(), deck_b.clone());
+    let finished = game.play();
     println!(
         "Part 1: The final winning score of Combat is {}.",
-        game.score()
+        finished.score()
     );
 
     // Part 2
-    let mut game = RecursiveCombat::new(deck_a, deck_b);
-    let _ = game.play();
+    let game = RecursiveCombat::new(deck_a, deck_b);
+    let finished = game.play();
     println!(
         "Part 2: The final winning score of RecursiveCombat is {}.",
-        game.score()
+        finished.score()
     );
 
     Ok(())

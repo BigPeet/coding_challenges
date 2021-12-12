@@ -23,6 +23,14 @@ impl Deck {
     pub fn add(&mut self, card: Card) {
         self.cards.push_back(card)
     }
+
+    fn score(&self) -> Score {
+        let mut score = 0;
+        for (i, card) in self.cards.iter().rev().enumerate() {
+            score += (i + 1) as Score * *card as Score;
+        }
+        score
+    }
 }
 
 impl FromStr for Deck {
@@ -37,44 +45,46 @@ impl FromStr for Deck {
     }
 }
 
+pub struct FinishedGame {
+    winner: usize,
+    winning_deck: Deck,
+}
+
+impl FinishedGame {
+    pub fn score(&self) -> Score {
+        self.winning_deck.score()
+    }
+}
+
+pub enum Outcome<T>
+where
+    T: CardGame + Sized,
+{
+    Running(T),
+    Win(FinishedGame),
+}
+
 pub trait CardGame {
-    fn play(&mut self) -> usize {
-        while !self.is_over() {
-            self.round();
+    fn play(mut self) -> FinishedGame
+    where
+        Self: Sized,
+    {
+        loop {
+            match self.round() {
+                Outcome::Running(next) => self = next,
+                Outcome::Win(w) => return w,
+            }
         }
-        self.winner()
     }
 
     fn is_over(&self) -> bool {
         self.decks()[0].cards.is_empty() || self.decks()[1].cards.is_empty()
     }
 
-    fn winner(&self) -> usize {
-        if self.decks()[0].cards.is_empty() {
-            1
-        } else {
-            0
-        }
-    }
-
-    fn calculate_deck_score(deck: &Deck) -> Score {
-        let mut score = 0;
-        for (i, card) in deck.cards.iter().rev().enumerate() {
-            score += (i + 1) as Score * *card as Score;
-        }
-        score
-    }
-
-    fn score(&self) -> Score {
-        if self.is_over() {
-            Self::calculate_deck_score(&self.decks()[self.winner()])
-        } else {
-            0
-        }
-    }
-
     fn decks(&self) -> &[Deck];
-    fn round(&mut self);
+    fn round(self) -> Outcome<Self>
+    where
+        Self: Sized;
 }
 
 pub struct CombatGame {
@@ -82,7 +92,7 @@ pub struct CombatGame {
 }
 
 impl CardGame for CombatGame {
-    fn round(&mut self) {
+    fn round(mut self) -> Outcome<Self> {
         if !self.is_over() {
             let card_a = self.decks[0].draw().unwrap();
             let card_b = self.decks[1].draw().unwrap();
@@ -93,6 +103,13 @@ impl CardGame for CombatGame {
                 self.decks[1].add(card_b);
                 self.decks[1].add(card_a);
             }
+            Outcome::Running(self)
+        } else {
+            let winner = self.winner();
+            Outcome::Win(FinishedGame {
+                winner,
+                winning_deck: self.decks[winner].clone(),
+            })
         }
     }
 
@@ -104,6 +121,13 @@ impl CardGame for CombatGame {
 impl CombatGame {
     pub fn new(a: Deck, b: Deck) -> CombatGame {
         CombatGame { decks: [a, b] }
+    }
+    fn winner(&self) -> usize {
+        if self.decks()[0].cards.is_empty() {
+            1
+        } else {
+            0
+        }
     }
 }
 
@@ -123,6 +147,15 @@ impl RecursiveCombat {
             winner: None,
         }
     }
+    fn winner(&self) -> usize {
+        if let Some(win_id) = self.winner {
+            win_id
+        } else if self.decks[0].cards.is_empty() {
+            1
+        } else {
+            0
+        }
+    }
 }
 
 impl CardGame for RecursiveCombat {
@@ -130,12 +163,9 @@ impl CardGame for RecursiveCombat {
         &self.decks
     }
 
-    fn round(&mut self) {
+    fn round(mut self) -> Outcome<Self> {
         if !self.is_over() {
-            let scores = (
-                Self::calculate_deck_score(&self.decks[0]),
-                Self::calculate_deck_score(&self.decks[1]),
-            );
+            let scores = (self.decks[0].score(), self.decks[1].score());
             if self.history.contains(&scores) {
                 // Player 1 (:= 0) wins
                 self.winner = Some(0);
@@ -153,8 +183,8 @@ impl CardGame for RecursiveCombat {
                     let new_deck_b = Deck::new(
                         &self.decks[1].cards.make_contiguous()[0..drawn_cards[1] as usize],
                     );
-                    let mut new_game = RecursiveCombat::new(new_deck_a, new_deck_b);
-                    winner = new_game.play();
+                    let new_game = RecursiveCombat::new(new_deck_a, new_deck_b);
+                    winner = new_game.play().winner;
                 } else {
                     // Normal round
                     winner = if drawn_cards[0] > drawn_cards[1] {
@@ -166,20 +196,17 @@ impl CardGame for RecursiveCombat {
                 self.decks[winner].add(drawn_cards[winner]);
                 self.decks[winner].add(drawn_cards[1 - winner]);
             }
+            Outcome::Running(self)
+        } else {
+            let winner = self.winner();
+            Outcome::Win(FinishedGame {
+                winner,
+                winning_deck: self.decks[winner].clone(),
+            })
         }
     }
 
     fn is_over(&self) -> bool {
         self.winner.is_some() || self.decks[0].cards.is_empty() || self.decks[1].cards.is_empty()
-    }
-
-    fn winner(&self) -> usize {
-        if let Some(win_id) = self.winner {
-            win_id
-        } else if self.decks[0].cards.is_empty() {
-            1
-        } else {
-            0
-        }
     }
 }
