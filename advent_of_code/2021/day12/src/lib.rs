@@ -77,7 +77,16 @@ impl CaveSystem {
         }
     }
 
-    pub fn find_all_paths(&self) -> Vec<Path> {
+    pub fn normal_path_filter(cave: &Cave, path: &Path) -> bool {
+        !cave.is_small || !path.contains(cave)
+    }
+
+    pub fn advanced_path_filter(cave: &Cave, path: &Path) -> bool {
+        !cave.is_small
+            || (cave.name != "start" && (!path.contains(cave) || !path.visits_small_cave_twice()))
+    }
+
+    pub fn find_all_paths(&self, filter: fn(&Cave, &Path) -> bool) -> Vec<Path> {
         let mut found_paths = vec![];
         let mut queue = VecDeque::new();
         if let Some(start) = self.get_start() {
@@ -89,10 +98,7 @@ impl CaveSystem {
             if cave.name == "end" {
                 found_paths.push(path);
             } else if let Some(connections) = self.connections.map.get(cave) {
-                for valid_target in connections
-                    .iter()
-                    .filter(|cave| !cave.is_small || !path.contains(cave))
-                {
+                for valid_target in connections.iter().filter(|cave| filter(cave, &path)) {
                     queue.push_back((valid_target, path.clone()));
                 }
             }
@@ -101,9 +107,10 @@ impl CaveSystem {
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Path<'a> {
     caves: Vec<&'a Cave>,
+    small_cave_visited_twice: bool,
 }
 
 impl<'a> Path<'a> {
@@ -111,12 +118,22 @@ impl<'a> Path<'a> {
         self.caves.contains(&cave)
     }
 
+    pub fn visits_small_cave_twice(&self) -> bool {
+        self.small_cave_visited_twice
+    }
+
     pub fn add(&mut self, cave: &'a Cave) {
+        if !self.small_cave_visited_twice && cave.is_small && self.caves.contains(&cave) {
+            self.small_cave_visited_twice = true;
+        }
         self.caves.push(cave);
     }
 
     pub fn new() -> Self {
-        Path { caves: Vec::new() }
+        Path {
+            caves: Vec::new(),
+            small_cave_visited_twice: false,
+        }
     }
 }
 

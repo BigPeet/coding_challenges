@@ -19,3 +19,10 @@ One algorithm to find all such paths would be the following:
     * Repeat.
 
 The solution for the first part is 4411.
+
+The rule changes for of the second part only affect how to filter "connections".
+The rest of the algorithm remains unaffected.
+Instead of just checking, if a small cave has been visited, it has to be checked, if the current path has already visited any small cave twice.
+In addition, "start" needs an extra treatment similar to how "end" already has.
+
+The solution for the second part is 136767.
