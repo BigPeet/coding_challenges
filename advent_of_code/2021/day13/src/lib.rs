@@ -7,8 +7,6 @@ type SparseMatrix = HashSet<Point>;
 
 pub struct TransparentPaper {
     data: SparseMatrix,
-    height: usize,
-    width: usize,
 }
 
 #[derive(PartialEq, Eq, Hash)]
@@ -24,26 +22,8 @@ pub enum FoldInstruction {
 
 impl TransparentPaper {
     pub fn new(points: Vec<Point>) -> TransparentPaper {
-        TransparentPaper::create_from_sparse_matrix(SparseMatrix::from_iter(points.into_iter()))
-    }
-
-    fn create_from_sparse_matrix(points: SparseMatrix) -> TransparentPaper {
-        let height = points
-            .iter()
-            .map(|p| p.y)
-            .max()
-            .and_then(|m| Some(m + 1))
-            .unwrap_or(0);
-        let width = points
-            .iter()
-            .map(|p| p.x)
-            .max()
-            .and_then(|m| Some(m + 1))
-            .unwrap_or(0);
         TransparentPaper {
-            data: points,
-            height,
-            width,
+            data: SparseMatrix::from_iter(points.into_iter()),
         }
     }
 
@@ -65,7 +45,7 @@ impl TransparentPaper {
             }
             new_data.insert(point);
         }
-        TransparentPaper::create_from_sparse_matrix(new_data)
+        TransparentPaper { data: new_data }
     }
 
     pub fn visible_dots(&self) -> usize {
@@ -75,13 +55,28 @@ impl TransparentPaper {
 
 impl Display for TransparentPaper {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut characters = vec![vec!['.'; self.width]; self.height];
-        for p in self.data.iter() {
-            characters[p.y][p.x] = '#';
-        }
-        for row in characters.iter() {
-            for c in row.iter() {
-                write!(f, "{}", c)?;
+        let height = self
+            .data
+            .iter()
+            .map(|p| p.y)
+            .max()
+            .map(|m| m + 1)
+            .unwrap_or(0);
+        let width = self
+            .data
+            .iter()
+            .map(|p| p.x)
+            .max()
+            .map(|m| m + 1)
+            .unwrap_or(0);
+        for y in 0..height {
+            for x in 0..width {
+                let p = Point { x, y };
+                if self.data.contains(&p) {
+                    write!(f, "#")?;
+                } else {
+                    write!(f, ".")?;
+                }
             }
             writeln!(f)?;
         }
