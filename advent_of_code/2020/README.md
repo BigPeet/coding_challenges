@@ -12,6 +12,6 @@ If I'm not satisfied with some piece of code, but it works at least, I might add
 In general, to build and run the solution for dayXY use the following commands:
 
 ```bash
-cargo build -p dayXY
-cargo run --bin dayXY dayXY/input.txt [OPTIONS]
+cargo build [--release] -p dayXY
+cargo run [--release] --bin dayXY dayXY/input.txt [INPUT_OPTIONS]
 ```
