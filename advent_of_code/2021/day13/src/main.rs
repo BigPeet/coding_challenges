@@ -30,5 +30,14 @@ fn main() -> ParsingResult {
         paper.visible_dots()
     );
 
+    // Part 2
+    for instruction in instructions.iter().skip(1) {
+        paper = paper.apply(instruction);
+    }
+    println!(
+        "Part 2: After applying all instructions, the transparent paper looks like this:\n\n{}",
+        paper
+    );
+
     Ok(())
 }
