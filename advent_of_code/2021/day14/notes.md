@@ -15,23 +15,19 @@ What remains constant throughout the whole process is the set of characters (pos
 So my initial idea would be:
 
 * Count the initial occurrences of each character and store them into an array (occ[0; 26]).
-* Setup a dictionary that can be indexed by the left-hand side pairs of the insertion rules and one additional character.
-* Then count how often these pairs and additional character occurr in the initial sequence.
-    * E.g., in the given example `pair[('NN', 'C')]` (or simply `pair['NNC']`) would be initialized to 1, `pair['NNA']` would be initialized to 0, etc.
-    * A special case is introduced for the last pair. It will be entered as `pair['CB_']`.
+* Setup a dictionary that can be indexed by the left-hand side pairs of the insertion rules.
+* Then count how often these pairs occurr in the initial sequence.
+    * E.g., in the given example `pair[('NN')]` would be initialized to 1, `pair['NH']` would be initialized to 0, etc.
 * Now during an update step, these counts have to be updated.
-    * Create a new pair-dictionary. (necessary???)
-    * Iterate over the pair-dictionary. For every three-char-sequence of 'xyz':
+    * Create a new pair-dictionary.
+    * Iterate over the pair-dictionary. For every pair 'xy':
         ```
-        let occ = pair[xyz]
+        let occ = pair[xy]
         let a = rule[xy]
-        let b = rule[yz].or(_)
         counts[a] += occ
-        new_pair[xay] += occ
-        new_pair[ayb] += occ
+        new_pair[xa] += occ
+        new_pair[ay] += occ
         ```
     * Finally, replace the old pair with the new pair dictionary.
-    * This only really works, if there is a rule for every pair which can occurr. Otherwise, that case would need to be handled.
-        * But I assume that holds true for the input.
 
 The solution for the second part is 3288891573057.

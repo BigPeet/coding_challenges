@@ -11,13 +11,6 @@ pub struct Polymer {
 }
 
 impl Polymer {
-    fn pair_iter(&self) -> PolymerIterator {
-        PolymerIterator {
-            index: 0,
-            poly: self,
-        }
-    }
-
     pub fn len(&self) -> usize {
         self.data.len()
     }
@@ -104,26 +97,6 @@ impl FromStr for InsertionRule {
     }
 }
 
-pub struct PolymerIterator<'a> {
-    index: usize,
-    poly: &'a Polymer,
-}
-
-impl<'a> Iterator for PolymerIterator<'a> {
-    type Item = Pair;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.index < self.poly.data.len() - 1 {
-            let l = self.poly.data[self.index];
-            self.index += 1;
-            let r = self.poly.data[self.index];
-            Some((l, r))
-        } else {
-            None
-        }
-    }
-}
-
 pub struct Polymerisation {
     polymer: Polymer,
     rules: Vec<InsertionRule>,
@@ -145,8 +118,8 @@ impl Polymerisation {
 
     pub fn step(&mut self) {
         let mut insertions = vec![];
-        for (i, p) in self.polymer.pair_iter().enumerate() {
-            if let Some(rule) = self.rule(&p) {
+        for (i, p) in self.polymer.data.windows(2).enumerate() {
+            if let Some(rule) = self.rule(&(p[0], p[1])) {
                 insertions.push((i + 1 + insertions.len(), rule.apply()));
             }
         }
@@ -155,14 +128,17 @@ impl Polymerisation {
         }
     }
 
-    pub fn polymer(&self) -> &Polymer {
-        &self.polymer
+    pub fn min_max(&self) -> (usize, usize) {
+        let counts = self.polymer.occurrences();
+        let max = counts.iter().map(|&(_, occ)| occ).max().unwrap_or(0);
+        let min = counts.iter().map(|&(_, occ)| occ).min().unwrap_or(0);
+        (min, max)
     }
 }
 
 pub struct FastPolymerisation {
     // FIXME replace with a Vec by using a "hash" as index
-    pair_dictionary: HashMap<(char, char, char), usize>,
+    pair_dictionary: HashMap<Pair, usize>,
     rules: Vec<InsertionRule>,
     counts: [usize; 26],
 }
@@ -185,23 +161,16 @@ impl FastPolymerisation {
         let mut pair_dictionary = HashMap::new();
         let mut counts = [0; 26];
         let len = polymer.len();
-        for i in 0..len - 2 {
-            let a = polymer.data[i];
-            let b = polymer.data[i + 1];
-            let c = polymer.data[i + 2];
+        for w in polymer.data.windows(2) {
             pair_dictionary
-                .entry((a, b, c))
+                .entry((w[0], w[1]))
                 .and_modify(|val| *val += 1)
                 .or_insert(1);
-
-            counts[Self::to_index(a)] += 1;
+            counts[Self::to_index(w[0])] += 1;
         }
-        // Last two chars
-        let a = polymer.data[len - 2];
+        // Last character
         let b = polymer.data[len - 1];
-        counts[Self::to_index(a)] += 1;
         counts[Self::to_index(b)] += 1;
-        pair_dictionary.insert((a, b, '_'), 1);
 
         FastPolymerisation {
             pair_dictionary,
@@ -212,42 +181,31 @@ impl FastPolymerisation {
 
     pub fn step(&mut self) {
         let mut new_pairs = HashMap::new();
-        for (&(x, y, z), &occ) in self.pair_dictionary.iter() {
+        for (&(x, y), &occ) in self.pair_dictionary.iter() {
             // Apply rule
             let a = self
                 .rule(&(x, y))
                 .map(|r| r.apply())
                 .expect("No rule found!");
-            let b = self.rule(&(y, z)).map(|r| r.apply()).unwrap_or('_');
-
             // Update character count.
             self.counts[Self::to_index(a)] += occ;
 
             // Update pair counts.
             new_pairs
-                .entry((x, a, y))
+                .entry((x, a))
                 .and_modify(|val| *val += occ)
                 .or_insert(occ);
             new_pairs
-                .entry((a, y, b))
+                .entry((a, y))
                 .and_modify(|val| *val += occ)
                 .or_insert(occ);
         }
         self.pair_dictionary = new_pairs;
     }
 
-    pub fn occurrences(&self) -> Vec<(char, usize)> {
-        self.counts
-            .iter()
-            .enumerate()
-            .filter_map(|(idx, &count)| {
-                if count > 0 {
-                    let c = idx as u8 + b'A';
-                    Some((c as char, count))
-                } else {
-                    None
-                }
-            })
-            .collect()
+    pub fn min_max(&self) -> (usize, usize) {
+        let max = *self.counts.iter().max().unwrap_or(&0);
+        let min = *self.counts.iter().filter(|&&c| c > 0).min().unwrap_or(&0);
+        (min, max)
     }
 }
