@@ -1,3 +1,6 @@
+use std::cmp::Reverse;
+use std::collections::BinaryHeap;
+
 type Position = (usize, usize);
 type Risk = u32;
 
@@ -41,10 +44,6 @@ fn to_index(p: Position, l: usize) -> usize {
     p.1 * l + p.0
 }
 
-fn to_pos(idx: usize, l: usize) -> Position {
-    (idx.rem_euclid(l), idx / l)
-}
-
 fn inc_risk(r: Risk) -> Risk {
     if r == 9 {
         1
@@ -81,37 +80,22 @@ pub fn dijkstra_path(graph: &[Vec<Risk>], start: Position, end: Position) -> (Ve
     // Initialize
     let mut distance = vec![None; size * size];
     let mut predecessors = vec![None; size * size];
-    let mut visited = vec![false; size * size];
     distance[to_index(start, size)] = Some(0);
 
-    // Iterate until all nodes are visited.
+    let mut heap = BinaryHeap::new();
+    heap.push(Reverse((0, start)));
+
     // Always get the node with the smallest distance.
-    while let Some((next, dist)) = visited
-        .iter()
-        .zip(distance.iter())
-        .enumerate()
-        .filter_map(|(i, (&v, &dist))| {
-            if let Some(d) = dist {
-                if !v {
-                    return Some((i, d));
-                }
-            }
-            None
-        })
-        .min_by_key(|(_, dist)| *dist)
-    {
-        visited[next] = true;
-        let pos = to_pos(next, size);
+    while let Some(Reverse((dist, pos))) = heap.pop() {
         let iter = StraightNeighbourIterator::new(pos, size);
         for neighbour in iter {
             let nidx = to_index(neighbour, size);
-            if !visited[nidx] {
-                // Update distance
-                let new_dist = dist + graph[neighbour.1][neighbour.0];
-                if distance[nidx].is_none() || new_dist < distance[nidx].unwrap() {
-                    distance[nidx] = Some(new_dist);
-                    predecessors[nidx] = Some(pos);
-                }
+            // Update distance
+            let new_dist = dist + graph[neighbour.1][neighbour.0];
+            if distance[nidx].map_or(true, |old_dist| new_dist < old_dist) {
+                heap.push(Reverse((new_dist, neighbour)));
+                distance[nidx] = Some(new_dist);
+                predecessors[nidx] = Some(pos);
             }
         }
     }
