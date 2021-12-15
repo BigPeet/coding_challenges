@@ -3,3 +3,7 @@ The "classic" Dijkstra algorithm seems to be a perfect match.
 The only issue might be that the input (100x100 square) has "a lot of" nodes and edges and it might become more complex for part 2.
 
 The solution for the first part is 390.
+
+While slow (~25-30s) the solution for the first part also works for the second part.
+
+The solution for the second part is 2814.

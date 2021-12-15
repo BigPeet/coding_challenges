@@ -23,5 +23,16 @@ fn main() -> ParsingResult {
         total_risk
     );
 
+    // Part 2
+    let extended_graph = day15::extend_graph(graph);
+    let size = extended_graph.len();
+    let start = (0, 0);
+    let end = (size - 1, size - 1);
+    let (_, total_risk) = day15::dijkstra_path(&extended_graph, start, end);
+    println!(
+        "Part 2: The lowest total risk of any extended path from start to end is {}.",
+        total_risk
+    );
+
     Ok(())
 }

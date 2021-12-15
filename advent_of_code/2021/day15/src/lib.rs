@@ -10,6 +10,14 @@ pub struct StraightNeighbourIterator {
 impl StraightNeighbourIterator {
     const LEN: usize = 4;
     const OFFSET: [(i32, i32); Self::LEN] = [(-1, 0), (0, -1), (0, 1), (1, 0)];
+
+    fn new(center: Position, size: usize) -> StraightNeighbourIterator {
+        StraightNeighbourIterator {
+            center,
+            index: 0,
+            size,
+        }
+    }
 }
 
 impl Iterator for StraightNeighbourIterator {
@@ -37,6 +45,33 @@ fn to_pos(idx: usize, l: usize) -> Position {
     (idx.rem_euclid(l), idx / l)
 }
 
+fn inc_risk(r: Risk) -> Risk {
+    if r == 9 {
+        1
+    } else {
+        r + 1
+    }
+}
+
+pub fn extend_graph(graph: Vec<Vec<Risk>>) -> Vec<Vec<Risk>> {
+    let size = graph.len();
+    let mut extended = vec![vec![0; size * 5]; size * 5];
+    for roff in 0..5 {
+        for (r, row) in graph.iter().enumerate() {
+            for coff in 0..5 {
+                for (c, &val) in row.iter().enumerate() {
+                    let mut new_val = val;
+                    for _ in 0..(coff + roff) {
+                        new_val = inc_risk(new_val);
+                    }
+                    extended[roff * size + r][coff * size + c] = new_val;
+                }
+            }
+        }
+    }
+    extended
+}
+
 // Preconditions:
 // graph is a square plane of risk levels.
 // start and end are positions inside the graph.
@@ -56,22 +91,18 @@ pub fn dijkstra_path(graph: &[Vec<Risk>], start: Position, end: Position) -> (Ve
         .zip(distance.iter())
         .enumerate()
         .filter_map(|(i, (&v, &dist))| {
-            if !v && dist.is_some() {
-                Some((i, dist.unwrap()))
-            } else {
-                None
+            if let Some(d) = dist {
+                if !v {
+                    return Some((i, d));
+                }
             }
+            None
         })
         .min_by_key(|(_, dist)| *dist)
     {
         visited[next] = true;
         let pos = to_pos(next, size);
-        let iter = StraightNeighbourIterator {
-            center: pos,
-            index: 0,
-            size,
-        };
-
+        let iter = StraightNeighbourIterator::new(pos, size);
         for neighbour in iter {
             let nidx = to_index(neighbour, size);
             if !visited[nidx] {
