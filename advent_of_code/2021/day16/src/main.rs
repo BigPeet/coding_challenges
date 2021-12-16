@@ -14,5 +14,8 @@ fn main() -> ParsingResult {
         pack.version_check_sum()
     );
 
+    // Part 2
+    println!("Part 2: The evaluation result is {}.", pack.evaluate()?);
+
     Ok(())
 }

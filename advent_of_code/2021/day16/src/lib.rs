@@ -32,6 +32,72 @@ impl Package {
             }
         }
     }
+
+    pub fn evaluate(&self) -> Result<Literal, InputError> {
+        match self {
+            Package::LiteralPackge { literal, .. } => Ok(*literal),
+            Package::OperatorPackage { info, subpackages } => match info.type_id {
+                0 => subpackages
+                    .iter()
+                    .fold(Ok(0), |acc, sub| Ok(acc? + sub.evaluate()?)),
+                1 => subpackages
+                    .iter()
+                    .fold(Ok(1), |acc, sub| Ok(acc? * sub.evaluate()?)),
+                2 => subpackages.iter().fold(Ok(Literal::MAX), |acc, sub| {
+                    acc.and_then(|val| {
+                        let sub_val = sub.evaluate()?;
+                        Ok(sub_val.min(val))
+                    })
+                }),
+                3 => subpackages.iter().fold(Ok(Literal::MIN), |acc, sub| {
+                    acc.and_then(|val| {
+                        let sub_val = sub.evaluate()?;
+                        Ok(sub_val.max(val))
+                    })
+                }),
+                5 => {
+                    if subpackages.len() == 2 {
+                        let a = subpackages[0].evaluate()?;
+                        let b = subpackages[1].evaluate()?;
+                        if a > b {
+                            Ok(1)
+                        } else {
+                            Ok(0)
+                        }
+                    } else {
+                        Err(InputError::ParseGeneral)
+                    }
+                }
+                6 => {
+                    if subpackages.len() == 2 {
+                        let a = subpackages[0].evaluate()?;
+                        let b = subpackages[1].evaluate()?;
+                        if a < b {
+                            Ok(1)
+                        } else {
+                            Ok(0)
+                        }
+                    } else {
+                        Err(InputError::ParseGeneral)
+                    }
+                }
+                7 => {
+                    if subpackages.len() == 2 {
+                        let a = subpackages[0].evaluate()?;
+                        let b = subpackages[1].evaluate()?;
+                        if a == b {
+                            Ok(1)
+                        } else {
+                            Ok(0)
+                        }
+                    } else {
+                        Err(InputError::ParseGeneral)
+                    }
+                }
+                _ => Err(InputError::ParseGeneral),
+            },
+        }
+    }
 }
 
 fn char_to_bits(c: char) -> Result<[Bit; 4], InputError> {
@@ -129,7 +195,6 @@ pub fn try_package_from(bits: &[Bit]) -> Result<(Package, usize), InputError> {
             type_id,
         };
         let remaining_bits = &bits[HEADER_LEN..];
-        //println!("Parsed info {:?}", info);
         match type_id {
             4 => {
                 let (literal, end) = try_parse_literal(remaining_bits)?;
