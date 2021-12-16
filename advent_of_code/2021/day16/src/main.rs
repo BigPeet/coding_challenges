@@ -1,0 +1,18 @@
+use parsing::ParsingResult;
+
+fn main() -> ParsingResult {
+    let hex_string =
+        parsing::filepath_from_args(std::env::args().collect()).and_then(parsing::read)?;
+
+    let hex_string = hex_string.trim_end().to_string();
+    let bits = day16::str_to_bits(&hex_string)?;
+
+    // Part 1
+    let (pack, _) = day16::try_package_from(&bits)?;
+    println!(
+        "Part 1: The sum of all version IDs is {}.",
+        pack.version_check_sum()
+    );
+
+    Ok(())
+}
