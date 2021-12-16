@@ -2,6 +2,7 @@ use parsing::InputError;
 
 type Bit = u8;
 type Literal = u64;
+const HEADER_LEN: usize = 6;
 
 #[derive(Debug)]
 pub enum Package {
@@ -22,6 +23,11 @@ pub struct PackageInfo {
 }
 
 impl Package {
+    pub fn new(bits: &[Bit]) -> Result<Package, InputError> {
+        let (package, _) = try_package_from(bits)?;
+        Ok(package)
+    }
+
     pub fn version_check_sum(&self) -> u32 {
         match self {
             Package::LiteralPackge { info, .. } => info.version_id as u32,
@@ -43,23 +49,15 @@ impl Package {
                 1 => subpackages
                     .iter()
                     .fold(Ok(1), |acc, sub| Ok(acc? * sub.evaluate()?)),
-                2 => subpackages.iter().fold(Ok(Literal::MAX), |acc, sub| {
-                    acc.and_then(|val| {
-                        let sub_val = sub.evaluate()?;
-                        Ok(sub_val.min(val))
-                    })
-                }),
-                3 => subpackages.iter().fold(Ok(Literal::MIN), |acc, sub| {
-                    acc.and_then(|val| {
-                        let sub_val = sub.evaluate()?;
-                        Ok(sub_val.max(val))
-                    })
-                }),
+                2 => subpackages
+                    .iter()
+                    .fold(Ok(Literal::MAX), |acc, sub| Ok(acc?.min(sub.evaluate()?))),
+                3 => subpackages
+                    .iter()
+                    .fold(Ok(Literal::MIN), |acc, sub| Ok(acc?.max(sub.evaluate()?))),
                 5 => {
                     if subpackages.len() == 2 {
-                        let a = subpackages[0].evaluate()?;
-                        let b = subpackages[1].evaluate()?;
-                        if a > b {
+                        if subpackages[0].evaluate()? > subpackages[1].evaluate()? {
                             Ok(1)
                         } else {
                             Ok(0)
@@ -70,9 +68,7 @@ impl Package {
                 }
                 6 => {
                     if subpackages.len() == 2 {
-                        let a = subpackages[0].evaluate()?;
-                        let b = subpackages[1].evaluate()?;
-                        if a < b {
+                        if subpackages[0].evaluate()? < subpackages[1].evaluate()? {
                             Ok(1)
                         } else {
                             Ok(0)
@@ -83,9 +79,7 @@ impl Package {
                 }
                 7 => {
                     if subpackages.len() == 2 {
-                        let a = subpackages[0].evaluate()?;
-                        let b = subpackages[1].evaluate()?;
-                        if a == b {
+                        if subpackages[0].evaluate()? == subpackages[1].evaluate()? {
                             Ok(1)
                         } else {
                             Ok(0)
@@ -183,9 +177,8 @@ fn try_subpackages_from(bits: &[Bit]) -> Result<(Vec<Package>, usize), InputErro
     Err(InputError::ParseGeneral)
 }
 
-const HEADER_LEN: usize = 6;
 
-pub fn try_package_from(bits: &[Bit]) -> Result<(Package, usize), InputError> {
+fn try_package_from(bits: &[Bit]) -> Result<(Package, usize), InputError> {
     let len = bits.len();
     if len > HEADER_LEN {
         let version_id = to_id(&bits[0..3])?;

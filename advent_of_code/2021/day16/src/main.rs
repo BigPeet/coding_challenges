@@ -1,4 +1,5 @@
 use parsing::ParsingResult;
+use day16::Package;
 
 fn main() -> ParsingResult {
     let hex_string =
@@ -8,7 +9,7 @@ fn main() -> ParsingResult {
     let bits = day16::str_to_bits(&hex_string)?;
 
     // Part 1
-    let (pack, _) = day16::try_package_from(&bits)?;
+    let pack = Package::new(&bits)?;
     println!(
         "Part 1: The sum of all version IDs is {}.",
         pack.version_check_sum()
