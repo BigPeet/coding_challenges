@@ -16,3 +16,7 @@ For any positive y value, the probe will come back to the x-axis (y=0) with a y-
 If that is greater than the absolute value of the lower bound, it will always skip the target.
 
 The solution for the first part is 9870.
+
+Part two was basically already covered with the implementation for part 1.
+
+The solution for the second part is 5523.
