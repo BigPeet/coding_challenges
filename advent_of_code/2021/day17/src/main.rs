@@ -11,6 +11,7 @@ fn main() -> ParsingResult {
     let max_height =
         day17::find_highest_position(&viable_velocities).ok_or(InputError::ParseGeneral)?;
     println!("Part 1: The highest y position is {}.", max_height);
+    // Part 2
     println!(
         "Part 2: There are {} distinct viable velocity values.",
         viable_velocities.len()
