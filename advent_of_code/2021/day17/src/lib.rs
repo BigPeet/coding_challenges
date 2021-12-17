@@ -13,41 +13,24 @@ pub struct Area {
     bottom_far: Vec2,
 }
 
-#[derive(Debug, Clone, Copy)]
 pub struct Probe {
     pos: Position,
     velocity: Velocity,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Velocity(pub Vec2);
-#[derive(Debug, Clone, Copy)]
-pub struct Position(pub Vec2);
+pub struct Velocity(Vec2);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct Position(Vec2);
 
 impl Default for Position {
     fn default() -> Self {
-        Position::new(0, 0)
+        Position(Vec2 { x: 0, y: 0 })
     }
 }
 
 impl Position {
-    pub fn new(x: i32, y: i32) -> Position {
-        Position(Vec2 { x, y })
-    }
-    pub fn landing(mut v: &mut Velocity, steps: usize) -> Position {
-        let mut pos = Position::default();
-        (0..steps).for_each(|_| pos.step(&mut v));
-        pos
-    }
-    pub fn step(&mut self, v: &mut Velocity) {
-        // Update position
-        self.0.x += v.0.x;
-        self.0.y += v.0.y;
-
-        // Update velocity
-        v.update();
-    }
-
+    // Does not handle cases in which the area is intersecting the x or y axis
     pub fn is_in_area(&self, target: &Area) -> bool {
         let horizontal;
         let vertical;
@@ -89,6 +72,10 @@ impl Velocity {
         Velocity(Vec2 { x, y: 0 })
     }
 
+    pub fn is_going_upward(&self) -> bool {
+        self.0.y > 0
+    }
+
     pub fn update(&mut self) {
         if self.0.x > 0 {
             self.0.x -= 1;
@@ -102,7 +89,7 @@ impl Velocity {
 impl Probe {
     pub fn new(velocity: Velocity) -> Probe {
         Probe {
-            pos: Position (Vec2{ x: 0, y: 0 }),
+            pos: Position(Vec2 { x: 0, y: 0 }),
             velocity,
         }
     }
@@ -127,36 +114,7 @@ impl Probe {
     pub fn vel(&self) -> &Velocity {
         &self.velocity
     }
-
-    // Does not handle cases in which the area is intersecting the x or y axis
-    //pub fn is_in_area(&self, target: &Area) -> bool {
-        //let horizontal;
-        //let vertical;
-        //// is the area to the right or left?
-        //if target.top_near.x > 0 {
-            //horizontal = self.pos.x >= target.top_near.x && self.pos.x <= target.bottom_far.x;
-        //} else {
-            //horizontal = self.pos.x <= target.top_near.x && self.pos.x >= target.bottom_far.x;
-        //}
-        //// is the area above or below
-        //if target.top_near.y > 0 {
-            //vertical = self.pos.y >= target.top_near.y && self.pos.y <= target.bottom_far.y;
-        //} else {
-            //vertical = self.pos.y <= target.top_near.y && self.pos.y >= target.bottom_far.y;
-        //}
-
-        //horizontal && vertical
-    //}
-
 }
-
-//pub fn hits_target(velocity: Vec2, target: &Area) -> (Vec2, bool) {
-    //let mut probe = Probe::new(Velocity::new(velocity.x, velocity.y));
-    //while !probe.is_in_area(target) && !probe.has_missed(target) {
-        //probe.step();
-    //}
-    //(probe.pos, probe.is_in_area(target))
-//}
 
 impl Area {
     // This assumes the area is not intersecting with the x or y axis.
@@ -195,30 +153,7 @@ impl Area {
         0
     }
 
-    fn horizontal_match(&self, x: i32) -> bool {
-        let x_abs = x.abs();
-        x_abs >= self.top_near.x.abs() && x_abs <= self.bottom_far.x.abs()
-    }
-
-    pub fn hit_candidates(&self, x: i32) -> Vec<usize> {
-        let mut steps = vec![];
-        if x.signum() == self.top_near.x.signum() {
-            let mut v = Velocity::only_x(x);
-            let mut lands = v.0.x;
-            let mut step = 1;
-            while v.0.x != 0 {
-                v.update();
-                if self.horizontal_match(lands) {
-                    steps.push(step);
-                }
-                lands += v.0.x;
-                step += 1;
-            }
-        }
-        steps
-    }
-
-    pub fn velocity_x_values(&self) -> (i32, i32) {
+    fn horizontal_value_range(&self) -> (i32, i32) {
         let min_x = self.find_min_x();
         let max_x = self.bottom_far.x;
         if min_x < max_x {
@@ -228,7 +163,14 @@ impl Area {
         }
     }
 
-    pub fn lower_bound(&self) -> i32 {
+    // This assumes the area is in the bottom quadrant.
+    fn vertical_value_range(&self) -> (i32, i32) {
+        // For any y-value > 0, the probe will come back to the x-axis (y=0) with exactly -y velocity.
+        // If y is greater than the lower bound, then it will miss.
+        (self.lower_bound(), -self.lower_bound())
+    }
+
+    fn lower_bound(&self) -> i32 {
         self.bottom_far.y
     }
 }
@@ -254,7 +196,35 @@ impl FromStr for Area {
                 }
             }
         }
-
         Err(InputError::ParseGeneral)
     }
+}
+
+pub fn viable_velocities(target: &Area) -> Vec<Velocity> {
+    let mut viable_velocities = vec![];
+    let (x_from, x_to) = target.horizontal_value_range();
+    let (y_from, y_to) = target.vertical_value_range();
+    for x in x_from..=x_to {
+        for y in y_from..=y_to {
+            let vel = Velocity::new(x, y);
+            let mut probe = Probe::new(vel);
+            while !probe.pos().is_in_area(&target) && !probe.pos().has_missed(&target) {
+                probe.step();
+            }
+            if probe.pos().is_in_area(&target) {
+                viable_velocities.push(vel);
+            }
+        }
+    }
+    viable_velocities
+}
+
+pub fn find_highest_position(velocities: &[Velocity]) -> Option<i32> {
+    let mut max_v = *velocities.iter().max_by_key(|v| v.0.y)?;
+    let mut height = 0;
+    while max_v.is_going_upward() {
+        height += max_v.0.y;
+        max_v.update();
+    }
+    Some(height)
 }
