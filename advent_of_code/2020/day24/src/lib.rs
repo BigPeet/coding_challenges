@@ -1,5 +1,5 @@
 use parsing::InputError;
-use std::collections::HashMap;
+use std::collections::HashSet;
 use std::fmt::Display;
 use std::str::FromStr;
 
@@ -36,26 +36,92 @@ impl Position {
             }
         }
     }
+
+    fn neighbours(&self) -> PositionNeighbourIterator {
+        PositionNeighbourIterator {
+            center: *self,
+            index: 0,
+        }
+    }
+}
+
+struct PositionNeighbourIterator {
+    center: Position,
+    index: usize,
+}
+
+impl PositionNeighbourIterator {
+    const LEN: usize = 6;
+    const OFFSETS: [(i32, i32); Self::LEN] = [(1, 0), (0, -1), (-1, -1), (-1, 0), (0, 1), (1, 1)];
+}
+
+impl Iterator for PositionNeighbourIterator {
+    type Item = Position;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index < Self::LEN {
+            let new_pos = Position {
+                x: self.center.x + Self::OFFSETS[self.index].0,
+                y: self.center.y + Self::OFFSETS[self.index].1,
+            };
+            self.index += 1;
+            Some(new_pos)
+        } else {
+            None
+        }
+    }
 }
 
 #[derive(Default)]
-pub struct TileMap(HashMap<Position, bool>);
+pub struct TileMap(HashSet<Position>);
 
 impl TileMap {
     pub fn flip_tile(&mut self, tile_ref: &TileReference) {
         let mut pos = Position::default();
         tile_ref.0.iter().for_each(|&dir| pos.apply(dir));
-        self.0
-            .entry(pos)
-            .and_modify(|flipped| *flipped = !*flipped)
-            .or_insert(true);
+        if !self.0.remove(&pos) {
+            self.0.insert(pos);
+        }
     }
 
-    pub fn black_tiles(&self) -> Vec<Position> {
-        self.0
-            .iter()
-            .filter_map(|(&pos, &flipped)| if flipped { Some(pos) } else { None })
-            .collect()
+    pub fn update(&mut self) {
+        let mut relevant_white_tiles = vec![];
+        let mut turn_white = vec![];
+        let mut turn_black = vec![];
+        for pos in self.0.iter() {
+            let mut black_count = 0;
+            for nb in pos.neighbours() {
+                if self.0.contains(&nb) {
+                    black_count += 1;
+                } else {
+                    relevant_white_tiles.push(nb);
+                }
+            }
+            if black_count == 0 || black_count > 2 {
+                turn_white.push(*pos);
+            }
+        }
+        for pos in relevant_white_tiles {
+            let mut black_count = 0;
+            for nb in pos.neighbours() {
+                if self.0.contains(&nb) {
+                    black_count += 1;
+                }
+            }
+            if black_count == 2 {
+                turn_black.push(pos);
+            }
+        }
+        for pos in turn_white {
+            self.0.remove(&pos);
+        }
+        for pos in turn_black {
+            self.0.insert(pos);
+        }
+    }
+
+    pub fn black_tiles(&self) -> usize {
+        self.0.len()
     }
 }
 
