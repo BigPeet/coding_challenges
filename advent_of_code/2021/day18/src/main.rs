@@ -8,12 +8,30 @@ fn main() -> ParsingResult {
 
     // Part 1
     let mut sum = SnailNumber::empty();
-    for n in numbers {
+    for n in numbers.clone() {
         sum = sum + n;
     }
     println!(
-        "Part 1: The magnitude of the final sum is {}",
+        "Part 1: The magnitude of the final sum is {}.",
         sum.magnitude()
+    );
+
+    // Part 2
+    let mut largest_mag = u32::MIN;
+    for (i, n1) in numbers.iter().enumerate() {
+        for (j, n2) in numbers.iter().enumerate() {
+            if i != j {
+                let sum = n1.clone() + n2.clone();
+                let mag = sum.magnitude();
+                if mag > largest_mag {
+                    largest_mag = mag;
+                }
+            }
+        }
+    }
+    println!(
+        "Part 2: The largest magnitude of just two different numbers is {}.",
+        largest_mag
     );
 
     Ok(())

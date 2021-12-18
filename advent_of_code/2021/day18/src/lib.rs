@@ -5,7 +5,7 @@ use std::str::FromStr;
 
 type NestingInfo = bool;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SnailNumber {
     numbers: Vec<(u8, Vec<NestingInfo>)>,
 }
