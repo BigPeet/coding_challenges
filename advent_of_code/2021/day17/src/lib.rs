@@ -1,4 +1,5 @@
 use parsing::InputError;
+use std::cmp::Ordering;
 use std::str::FromStr;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -77,10 +78,10 @@ impl Velocity {
     }
 
     pub fn update(&mut self) {
-        if self.0.x > 0 {
-            self.0.x -= 1;
-        } else if self.0.x < 0 {
-            self.0.x += 1;
+        match self.0.x.cmp(&0) {
+            Ordering::Greater => self.0.x -= 1,
+            Ordering::Less => self.0.x += 1,
+            _ => (),
         }
         self.0.y -= 1;
     }
@@ -208,10 +209,10 @@ pub fn viable_velocities(target: &Area) -> Vec<Velocity> {
         for y in y_from..=y_to {
             let vel = Velocity::new(x, y);
             let mut probe = Probe::new(vel);
-            while !probe.pos().is_in_area(&target) && !probe.pos().has_missed(&target) {
+            while !probe.pos().is_in_area(target) && !probe.pos().has_missed(target) {
                 probe.step();
             }
-            if probe.pos().is_in_area(&target) {
+            if probe.pos().is_in_area(target) {
                 viable_velocities.push(vel);
             }
         }

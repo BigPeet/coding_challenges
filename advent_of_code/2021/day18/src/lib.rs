@@ -82,9 +82,7 @@ impl SnailNumber {
             let n_depth = meta.len();
             // Add results for all new levels to the stack.
             if n_depth > prev_depth {
-                for _ in 0..(n_depth - prev_depth) {
-                    stack.push(0);
-                }
+                stack.resize(n_depth, 0);
             }
             let mut didx = n_depth;
             let mut intermediate = *val as u32;

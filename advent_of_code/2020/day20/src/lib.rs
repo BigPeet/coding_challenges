@@ -222,7 +222,7 @@ impl Transform for Match {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Default, Clone)]
 pub struct Tile {
     id: usize,
     data: Vec<Vec<char>>,
@@ -313,15 +313,6 @@ impl FromStr for Tile {
             Ok(Tile { id, data })
         } else {
             Err(InputError::ParseGeneral)
-        }
-    }
-}
-
-impl Default for Tile {
-    fn default() -> Self {
-        Tile {
-            id: 0,
-            data: vec![],
         }
     }
 }
