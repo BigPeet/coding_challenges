@@ -16,34 +16,25 @@ impl SnailNumber {
     }
 
     fn find_explosion(&self) -> Option<usize> {
-        for (i, (_, meta_stack)) in self.numbers.iter().enumerate() {
-            // a nesting depth of 4 has a stack length of 5!
-            if meta_stack.len() > 4 {
-                return Some(i);
-            }
-        }
-        None
+        self.numbers
+            .iter()
+            .position(|(_, meta_stack)| meta_stack.len() > 4)
     }
 
     fn find_split(&self) -> Option<usize> {
-        for (i, &(val, _)) in self.numbers.iter().enumerate() {
-            if val >= 10 {
-                return Some(i);
-            }
-        }
-        None
+        self.numbers.iter().position(|&(val, _)| val >= 10)
     }
 
     fn explode(&mut self) -> bool {
         if let Some(idx) = self.find_explosion() {
             // The first number found will always be the left in the pair.
             // An exploding pair always consist of two numbers.
-            let (lval, mut lmeta) = self.numbers.remove(idx);
-            let (rval, _) = self.numbers.remove(idx);
+            let (lval, _) = self.numbers.remove(idx);
+            let rval = self.numbers[idx].0;
 
             // Replace pair with a 0 in the higher pair.
-            lmeta.pop();
-            self.numbers.insert(idx, (0, lmeta));
+            self.numbers[idx].0 = 0;
+            self.numbers[idx].1.pop();
 
             // Add left exploding value to the next left number.
             if idx > 0 {
@@ -62,17 +53,20 @@ impl SnailNumber {
 
     fn split(&mut self) -> bool {
         if let Some(idx) = self.find_split() {
-            let (val, mut lmeta) = self.numbers.remove(idx);
+            // Calculate new values.
+            let val = self.numbers[idx].0;
             let fval = val as f32;
             let lval = (fval / 2.0).floor() as u8;
             let rval = (fval / 2.0).ceil() as u8;
 
-            let mut rmeta = lmeta.clone();
+            // Add new right value.
+            let mut rmeta = self.numbers[idx].1.clone();
             rmeta.push(false);
-            lmeta.push(true);
+            self.numbers.insert(idx + 1, (rval, rmeta));
 
-            self.numbers.insert(idx, (rval, rmeta));
-            self.numbers.insert(idx, (lval, lmeta));
+            // Update left value.
+            self.numbers[idx].0 = lval;
+            self.numbers[idx].1.push(true);
 
             true
         } else {
