@@ -83,7 +83,7 @@ impl SnailNumber {
             // Add results for all new levels to the stack.
             if n_depth > prev_depth {
                 for _ in 0..(n_depth - prev_depth) {
-                    stack.push((0, 0));
+                    stack.push(0);
                 }
             }
             let mut didx = n_depth;
@@ -92,14 +92,14 @@ impl SnailNumber {
                 let stack_res = stack.last_mut().unwrap();
                 if meta[didx - 1] {
                     // Store the left result.
-                    stack_res.0 = 3 * intermediate;
+                    *stack_res = 3 * intermediate;
                     prev_depth = didx;
                     break;
                 } else {
                     // Right result completes the pair.
-                    stack_res.1 = 2 * intermediate;
+                    *stack_res += 2 * intermediate;
                     // Propagate upward.
-                    intermediate = stack_res.0 + stack_res.1;
+                    intermediate = *stack_res;
                     res = intermediate;
                     stack.pop();
                 }
