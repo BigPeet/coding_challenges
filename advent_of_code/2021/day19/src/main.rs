@@ -1,4 +1,4 @@
-use day19::{Position, Scanner};
+use day19::{Scanner, Vec3};
 use parsing::{InputError, ParsingResult};
 
 fn main() -> ParsingResult {
@@ -16,23 +16,30 @@ fn main() -> ParsingResult {
             .ok_or(InputError::ParseGeneral)?
             .parse::<usize>()?;
         for l in group.iter().skip(1) {
-            beacons.push(l.parse::<Position>()?);
+            beacons.push(l.parse::<Vec3>()?);
         }
         scanners.push(Scanner::new(id, beacons));
     }
 
     // Part 1
     let mut origin = scanners.remove(0);
-    while let Some(overlapping) = scanners
-        .iter()
-        .find(|s| s.max_common_distances(&origin) >= 12)
-    {
-        // TODO: Find the overlapping beacons.
-        // TODO: Use them to create the translation/rotation between the scanners.
-        // TODO: Add the beacons to origin.
-        // TODO: Remove the scanner from the list/set.
-        break;
-    }
+    while !scanners.is_empty() {
+        // Find scanner with overlapping beacons.
+        let idx = scanners
+            .iter()
+            .position(|s| s.overlaps(&origin))
+            .ok_or(InputError::ParseGeneral)?;
+        // Use them to create the translation/rotation between the scanners.
+        let overlapping = scanners.swap_remove(idx);
+        //println!("Overlapping: {}", overlapping.id());
+        let transformation = origin
+            .try_transformation(&overlapping)
+            .ok_or(InputError::ParseGeneral)?;
 
+        //println!("Transformation: {:?}", transformation);
+        // Add the beacons to origin.
+        origin.combine(overlapping, transformation);
+    }
+    println!("Total Beacons: {}", origin.beacons());
     Ok(())
 }

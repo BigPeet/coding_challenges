@@ -10,3 +10,6 @@ The general approach is roughly as follows:
 * Determine the rotation and translation of the other scanner in relation to the origin based on the overlapping beacones.
 * Rotate and translate the other scanner's beacons and add them to the origin.
 * Repeat until all beacons/scanners have been added.
+
+
+The solution for the first part is 496.
