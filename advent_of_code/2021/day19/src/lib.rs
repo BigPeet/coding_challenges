@@ -24,7 +24,10 @@ impl FromStr for Vec3 {
 
 impl Vec3 {
     pub fn null() -> Vec3 {
-        Vec3 { x: 0, y: 0, z: 0 }
+        Vec3::new(0, 0, 0)
+    }
+    pub fn new(x: i32, y: i32, z: i32) -> Vec3 {
+        Vec3 { x, y, z }
     }
     pub fn distance(&self, other: &Vec3) -> Vec3 {
         Vec3 {
@@ -46,6 +49,10 @@ impl Vec3 {
             y: mid,
             z: min,
         }
+    }
+
+    pub fn manhattan_dist(&self, other: &Vec3) -> u32 {
+        self.x.abs_diff(other.x) + self.y.abs_diff(other.y) + self.z.abs_diff(other.z)
     }
 
     pub fn translate(&self, other: &Vec3) -> Vec3 {
@@ -144,12 +151,13 @@ impl Transformation {
     }
 }
 
+// there should likely be a type for a "collection" of scanners
 #[derive(Debug, Eq)]
 pub struct Scanner {
     id: usize,
     beacons: Vec<Vec3>,
     distances: HashMap<Vec3, HashSet<Vec3>>,
-    // translation + rotation info
+    origins: Vec<Vec3>,
 }
 
 impl PartialEq for Scanner {
@@ -164,7 +172,7 @@ impl Scanner {
     fn calculate_distances(beacons: &[Vec3]) -> HashMap<Vec3, HashSet<Vec3>> {
         let mut distances = HashMap::new();
         for b1 in beacons.iter() {
-            let e = distances.entry(*b1).or_insert(HashSet::new());
+            let e = distances.entry(*b1).or_insert_with(HashSet::new);
             for b2 in beacons.iter() {
                 if b1 != b2 {
                     e.insert(b1.comparable_distance(b2));
@@ -180,6 +188,7 @@ impl Scanner {
             id,
             beacons,
             distances,
+            origins: vec![Vec3::null()],
         }
     }
 
@@ -249,5 +258,20 @@ impl Scanner {
                 self.distances.entry(transformed).or_default().extend(ds)
             }
         }
+        self.origins.push(t.1);
+    }
+
+    pub fn manhattan_dist(&self) -> u32 {
+        self.origins
+            .iter()
+            .map(|o1| {
+                self.origins
+                    .iter()
+                    .map(|o2| o1.manhattan_dist(o2))
+                    .max()
+                    .unwrap_or(0)
+            })
+            .max()
+            .unwrap_or(0)
     }
 }

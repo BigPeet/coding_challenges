@@ -31,15 +31,15 @@ fn main() -> ParsingResult {
             .ok_or(InputError::ParseGeneral)?;
         // Use them to create the translation/rotation between the scanners.
         let overlapping = scanners.swap_remove(idx);
-        //println!("Overlapping: {}", overlapping.id());
         let transformation = origin
             .try_transformation(&overlapping)
             .ok_or(InputError::ParseGeneral)?;
 
-        //println!("Transformation: {:?}", transformation);
         // Add the beacons to origin.
         origin.combine(overlapping, transformation);
     }
     println!("Total Beacons: {}", origin.beacons());
+    // Part 2
+    println!("Largest Manhattan Distance: {}", origin.manhattan_dist());
     Ok(())
 }

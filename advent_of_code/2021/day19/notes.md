@@ -13,3 +13,4 @@ The general approach is roughly as follows:
 
 
 The solution for the first part is 496.
+The solution for the second part is 14478.
