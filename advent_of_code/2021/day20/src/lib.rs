@@ -146,6 +146,7 @@ impl Image {
         let mut output_pixels = HashMap::new();
 
         // extend region to next layer
+        // TODO: simplify by adding outer ring / border
         for pos in self.pixels.keys() {
             output_pixels.insert(*pos, Pixel::Dark);
             for neighbour in InputPixels::input_pixels(*pos) {

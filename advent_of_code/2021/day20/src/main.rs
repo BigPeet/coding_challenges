@@ -13,10 +13,21 @@ fn main() -> ParsingResult {
         .collect::<String>()
         .parse::<Image>()?;
 
+    // Part 1
     let enhanced_2 = input_img.enhance_twice(&algorithm).unwrap();
     println!(
         "Lit pixels after two enhancement steps: {}",
         enhanced_2.lit_pixels()
+    );
+
+    // Part 2
+    let mut result_img = enhanced_2;
+    for _ in 0..24 {
+        result_img = result_img.enhance_twice(&algorithm).unwrap();
+    }
+    println!(
+        "Lit pixels after 50 enhancement steps: {}",
+        result_img.lit_pixels()
     );
 
     Ok(())
