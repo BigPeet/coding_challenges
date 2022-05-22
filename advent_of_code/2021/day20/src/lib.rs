@@ -1,5 +1,4 @@
 use parsing::InputError;
-use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::fmt::Display;
 use std::str::FromStr;
@@ -67,57 +66,42 @@ impl Algorithm {
 struct Position(i32, i32);
 
 pub struct Image {
-    pixels: HashMap<Position, Pixel>,
+    pixels: Vec<Pixel>,
+    width: usize,
+    height: usize,
 }
 
 impl FromStr for Image {
     type Err = InputError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut pixels = HashMap::new();
+        let mut pixels = Vec::new();
         let mut cur_pos = Position(0, 0);
         for c in s.trim().chars() {
             if c == '\n' {
                 cur_pos.0 = 0;
                 cur_pos.1 += 1;
             } else {
-                pixels.insert(cur_pos, Pixel::try_from(c)?);
+                pixels.push(Pixel::try_from(c)?);
                 cur_pos.0 += 1;
             }
         }
-        Ok(Image { pixels })
+        Ok(Image {
+            pixels,
+            width: cur_pos.0 as usize,
+            height: (cur_pos.1 + 1) as usize,
+        })
     }
 }
 
 impl Display for Image {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut min_x = 0;
-        let mut min_y = 0;
-        let mut max_x = 0;
-        let mut max_y = 0;
-
-        for pos in self.pixels.keys() {
-            if pos.0 < min_x {
-                min_x = pos.0;
+        for y in 0..self.height {
+            for x in 0..self.width {
+                write!(f, "{}", self.pixels[x + y * self.width])?;
             }
-            if pos.0 > max_x {
-                max_x = pos.0;
-            }
-            if pos.1 < min_y {
-                min_y = pos.1;
-            }
-            if pos.1 > max_y {
-                max_y = pos.1;
-            }
-        }
-
-        for y in min_y..=max_y {
-            for x in min_x..=max_x {
-                let pixel = self.pixels.get(&Position(x, y)).unwrap_or(&Pixel::Dark);
-                write!(f, "{}", pixel)?;
-            }
-            if y < max_y {
-                write!(f, "\n")?;
+            if y < self.width - 1 {
+                writeln!(f)?;
             }
         }
         Ok(())
@@ -125,6 +109,19 @@ impl Display for Image {
 }
 
 impl Image {
+    fn get_pixel(&self, pos: &Position) -> Option<Pixel> {
+        if pos.0 >= 0
+            && (pos.0 as usize) < self.width
+            && pos.1 >= 0
+            && (pos.1 as usize) < self.height
+        {
+            let idx = (pos.0 as usize) + (pos.1 as usize) * self.width;
+            Some(self.pixels[idx])
+        } else {
+            None
+        }
+    }
+
     pub fn enhance_twice(&self, algo: &Algorithm) -> Option<Image> {
         if !matches!(algo.0[0], Pixel::Light) {
             Some(
@@ -138,40 +135,37 @@ impl Image {
                     .enhance_with(algo, Pixel::Light),
             )
         } else {
+            // Don't handle this case!
             None
         }
     }
 
     fn enhance_with(&self, algo: &Algorithm, border_pixel: Pixel) -> Image {
-        let mut output_pixels = HashMap::new();
-
-        // extend region to next layer
-        // TODO: simplify by adding outer ring / border
-        for pos in self.pixels.keys() {
-            output_pixels.insert(*pos, Pixel::Dark);
-            for neighbour in InputPixels::input_pixels(*pos) {
-                output_pixels.insert(neighbour, Pixel::Dark);
-            }
-        }
-
         // For each pixel in the output, calculate value from input+algo.
-        for (pos, pixel) in output_pixels.iter_mut() {
-            let mut bin_num = [Pixel::Dark; 9];
-            for (i, input) in InputPixels::input_pixels(*pos).enumerate() {
-                bin_num[i] = *self.pixels.get(&input).unwrap_or(&border_pixel);
+        let mut output_pixels = Vec::with_capacity((self.height + 2) * (self.width + 2));
+        for y in 0..self.height + 2 {
+            for x in 0..self.width + 2 {
+                let pos = Position(x as i32, y as i32);
+                let mut bin_num = [Pixel::Dark; 9];
+                for (i, input) in InputPixels::input_pixels(pos).enumerate() {
+                    let offset_pos = Position(input.0 - 1, input.1 - 1);
+                    bin_num[i] = self.get_pixel(&offset_pos).unwrap_or(border_pixel);
+                }
+                output_pixels.push(algo.calculate(&bin_num));
             }
-            *pixel = algo.calculate(&bin_num);
         }
 
         Image {
             pixels: output_pixels,
+            width: self.width + 2,
+            height: self.height + 2,
         }
     }
 
     pub fn lit_pixels(&self) -> usize {
         self.pixels
             .iter()
-            .filter(|(_, p)| matches!(p, Pixel::Light))
+            .filter(|p| matches!(p, Pixel::Light))
             .count()
     }
 }
