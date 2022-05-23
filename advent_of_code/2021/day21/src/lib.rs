@@ -1,5 +1,3 @@
-use std::fmt::Debug;
-
 pub trait Die {
     fn roll(&mut self) -> u32;
     fn roll_thrice(&mut self) -> u32 {
@@ -9,7 +7,6 @@ pub trait Die {
     fn total_rolls(&self) -> u32;
 }
 
-#[derive(Debug, Copy, Clone)]
 pub struct DeterministicDie {
     face: u32,
     rolls: u32,
@@ -18,7 +15,7 @@ pub struct DeterministicDie {
 impl DeterministicDie {
     const MAX: u32 = 100;
 
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self { face: 0, rolls: 0 }
     }
 }
@@ -51,64 +48,59 @@ struct Player {
 
 impl Player {
     fn new(pos: u32) -> Self {
-        Self { pos, score: 0 }
-    }
-}
-
-pub struct DiracGame<T> {
-    player_1: Player,
-    player_2: Player,
-    die: T,
-}
-
-impl<T> DiracGame<T>
-where
-    T: Die + Default + Debug,
-{
-    pub fn new(p1_start: u32, p2_start: u32) -> Self {
         Self {
-            player_1: Player::new(p1_start),
-            player_2: Player::new(p2_start),
-            die: T::default(),
+            pos: pos - 1,
+            score: 0,
         }
     }
 
-    pub fn play(&mut self) {
-        while !self.turn(1) && !self.turn(2) {}
+    fn advance(&mut self, steps: u32) {
+        self.pos = (self.pos + steps).rem_euclid(10);
+        self.score += self.pos + 1;
+    }
+}
+
+pub struct DiracGame<const MAX_SCORE: u32> {
+    player_1: Player,
+    player_2: Player,
+}
+
+impl<const MAX_SCORE: u32> DiracGame<MAX_SCORE> {
+    fn new(p1_start: u32, p2_start: u32) -> Self {
+        Self {
+            player_1: Player::new(p1_start),
+            player_2: Player::new(p2_start),
+        }
     }
 
-    pub fn loser_score(&self) -> u32 {
-        self.player_1.score.min(self.player_2.score)
-    }
-
-    pub fn total_rolls(&self) -> u32 {
-        self.die.total_rolls()
-    }
-
-    fn turn(&mut self, player_idx: u32) -> bool {
+    fn turn(&mut self, player_idx: u32, steps: u32) -> bool {
         let player = if player_idx == 1 {
             &mut self.player_1
         } else {
             &mut self.player_2
         };
+        player.advance(steps);
+        player.score >= MAX_SCORE
+    }
 
-        let steps: u32 = self.die.roll_thrice();
-        let mut new_pos = player.pos + steps;
-        if new_pos > 10 {
-            new_pos = new_pos.rem_euclid(10);
-            if new_pos == 0 {
-                new_pos = 10;
-            }
-        }
+    pub fn play_with_deterministic_die(mut self, die: &mut DeterministicDie) -> (u32, u32) {
+        while !self.turn(1, die.roll_thrice()) && !self.turn(2, die.roll_thrice()) {}
 
-        player.score += new_pos;
-        player.pos = new_pos;
-        player.score >= 1000
+        (
+            self.player_1.score.max(self.player_2.score),
+            self.player_1.score.min(self.player_2.score),
+        )
     }
 }
 
-impl DiracGame<DeterministicDie> {
-    pub fn with_deterministic_die(p1_start: u32, p2_start: u32) -> Self {
-        DiracGame::new(p1_start, p2_start)
+impl DiracGame<1000> {
+    pub fn part1(p1_start: u32, p2_start: u32) -> Self {
+        Self::new(p1_start, p2_start)
+    }
+}
+
+impl DiracGame<21> {
+    pub fn part2(p1_start: u32, p2_start: u32) -> Self {
+        Self::new(p1_start, p2_start)
     }
 }

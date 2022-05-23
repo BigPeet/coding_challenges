@@ -1,4 +1,4 @@
-use day21::DiracGame;
+use day21::{DeterministicDie, Die, DiracGame};
 use parsing::{InputError, ParsingResult};
 
 fn parse_start(line: &str) -> Result<u32, InputError> {
@@ -16,14 +16,15 @@ fn main() -> ParsingResult {
     let start2 = parse_start(&lines[1])?;
 
     // Part 1
-    let mut game = DiracGame::with_deterministic_die(start1, start2);
-    game.play();
+    let mut det_die = DeterministicDie::default();
+    let game = DiracGame::part1(start1, start2);
+    let (_, loser_score) = game.play_with_deterministic_die(&mut det_die);
 
     println!(
         "Game Over. Losing player had {} points and the die has been rolled {} times. Result = {}",
-        game.loser_score(),
-        game.total_rolls(),
-        game.loser_score() * game.total_rolls()
+        loser_score,
+        det_die.total_rolls(),
+        loser_score * det_die.total_rolls()
     );
 
     Ok(())
