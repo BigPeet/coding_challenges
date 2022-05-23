@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 pub trait Die {
     fn roll(&mut self) -> u32;
     fn roll_thrice(&mut self) -> u32 {
@@ -41,6 +43,7 @@ impl Die for DeterministicDie {
     }
 }
 
+#[derive(Clone, PartialEq, Eq, Hash)]
 struct Player {
     pos: u32,
     score: u32,
@@ -60,6 +63,7 @@ impl Player {
     }
 }
 
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub struct DiracGame<const MAX_SCORE: u32> {
     player_1: Player,
     player_2: Player,
@@ -73,8 +77,8 @@ impl<const MAX_SCORE: u32> DiracGame<MAX_SCORE> {
         }
     }
 
-    fn turn(&mut self, player_idx: u32, steps: u32) -> bool {
-        let player = if player_idx == 1 {
+    fn turn(&mut self, player_idx: usize, steps: u32) -> bool {
+        let player = if player_idx == 0 {
             &mut self.player_1
         } else {
             &mut self.player_2
@@ -84,12 +88,40 @@ impl<const MAX_SCORE: u32> DiracGame<MAX_SCORE> {
     }
 
     pub fn play_with_deterministic_die(mut self, die: &mut DeterministicDie) -> (u32, u32) {
-        while !self.turn(1, die.roll_thrice()) && !self.turn(2, die.roll_thrice()) {}
+        while !self.turn(0, die.roll_thrice()) && !self.turn(1, die.roll_thrice()) {}
 
         (
             self.player_1.score.max(self.player_2.score),
             self.player_1.score.min(self.player_2.score),
         )
+    }
+
+    pub fn play_with_dirac_die(self) -> (u64, u64) {
+        let mut game_states = HashMap::<Self, u64>::from([(self, 1u64)]);
+        let rolls = [(3, 1), (4, 3), (5, 6), (6, 7), (7, 6), (8, 3), (9, 1)];
+        let mut wins = [0u64, 0u64];
+
+        for player in (0..=1).cycle() {
+            let mut new_game_states = HashMap::new();
+            for (roll, factor) in rolls.iter() {
+                for (state, splits) in game_states.iter() {
+                    let mut advanced_state = state.clone();
+                    let new_splits = splits * factor;
+                    if advanced_state.turn(player, *roll) {
+                        wins[player] += new_splits;
+                    } else {
+                        *new_game_states.entry(advanced_state).or_default() += new_splits;
+                    }
+                }
+            }
+            if new_game_states.is_empty() {
+                break;
+            } else {
+                game_states = new_game_states;
+            }
+        }
+
+        (wins[0].max(wins[1]), wins[0].min(wins[1]))
     }
 }
 

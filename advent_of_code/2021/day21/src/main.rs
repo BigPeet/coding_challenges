@@ -17,15 +17,19 @@ fn main() -> ParsingResult {
 
     // Part 1
     let mut det_die = DeterministicDie::default();
-    let game = DiracGame::part1(start1, start2);
-    let (_, loser_score) = game.play_with_deterministic_die(&mut det_die);
+    let (_, loser_score) =
+        DiracGame::part1(start1, start2).play_with_deterministic_die(&mut det_die);
 
     println!(
-        "Game Over. Losing player had {} points and the die has been rolled {} times. Result = {}",
+        "Part 1: Losing player had {} points and the die has been rolled {} times. Result = {}",
         loser_score,
         det_die.total_rolls(),
         loser_score * det_die.total_rolls()
     );
+
+    // Part 2
+    let (max_dim, _) = DiracGame::part2(start1, start2).play_with_dirac_die();
+    println!("Part 2: Higher number of universes won: {}", max_dim);
 
     Ok(())
 }
