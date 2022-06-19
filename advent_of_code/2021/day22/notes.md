@@ -19,3 +19,8 @@ For every reboot step:
 
 In the end, `M` only contains the ON cuboids.
 So, iterate of the cuboids of `M` and count the cubes they contain (i.e. calculate their volume) and sum it all up.
+
+The solution for part 2 is 1207167990362099.
+
+My general approach was fine, but I had fought with an annoying off-by-one error in my cuboid-splitting.
+I probably should have switch from inclusive-ranges to an easier, less error-prone modelling for the cuboids.
